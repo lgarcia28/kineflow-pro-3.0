@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+  }
+  
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    box-sizing: border-box;
+  }
+  
+  html, body, #root {
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  input, textarea {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+  }
+}
+
+@layer utilities {
+  .scroll-container {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  
+  .scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-sm;
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md shadow-lg border border-white/50 rounded-[2rem];
+  }
+}

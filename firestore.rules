@@ -1,0 +1,13 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // REGLAS MVP: Permite lectura y escritura si el usuario está autenticado
+    // Nota: Para este MVP inicial sin Auth configurado, permitimos acceso total.
+    // IMPORTANTE: Configurar Authentication pronto para asegurar datos de pacientes.
+    match /{document=**} {
+      allow read, write: if true; 
+    }
+  }
+}

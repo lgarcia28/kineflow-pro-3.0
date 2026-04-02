@@ -1,0 +1,338 @@
+import React, { useState } from 'react';
+import { Patient, Product, PlanType, RoutineExercise, RoutineDay } from '../types';
+import { TabataTimer } from './TabataTimer';
+import { 
+  Calendar, 
+  ShoppingBag, 
+  Home, 
+  CheckCircle2, 
+  Clock, 
+  ExternalLink, 
+  MessageCircle,
+  ChevronRight,
+  Activity,
+  User,
+  AlertCircle,
+  Timer
+} from 'lucide-react';
+
+interface PatientViewProps {
+  patient: Patient;
+  products: Product[];
+  onUpdatePatient: (updated: Patient) => void;
+}
+
+export const PatientView: React.FC<PatientViewProps> = ({ patient, products, onUpdatePatient }) => {
+  const [activeTab, setActiveTab] = useState<'HOME' | 'ROUTINE' | 'HOME_ROUTINE' | 'TIMER'>('HOME');
+  const [selectedDay, setSelectedDay] = useState<RoutineDay | null>(
+    patient.routine.days[0] || null
+  );
+
+  const getPlanStatus = () => {
+    const today = new Date();
+    const expiration = new Date(patient.expirationDate);
+    const diffTime = expiration.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (patient.planType === PlanType.SESSIONS) {
+      const remaining = patient.remainingSessions || 0;
+      if (remaining <= 0) return { label: 'Vencido', sub: '0 sesiones restantes', color: 'bg-red-500', text: 'text-red-500', bg: 'bg-red-50' };
+      if (remaining <= 3) return { label: 'Próximo a vencer', sub: `${remaining} sesiones restantes`, color: 'bg-orange-500', text: 'text-orange-500', bg: 'bg-orange-50' };
+      return { label: 'Vigente', sub: `${remaining} sesiones restantes`, color: 'bg-emerald-500', text: 'text-emerald-500', bg: 'bg-emerald-50' };
+    } else {
+      if (diffDays <= 0) return { label: 'Vencido', sub: `Expiró el ${patient.expirationDate}`, color: 'bg-red-500', text: 'text-red-500', bg: 'bg-red-50' };
+      if (diffDays <= 7) return { label: 'Próximo a vencer', sub: `Vence en ${diffDays} días`, color: 'bg-orange-500', text: 'text-orange-500', bg: 'bg-orange-50' };
+      return { label: 'Vigente', sub: `Vence en ${diffDays} días`, color: 'bg-emerald-500', text: 'text-emerald-500', bg: 'bg-emerald-50' };
+    }
+  };
+
+  const handleWhatsApp = (productName: string) => {
+    const message = encodeURIComponent(`Hola! Soy ${patient.firstName} ${patient.lastName} y estoy interesado en el producto: ${productName}`);
+    window.open(`https://wa.me/5493416055274?text=${message}`, '_blank');
+  };
+
+  const handleMarkHomeDone = (exerciseId: string, observations?: string) => {
+    if (!patient.homeRoutine) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const newDays = patient.homeRoutine.days.map(day => ({
+      ...day,
+      exercises: day.exercises.map(ex => {
+        if (ex.id === exerciseId) {
+          const newHistory = [...(ex.history || [])];
+          newHistory.push({
+            date: today,
+            week: patient.homeRoutine?.currentWeek || 1,
+            load: ex.targetLoad,
+            reps: ex.targetReps,
+            rpe: 5, // Default RPE for home
+            observation: observations
+          });
+          return { ...ex, isDone: true, history: newHistory };
+        }
+        return ex;
+      })
+    }));
+
+    onUpdatePatient({
+      ...patient,
+      homeRoutine: { ...patient.homeRoutine, days: newDays }
+    });
+  };
+
+  const status = getPlanStatus();
+
+  return (
+    <div className="flex-1 h-full bg-slate-50 overflow-hidden flex flex-col">
+      {/* Header */}
+      <header className="bg-white px-6 py-6 flex items-center justify-between border-b border-slate-100">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-100">
+            <User className="text-white w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-slate-900 leading-tight">Hola, {patient.firstName}</h1>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Panel del Paciente</p>
+          </div>
+        </div>
+        <div className={`px-4 py-2 rounded-full ${status.bg} flex items-center gap-2 border border-white`}>
+          <span className={`w-2 h-2 rounded-full ${status.color}`}></span>
+          <span className={`text-[10px] font-black uppercase tracking-wider ${status.text}`}>{status.label}</span>
+        </div>
+      </header>
+
+      {/* Navigation */}
+      <nav className="bg-white px-6 py-2 flex gap-4 overflow-x-auto border-b border-slate-100 scroll-container">
+        <button 
+          onClick={() => setActiveTab('HOME')}
+          className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'HOME' ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'text-slate-400'}`}
+        >
+          <Home size={18} /> Inicio
+        </button>
+        <button 
+          onClick={() => setActiveTab('ROUTINE')}
+          className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'ROUTINE' ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'text-slate-400'}`}
+        >
+          <Activity size={18} /> Mi Rutina
+        </button>
+        <button 
+          onClick={() => setActiveTab('HOME_ROUTINE')}
+          className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'HOME_ROUTINE' ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'text-slate-400'}`}
+        >
+          <Home size={18} /> Domiciliaria
+        </button>
+        <button 
+          onClick={() => setActiveTab('TIMER')}
+          className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'TIMER' ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'text-slate-400'}`}
+        >
+          <Timer size={18} /> Timer
+        </button>
+      </nav>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-6 pb-24">
+        {activeTab === 'HOME' && (
+          <div className="max-w-md mx-auto space-y-8">
+            {/* Status Card */}
+            <div className={`p-8 rounded-[2.5rem] shadow-xl border border-white ${status.bg}`}>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado de tu Plan</p>
+              <h2 className={`text-4xl font-black mb-2 ${status.text}`}>{status.label}</h2>
+              <p className="text-slate-500 font-medium">{status.sub}</p>
+              <div className="mt-6 flex items-center gap-2 text-xs font-bold text-slate-400">
+                <Calendar size={14} /> Próximo pago: {patient.expirationDate}
+              </div>
+            </div>
+
+            {/* Shop Section */}
+            <div className="space-y-8">
+              {/* Services Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-black text-slate-900">Servicios y Evaluaciones</h3>
+                  <span className="bg-blue-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg shadow-blue-100">
+                    Nuevos Servicios
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {products.filter(p => p.type === 'SERVICE').map(product => (
+                    <div key={product.id} className="bg-white rounded-[2rem] p-4 shadow-sm border border-slate-100 flex items-center gap-4">
+                      <img src={product.imageUrl} alt="" className="w-20 h-20 rounded-2xl object-cover" />
+                      <div className="flex-1">
+                        <h4 className="font-black text-slate-900 text-sm">{product.name}</h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">{product.category}</p>
+                        <p className="text-xs text-slate-500 font-medium mb-2">Consultar precio</p>
+                        <button 
+                          onClick={() => handleWhatsApp(product.name)}
+                          className="flex items-center gap-2 text-blue-500 font-black text-xs hover:underline"
+                        >
+                          <MessageCircle size={14} /> Consultar por WhatsApp
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Products Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-black text-slate-900">Productos RTP</h3>
+                  <span className="bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg shadow-emerald-100">
+                    15% OFF Pacientes
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {products.filter(p => p.type !== 'SERVICE').map(product => (
+                    <div key={product.id} className="bg-white rounded-[2rem] p-4 shadow-sm border border-slate-100 flex items-center gap-4">
+                      <img src={product.imageUrl} alt="" className="w-20 h-20 rounded-2xl object-cover" />
+                      <div className="flex-1">
+                        <h4 className="font-black text-slate-900 text-sm">{product.name}</h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">{product.category}</p>
+                        <p className="text-xs text-slate-500 font-medium mb-2">Consultar precio</p>
+                        <button 
+                          onClick={() => handleWhatsApp(product.name)}
+                          className="flex items-center gap-2 text-emerald-500 font-black text-xs hover:underline"
+                        >
+                          <MessageCircle size={14} /> Consultar por WhatsApp
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'ROUTINE' && (
+          <div className="max-w-md mx-auto space-y-6">
+            <div className="flex gap-2 overflow-x-auto pb-2 scroll-container">
+              {patient.routine.days.map(day => (
+                <button
+                  key={day.id}
+                  onClick={() => setSelectedDay(day)}
+                  className={`px-6 py-3 rounded-2xl font-black text-xs whitespace-nowrap transition-all ${selectedDay?.id === day.id ? 'bg-primary-600 text-white shadow-lg shadow-primary-100' : 'bg-white text-slate-400 border border-slate-100'}`}
+                >
+                  {day.name}
+                </button>
+              ))}
+            </div>
+
+            {selectedDay ? (
+              <div className="space-y-4">
+                {selectedDay.exercises.map(ex => (
+                  <div key={ex.id} className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden">
+                        {ex.definition.videoUrl ? (
+                          <img src={ex.definition.videoUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Activity className="text-slate-300" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-black text-slate-900">{ex.definition.name}</h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{ex.definition.category}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl">
+                      <div className="text-center">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Series</p>
+                        <p className="text-sm font-black text-slate-700">{ex.targetSets}</p>
+                      </div>
+                      <div className="text-center border-x border-slate-200">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Reps</p>
+                        <p className="text-sm font-black text-slate-700">{ex.targetReps}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
+                        <p className="text-sm font-black text-slate-700">{ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-white rounded-[2.5rem] border border-dashed border-slate-200">
+                <AlertCircle className="mx-auto text-slate-300 w-12 h-12 mb-4" />
+                <p className="text-slate-400 font-bold">No hay rutina asignada para hoy</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'HOME_ROUTINE' && (
+          <div className="max-w-md mx-auto">
+            {patient.hasHomePlan && patient.homeRoutine ? (
+              <div className="space-y-6">
+                <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl">
+                  <h2 className="text-3xl font-black mb-2">Rutina Domiciliaria</h2>
+                  <p className="text-slate-400 text-sm font-medium">Ejercicios para realizar en casa y complementar tu tratamiento.</p>
+                </div>
+                <div className="space-y-4">
+                  {patient.homeRoutine.days[0]?.exercises.map(ex => (
+                    <div key={ex.id} className={`bg-white rounded-[2rem] p-5 shadow-sm border transition-all ${ex.isDone ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100'}`}>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${ex.isDone ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-primary-600'}`}>
+                            {ex.isDone ? <CheckCircle2 size={24} /> : <Home size={24} />}
+                          </div>
+                          <div>
+                            <h4 className={`font-black ${ex.isDone ? 'text-emerald-900' : 'text-slate-900'}`}>{ex.definition.name}</h4>
+                            <p className="text-xs text-slate-400 font-bold">{ex.targetSets}x{ex.targetReps} • {ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
+                          </div>
+                        </div>
+                        {!ex.isDone && (
+                          <button 
+                            onClick={() => handleMarkHomeDone(ex.id)}
+                            className="w-10 h-10 rounded-full border-2 border-slate-100 flex items-center justify-center text-slate-300 hover:border-emerald-500 hover:text-emerald-500 transition-all"
+                          >
+                            <CheckCircle2 size={20} />
+                          </button>
+                        )}
+                      </div>
+                      {!ex.isDone && (
+                        <textarea 
+                          placeholder="Observaciones (opcional)..."
+                          className="w-full bg-slate-50 border-none rounded-xl p-3 text-xs font-medium placeholder:text-slate-300 focus:ring-1 focus:ring-primary-500"
+                          onBlur={(e) => {
+                            if (e.target.value.trim()) {
+                              // We could save observations here if we wanted to
+                            }
+                          }}
+                        />
+                      )}
+                      {ex.isDone && (
+                        <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                          <CheckCircle2 size={14} /> Completado hoy
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 px-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <AlertCircle className="text-slate-300 w-10 h-10" />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 mb-2">Sin Rutina Domiciliaria</h3>
+                <p className="text-slate-500 text-sm font-medium mb-8">No tienes una rutina domiciliaria disponible. Para obtenerla, contacta al profesional.</p>
+                <button 
+                  onClick={() => handleWhatsApp('Rutina Domiciliaria')}
+                  className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2"
+                >
+                  <MessageCircle size={20} /> Consultar con Profesional
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'TIMER' && (
+          <TabataTimer />
+        )}
+      </div>
+    </div>
+  );
+};
