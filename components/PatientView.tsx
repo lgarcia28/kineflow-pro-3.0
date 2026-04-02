@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Patient, Product, PlanType, RoutineExercise, RoutineDay } from '../types';
+import { Patient, Product, PlanType, RoutineExercise, RoutineDay, ExerciseDefinition } from '../types';
 import { TabataTimer } from './TabataTimer';
 import { 
   Calendar, 
@@ -19,10 +19,16 @@ import {
 interface PatientViewProps {
   patient: Patient;
   products: Product[];
+  exercises: ExerciseDefinition[];
   onUpdatePatient: (updated: Patient) => void;
 }
 
-export const PatientView: React.FC<PatientViewProps> = ({ patient, products, onUpdatePatient }) => {
+export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exercises, onUpdatePatient }) => {
+  // Helper: get the latest image URL from central library, fall back to definition's stored URL
+  const resolveExerciseImage = (ex: RoutineExercise): string | undefined => {
+    const master = exercises.find(e => e.id === ex.definitionId);
+    return master?.videoUrl || ex.definition?.videoUrl;
+  };
   const [activeTab, setActiveTab] = useState<'HOME' | 'ROUTINE' | 'HOME_ROUTINE' | 'TIMER'>('HOME');
   const [selectedDay, setSelectedDay] = useState<RoutineDay | null>(
     patient.routine.days[0] || null
@@ -138,9 +144,12 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, onU
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado de tu Plan</p>
               <h2 className={`text-4xl font-black mb-2 ${status.text}`}>{status.label}</h2>
               <p className="text-slate-500 font-medium">{status.sub}</p>
-              <div className="mt-6 flex items-center gap-2 text-xs font-bold text-slate-400">
-                <Calendar size={14} /> Próximo pago: {patient.expirationDate}
-              </div>
+              {patient.expirationDate && (
+                <div className="mt-6 flex items-center gap-2 text-xs font-bold text-slate-400">
+                  <Calendar size={14} />
+                  {patient.planType === PlanType.SESSIONS ? 'Sesiones hasta:' : 'Vence el:'} {patient.expirationDate}
+                </div>
+              )}
             </div>
 
             {/* Shop Section */}
@@ -224,8 +233,8 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, onU
                   <div key={ex.id} className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100">
                     <div className="flex items-center gap-4 mb-4">
                       <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden">
-                        {ex.definition.videoUrl ? (
-                          <img src={ex.definition.videoUrl} alt="" className="w-full h-full object-cover" />
+                        {resolveExerciseImage(ex) ? (
+                          <img src={resolveExerciseImage(ex)} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <Activity className="text-slate-300" />
                         )}

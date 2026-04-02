@@ -13,7 +13,7 @@ export const PatientList: React.FC<PatientListProps> = ({
   onSelectPatient
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAll, setShowAll] = useState(false); // Toggle between "En Sala" and "Todos"
+  const [showAll, setShowAll] = useState(true); // Default: show all patients
   
   const filteredPatients = patients.filter((p: Patient) => {
     const fullName = `${p.firstName} ${p.lastName} ${p.dni}`.toLowerCase();

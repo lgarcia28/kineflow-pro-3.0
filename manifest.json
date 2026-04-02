@@ -15,10 +15,10 @@
     }
   ],
   "start_url": "/",
-  "background_color": "#0ea5e9",
+  "background_color": "#2563eb",
   "display": "standalone",
   "orientation": "any",
   "scope": "/",
-  "theme_color": "#0284c7",
+  "theme_color": "#2563eb",
   "description": "App de alto rendimiento para clínicas de kinesiología."
 }

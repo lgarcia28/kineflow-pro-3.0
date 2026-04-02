@@ -178,6 +178,8 @@ const App: React.FC = () => {
       setDeferredPrompt(e);
       if (!window.matchMedia('(display-mode: standalone)').matches) {
         setShowInstallBanner(true);
+        // Auto-dismiss after 8 seconds
+        setTimeout(() => setShowInstallBanner(false), 8000);
       }
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
@@ -599,7 +601,7 @@ const App: React.FC = () => {
           />
         ) : currentUserRole === UserRole.PATIENT ? (
           loggedPatient ? (
-            <PatientView patient={loggedPatient} products={products} onUpdatePatient={handleUpdatePatient} />
+            <PatientView patient={loggedPatient} products={products} exercises={exercises} onUpdatePatient={handleUpdatePatient} />
           ) : (
             <div className="flex-1 flex items-center justify-center p-8 text-center">
               <div>

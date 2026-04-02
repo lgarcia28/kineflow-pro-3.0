@@ -36,8 +36,7 @@ if (isConfigValid) {
     db = initializeFirestore(app!, {
       localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager()
-      }),
-      experimentalForceLongPolling: true
+      })
     });
 
     console.log("Firebase initialized successfully with project:", firebaseConfig.projectId);
