@@ -13,7 +13,9 @@ import {
   Activity,
   User,
   AlertCircle,
-  Timer
+  Timer,
+  X,
+  Maximize2
 } from 'lucide-react';
 
 interface PatientViewProps {
@@ -33,6 +35,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
   const [selectedDay, setSelectedDay] = useState<RoutineDay | null>(
     patient.routine.days[0] || null
   );
+  const [zoomedImage, setZoomedImage] = useState<{url: string, name: string} | null>(null);
 
   const getPlanStatus = () => {
     const today = new Date();
@@ -232,13 +235,24 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                 {selectedDay.exercises.map(ex => (
                   <div key={ex.id} className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100">
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden">
+                      <button 
+                        onClick={() => {
+                          const url = resolveExerciseImage(ex);
+                          if (url) setZoomedImage({ url, name: ex.definition.name });
+                        }}
+                        className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative group cursor-zoom-in"
+                      >
                         {resolveExerciseImage(ex) ? (
-                          <img src={resolveExerciseImage(ex)} alt="" className="w-full h-full object-cover" />
+                          <>
+                            <img src={resolveExerciseImage(ex)} alt="" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <Maximize2 size={14} className="text-white" />
+                            </div>
+                          </>
                         ) : (
                           <Activity className="text-slate-300" />
                         )}
-                      </div>
+                      </button>
                       <div>
                         <h4 className="font-black text-slate-900">{ex.definition.name}</h4>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{ex.definition.category}</p>
@@ -283,9 +297,24 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                     <div key={ex.id} className={`bg-white rounded-[2rem] p-5 shadow-sm border transition-all ${ex.isDone ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100'}`}>
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${ex.isDone ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-primary-600'}`}>
-                            {ex.isDone ? <CheckCircle2 size={24} /> : <Home size={24} />}
-                          </div>
+                          <button 
+                            onClick={() => {
+                              const url = resolveExerciseImage(ex);
+                              if (url) setZoomedImage({ url, name: ex.definition.name });
+                            }}
+                            className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative group ${resolveExerciseImage(ex) ? 'cursor-zoom-in' : ''} ${ex.isDone ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-primary-600'}`}
+                          >
+                            {resolveExerciseImage(ex) ? (
+                              <>
+                                <img src={resolveExerciseImage(ex)} alt="" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                  <Maximize2 size={14} className="text-white" />
+                                </div>
+                              </>
+                            ) : (
+                              ex.isDone ? <CheckCircle2 size={24} /> : <Home size={24} />
+                            )}
+                          </button>
                           <div>
                             <h4 className={`font-black ${ex.isDone ? 'text-emerald-900' : 'text-slate-900'}`}>{ex.definition.name}</h4>
                             <p className="text-xs text-slate-400 font-bold">{ex.targetSets}x{ex.targetReps} • {ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
@@ -342,6 +371,33 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
           <TabataTimer />
         )}
       </div>
+
+      {/* Image Zoom Modal */}
+      {zoomedImage && (
+        <div 
+          className="fixed inset-0 z-[300] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-in fade-in duration-200"
+          onClick={() => setZoomedImage(null)}
+        >
+          <div 
+            className="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl max-w-2xl w-full animate-in zoom-in-95 duration-300 cursor-default"
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setZoomedImage(null)}
+              className="absolute top-6 right-6 z-10 p-3 bg-white/80 backdrop-blur-md hover:bg-white rounded-full text-slate-900 transition-all shadow-lg active:scale-95"
+            >
+              <X size={24} />
+            </button>
+            <div className="aspect-video bg-slate-100 flex items-center justify-center">
+              <img src={zoomedImage.url} alt={zoomedImage.name} className="max-w-full max-h-full object-contain block" />
+            </div>
+            <div className="p-8">
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">{zoomedImage.name}</h2>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Vista Detallada</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { 
     FileText, Plus, Search, X, Calendar, Trash2, Edit2, Save,
-    Activity, Minus, Layers, TrendingUp, CheckSquare, Square, BarChart2, CheckCircle2, History, ChevronRightCircle, Timer, Dumbbell
+    Activity, Minus, Layers, TrendingUp, CheckSquare, Square, BarChart2, CheckCircle2, History, ChevronRightCircle, Timer, Dumbbell, Maximize2
 } from 'lucide-react';
 
 interface PatientDetailProps {
@@ -36,6 +36,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [isAddingExerciseModal, setIsAddingExerciseModal] = useState<{show: boolean, dayId: string}>({show: false, dayId: ''});
   const [notes, setNotes] = useState('');
+  const [zoomedImage, setZoomedImage] = useState<{url: string, name: string} | null>(null);
 
   const isKine = role === UserRole.KINE;
   
@@ -525,7 +526,15 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                           <div key={ex.id} className="flex flex-col gap-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-primary-300 transition-all group relative">
                                               <div className="flex items-start justify-between gap-3">
                                                   {ex.definition.videoUrl ? (
-                                                    <img src={ex.definition.videoUrl} className="w-12 h-12 rounded-[1rem] object-cover shadow-sm bg-slate-100" />
+                                                    <button 
+                                                      onClick={() => setZoomedImage({ url: ex.definition.videoUrl || '', name: ex.definition.name })}
+                                                      className="w-12 h-12 rounded-[1rem] object-cover shadow-sm bg-slate-100 overflow-hidden relative group cursor-zoom-in"
+                                                    >
+                                                      <img src={ex.definition.videoUrl} className="w-full h-full object-cover" />
+                                                      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                        <Maximize2 size={14} className="text-white" />
+                                                      </div>
+                                                    </button>
                                                   ) : (
                                                     <div className="w-12 h-12 rounded-[1rem] bg-slate-100 flex items-center justify-center shadow-inner">
                                                         {ex.definition.metricType === 'time' ? <Timer size={20} className="text-slate-400"/> : <Dumbbell size={20} className="text-slate-400"/>}
@@ -600,7 +609,18 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                   </div>
                                   <div className="relative shrink-0 mr-5">
                                     {ex.videoUrl ? (
-                                        <img src={ex.videoUrl} className="w-16 h-16 rounded-[1.25rem] object-cover shadow-sm bg-slate-100" />
+                                        <button 
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setZoomedImage({ url: ex.videoUrl || '', name: ex.name });
+                                          }}
+                                          className="w-16 h-16 rounded-[1.25rem] object-cover shadow-sm bg-slate-100 overflow-hidden relative group cursor-zoom-in"
+                                        >
+                                          <img src={ex.videoUrl} className="w-full h-full object-cover" />
+                                          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                            <Maximize2 size={16} className="text-white" />
+                                          </div>
+                                        </button>
                                     ) : (
                                         <div className="w-16 h-16 rounded-[1.25rem] bg-slate-100 flex items-center justify-center shadow-inner">
                                             {ex.metricType === 'time' ? <Timer size={24} className="text-slate-400"/> : <Dumbbell size={24} className="text-slate-400"/>}
@@ -647,6 +667,33 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                   </div>
               </div>
           </div>
+      )}
+
+      {/* Image Zoom Modal */}
+      {zoomedImage && (
+        <div 
+          className="fixed inset-0 z-[500] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-in fade-in duration-200"
+          onClick={() => setZoomedImage(null)}
+        >
+          <div 
+            className="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl max-w-2xl w-full animate-in zoom-in-95 duration-300 cursor-default"
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setZoomedImage(null)}
+              className="absolute top-6 right-6 z-10 p-3 bg-white/80 backdrop-blur-md hover:bg-white rounded-full text-slate-900 transition-all shadow-lg active:scale-95"
+            >
+              <X size={24} />
+            </button>
+            <div className="aspect-video bg-slate-100 flex items-center justify-center">
+              <img src={zoomedImage.url} alt={zoomedImage.name} className="max-w-full max-h-full object-contain block" />
+            </div>
+            <div className="p-8">
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">{zoomedImage.name}</h2>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Biblioteca de Ejercicios</p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ExerciseDefinition, MetricType } from '../types';
 import { storage } from '../firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { X, Search, Plus, Trash2, Edit2, Save, Dumbbell, Timer, Image as ImageIcon, Upload, Loader2, Link } from 'lucide-react';
+import { X, Search, Plus, Trash2, Edit2, Save, Dumbbell, Timer, Image as ImageIcon, Upload, Loader2, Link, Maximize2 } from 'lucide-react';
 
 interface ExerciseLibraryProps {
   exercises: ExerciseDefinition[];
@@ -25,6 +25,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
   const [isCreating, setIsCreating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [zoomedImage, setZoomedImage] = useState<{url: string, name: string} | null>(null);
 
   // Estado del formulario (para crear o editar)
   const [formData, setFormData] = useState<Partial<ExerciseDefinition>>({
@@ -152,7 +153,15 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
               {filtered.map(ex => (
                 <div key={ex.id} className={`p-3 rounded-2xl border transition-all flex items-center gap-3 bg-white ${editingId === ex.id ? 'border-primary-500 ring-2 ring-primary-50' : 'border-slate-100 hover:border-slate-300'}`}>
                    {ex.videoUrl ? (
-                     <img src={ex.videoUrl} className="w-12 h-12 rounded-lg object-cover bg-slate-100" />
+                     <button 
+                       onClick={() => setZoomedImage({ url: ex.videoUrl || '', name: ex.name })}
+                       className="w-12 h-12 rounded-lg object-cover bg-slate-100 overflow-hidden relative group cursor-zoom-in shrink-0"
+                     >
+                        <img src={ex.videoUrl} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                           <Maximize2 size={12} className="text-white" />
+                        </div>
+                     </button>
                    ) : (
                      <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300">
                         {ex.metricType === 'time' ? <Timer size={20}/> : <Dumbbell size={20}/>}
@@ -225,8 +234,21 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
 
                     {formData.videoUrl && (
                         <div className="mt-2 rounded-2xl overflow-hidden border border-slate-100 h-32 flex items-center justify-center bg-slate-50 relative group">
-                            <img src={formData.videoUrl} className="h-full object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                            <button onClick={() => setFormData({...formData, videoUrl: ''})} className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+                            <button 
+                              type="button"
+                              onClick={() => setZoomedImage({ url: formData.videoUrl || '', name: formData.name || 'Vista Previa' })}
+                              className="h-full w-full flex items-center justify-center cursor-zoom-in relative"
+                            >
+                                <img src={formData.videoUrl} className="h-full object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                   <Maximize2 size={20} className="text-white" />
+                                </div>
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => setFormData({...formData, videoUrl: ''})} 
+                              className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"
+                            >
                                 <Trash2 size={14} />
                             </button>
                         </div>
@@ -249,6 +271,33 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
           )}
         </div>
       </div>
+
+      {/* Image Zoom Modal */}
+      {zoomedImage && (
+        <div 
+          className="fixed inset-0 z-[500] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-in fade-in duration-200"
+          onClick={() => setZoomedImage(null)}
+        >
+          <div 
+            className="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl max-w-2xl w-full animate-in zoom-in-95 duration-300 cursor-default"
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setZoomedImage(null)}
+              className="absolute top-6 right-6 z-10 p-3 bg-white/80 backdrop-blur-md hover:bg-white rounded-full text-slate-900 transition-all shadow-lg active:scale-95"
+            >
+              <X size={24} />
+            </button>
+            <div className="aspect-video bg-slate-100 flex items-center justify-center">
+              <img src={zoomedImage.url} alt={zoomedImage.name} className="max-w-full max-h-full object-contain block" />
+            </div>
+            <div className="p-8">
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">{zoomedImage.name}</h2>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Biblioteca Global</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
