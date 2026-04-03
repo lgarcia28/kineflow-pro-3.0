@@ -23,27 +23,23 @@ const SectionGrid = ({ title, children, cols = 4 }: { title: string, children: R
 );
 
 const VASSelector = ({ label, value, onChange }: { label: string, value: number, onChange: (v: number) => void }) => {
-  const colors = [
-    'bg-emerald-500', 'bg-emerald-400', 'bg-green-400', 'bg-yellow-400', 
-    'bg-yellow-500', 'bg-orange-400', 'bg-orange-500', 'bg-red-400', 
-    'bg-red-500', 'bg-red-600'
-  ];
-
   return (
-    <div className="space-y-2">
-      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{label}</label>
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num, i) => (
-          <button
-            key={num}
-            onClick={() => onChange(num)}
-            className={`flex-1 h-10 rounded-lg text-xs font-bold transition-all ${
-              value === num ? `${colors[i]} text-white shadow-lg scale-110 z-10` : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-            }`}
-          >
-            {num}
-          </button>
-        ))}
+    <div className="space-y-1">
+      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest line-clamp-1" title={label}>{label}</label>
+      <div className="relative">
+        <select 
+          value={value || ''}
+          onChange={e => onChange(parseInt(e.target.value))}
+          className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 text-sm focus:border-primary-500 focus:ring-0 transition-all shadow-sm appearance-none"
+        >
+          <option value="" disabled>Seleccionar (1-10)...</option>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+            <option key={num} value={num}>{num}</option>
+          ))}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+          <ChevronDown size={14} />
+        </div>
       </div>
     </div>
   );
