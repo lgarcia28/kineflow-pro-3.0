@@ -193,22 +193,22 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
           </button>
         </div>
 
-        <div className="flex-1 flex overflow-hidden">
-          {/* Vertical Sidebar */}
-          <div className="w-64 bg-slate-50/50 border-r border-slate-100 flex flex-col overflow-y-auto shrink-0 py-6 px-4 gap-1 no-scrollbar">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+          {/* Sidebar / Tabs */}
+          <div className="w-full md:w-64 bg-slate-50/50 border-b md:border-b-0 md:border-r border-slate-100 flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto shrink-0 p-4 gap-2 no-scrollbar scroll-smooth">
             {categories.map(cat => {
               const Icon = cat.icon;
               return (
                 <button
                   key={cat.id}
                   onClick={() => setActiveTab(cat.id as TabType)}
-                  className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[11px] font-black transition-all ${
+                  className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[11px] font-black transition-all whitespace-nowrap md:whitespace-normal shrink-0 ${
                     activeTab === cat.id 
                       ? 'bg-primary-600 text-white shadow-xl shadow-primary-200 -translate-y-0.5' 
                       : 'bg-transparent text-slate-400 hover:text-slate-700 hover:bg-white'
                   }`}
                 >
-                  <Icon size={18} />
+                  <Icon size={18} className="shrink-0" />
                   <span className="uppercase tracking-widest">{cat.label}</span>
                 </button>
               );
@@ -216,7 +216,7 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
           </div>
 
           {/* Scrolling Content */}
-          <div className="flex-1 overflow-y-auto p-12 bg-white no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 md:p-12 bg-white no-scrollbar">
             {/* BASICS */}
             {activeTab === 'BASICS' && (
               <div className="space-y-6">
@@ -397,13 +397,112 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
               </div>
             )}
 
-            {/* Default for other tabs - To be expanded further */}
-            {!['BASICS', 'MOBILITY', 'FLEXIBILITY', 'PALPATION', 'BALANCE', 'STRENGTH', 'JUMPS_V'].includes(activeTab) && (
-                <div className="flex flex-col items-center justify-center py-20 text-slate-300">
-                    <Activity size={48} className="mb-4 opacity-20" />
-                    <p className="font-black uppercase tracking-widest text-xs">Sección en integración detallada</p>
-                    <p className="text-[10px] font-bold mt-2">Agregando más de {Object.keys(measurements[activeTab.toLowerCase()] || {}).length || 20} campos...</p>
-                </div>
+            {/* VBT */}
+            {activeTab === 'VBT' && (
+              <div className="space-y-4">
+                <SectionGrid title="VBT Sentadilla">
+                  <InputField label="Derecha" value={measurements.vbt.squat_r} onChange={v => updateMeasurement('vbt', 'squat_r', v)} unit="M/S" />
+                  <InputField label="Izquierda" value={measurements.vbt.squat_l} onChange={v => updateMeasurement('vbt', 'squat_l', v)} unit="M/S" />
+                  <InputField label="Peso Utilizado" value={measurements.vbt.squat_weight} onChange={v => updateMeasurement('vbt', 'squat_weight', v)} unit="KG" />
+                </SectionGrid>
+                <SectionGrid title="VBT Peso Muerto">
+                  <InputField label="Derecha" value={measurements.vbt.deadlift_r} onChange={v => updateMeasurement('vbt', 'deadlift_r', v)} unit="M/S" />
+                  <InputField label="Izquierda" value={measurements.vbt.deadlift_l} onChange={v => updateMeasurement('vbt', 'deadlift_l', v)} unit="M/S" />
+                  <InputField label="Peso Utilizado" value={measurements.vbt.deadlift_weight} onChange={v => updateMeasurement('vbt', 'deadlift_weight', v)} unit="KG" />
+                </SectionGrid>
+                <SectionGrid title="VBT Puente Glúteo">
+                  <InputField label="Derecha" value={measurements.vbt.glute_bridge_r} onChange={v => updateMeasurement('vbt', 'glute_bridge_r', v)} unit="M/S" />
+                  <InputField label="Izquierda" value={measurements.vbt.glute_bridge_l} onChange={v => updateMeasurement('vbt', 'glute_bridge_l', v)} unit="M/S" />
+                  <InputField label="Peso Utilizado" value={measurements.vbt.glute_bridge_weight} onChange={v => updateMeasurement('vbt', 'glute_bridge_weight', v)} unit="KG" />
+                </SectionGrid>
+              </div>
+            )}
+
+            {/* JUMPS_H */}
+            {activeTab === 'JUMPS_H' && (
+              <div className="space-y-4">
+                <SectionGrid title="Single Hop Test">
+                  <InputField label="Distancia Der" value={measurements.jumps_horizontal.single_hop_r} onChange={v => updateMeasurement('jumps_horizontal', 'single_hop_r', v)} unit="CM" />
+                  <InputField label="Distancia Izq" value={measurements.jumps_horizontal.single_hop_l} onChange={v => updateMeasurement('jumps_horizontal', 'single_hop_l', v)} unit="CM" />
+                </SectionGrid>
+                <SectionGrid title="Triple Hop Test">
+                  <InputField label="Dist. Der" value={measurements.jumps_horizontal.triple_hop_dist_r} onChange={v => updateMeasurement('jumps_horizontal', 'triple_hop_dist_r', v)} unit="CM" />
+                  <InputField label="Dist. Izq" value={measurements.jumps_horizontal.triple_hop_dist_l} onChange={v => updateMeasurement('jumps_horizontal', 'triple_hop_dist_l', v)} unit="CM" />
+                  <InputField label="T. Contacto Der" value={measurements.jumps_horizontal.triple_hop_tc_r} onChange={v => updateMeasurement('jumps_horizontal', 'triple_hop_tc_r', v)} unit="MS" />
+                  <InputField label="T. Contacto Izq" value={measurements.jumps_horizontal.triple_hop_tc_l} onChange={v => updateMeasurement('jumps_horizontal', 'triple_hop_tc_l', v)} unit="MS" />
+                </SectionGrid>
+                <SectionGrid title="Crossover Hop Test">
+                  <InputField label="Dist. Der" value={measurements.jumps_horizontal.crossover_hop_dist_r} onChange={v => updateMeasurement('jumps_horizontal', 'crossover_hop_dist_r', v)} unit="CM" />
+                  <InputField label="Dist. Izq" value={measurements.jumps_horizontal.crossover_hop_dist_l} onChange={v => updateMeasurement('jumps_horizontal', 'crossover_hop_dist_l', v)} unit="CM" />
+                </SectionGrid>
+                <SectionGrid title="Otros Tests">
+                  <InputField label="Medial Side Der" value={measurements.jumps_horizontal.medial_side_r} onChange={v => updateMeasurement('jumps_horizontal', 'medial_side_r', v)} unit="CM" />
+                  <InputField label="Medial Side Izq" value={measurements.jumps_horizontal.medial_side_l} onChange={v => updateMeasurement('jumps_horizontal', 'medial_side_l', v)} unit="CM" />
+                  <InputField label="90 Medial Rot Der" value={measurements.jumps_horizontal.medial_rot_90_r} onChange={v => updateMeasurement('jumps_horizontal', 'medial_rot_90_r', v)} unit="CM" />
+                  <InputField label="90 Medial Rot Izq" value={measurements.jumps_horizontal.medial_rot_90_l} onChange={v => updateMeasurement('jumps_horizontal', 'medial_rot_90_l', v)} unit="CM" />
+                </SectionGrid>
+              </div>
+            )}
+
+            {/* CONTROL */}
+            {activeTab === 'CONTROL' && (
+              <div className="space-y-4">
+                <SectionGrid title="Sentadilla Bipodal & Bisagra">
+                   <InputField label="Sentadilla Bip Der" value={measurements.motor_control.squat_bip_r} onChange={v => updateMeasurement('motor_control', 'squat_bip_r', v)} type="select" options={['', 'normal', 'déficit']} />
+                   <InputField label="Sentadilla Bip Izq" value={measurements.motor_control.squat_bip_l} onChange={v => updateMeasurement('motor_control', 'squat_bip_l', v)} type="select" options={['', 'normal', 'déficit']} />
+                   <InputField label="Bisagra Cadera Der" value={measurements.motor_control.hip_hinge_r} onChange={v => updateMeasurement('motor_control', 'hip_hinge_r', v)} type="select" options={['', 'normal', 'déficit']} />
+                   <InputField label="Bisagra Cadera Izq" value={measurements.motor_control.hip_hinge_l} onChange={v => updateMeasurement('motor_control', 'hip_hinge_l', v)} type="select" options={['', 'normal', 'déficit']} />
+                </SectionGrid>
+                <SectionGrid title="Sentadilla 1 Pierna (Frontal Der)">
+                  <InputField label="Tronco" value={measurements.motor_control.squat_1p_front_trunk_r} onChange={v => updateMeasurement('motor_control', 'squat_1p_front_trunk_r', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Pelvis" value={measurements.motor_control.squat_1p_front_pelvis_r} onChange={v => updateMeasurement('motor_control', 'squat_1p_front_pelvis_r', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Cadera" value={measurements.motor_control.squat_1p_front_hip_r} onChange={v => updateMeasurement('motor_control', 'squat_1p_front_hip_r', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Rodilla" value={measurements.motor_control.squat_1p_front_knee_r} onChange={v => updateMeasurement('motor_control', 'squat_1p_front_knee_r', v)} type="select" options={['', 'normal', 'déficit']} />
+                </SectionGrid>
+                <SectionGrid title="Sentadilla 1 Pierna (Frontal Izq)">
+                  <InputField label="Tronco" value={measurements.motor_control.squat_1p_front_trunk_l} onChange={v => updateMeasurement('motor_control', 'squat_1p_front_trunk_l', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Pelvis" value={measurements.motor_control.squat_1p_front_pelvis_l} onChange={v => updateMeasurement('motor_control', 'squat_1p_front_pelvis_l', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Cadera" value={measurements.motor_control.squat_1p_front_hip_l} onChange={v => updateMeasurement('motor_control', 'squat_1p_front_hip_l', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Rodilla" value={measurements.motor_control.squat_1p_front_knee_l} onChange={v => updateMeasurement('motor_control', 'squat_1p_front_knee_l', v)} type="select" options={['', 'normal', 'déficit']} />
+                </SectionGrid>
+                <SectionGrid title="FMS & Sagital">
+                  <InputField label="Sagital Der" value={measurements.motor_control.squat_1p_sag_r} onChange={v => updateMeasurement('motor_control', 'squat_1p_sag_r', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Sagital Izq" value={measurements.motor_control.squat_1p_sag_l} onChange={v => updateMeasurement('motor_control', 'squat_1p_sag_l', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Estocada FMS Der" value={measurements.motor_control.lunge_fms_r} onChange={v => updateMeasurement('motor_control', 'lunge_fms_r', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Estocada FMS Izq" value={measurements.motor_control.lunge_fms_l} onChange={v => updateMeasurement('motor_control', 'lunge_fms_l', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Valla FMS Der" value={measurements.motor_control.hurdle_fms_r} onChange={v => updateMeasurement('motor_control', 'hurdle_fms_r', v)} type="select" options={['', 'normal', 'déficit']} />
+                  <InputField label="Valla FMS Izq" value={measurements.motor_control.hurdle_fms_l} onChange={v => updateMeasurement('motor_control', 'hurdle_fms_l', v)} type="select" options={['', 'normal', 'déficit']} />
+                </SectionGrid>
+              </div>
+            )}
+
+            {/* MCGILL */}
+            {activeTab === 'MCGILL' && (
+              <div className="space-y-4">
+                <SectionGrid title="Test de McGill (Segundos)">
+                  <InputField label="Lateral Der" value={measurements.mcgill.side_r} onChange={v => updateMeasurement('mcgill', 'side_r', v)} unit="SEG" />
+                  <InputField label="Lateral Izq" value={measurements.mcgill.side_l} onChange={v => updateMeasurement('mcgill', 'side_l', v)} unit="SEG" />
+                  <InputField label="Flexores (Sorensen)" value={measurements.mcgill.flexors} onChange={v => updateMeasurement('mcgill', 'flexors', v)} unit="SEG" />
+                  <InputField label="Extensores" value={measurements.mcgill.extensors} onChange={v => updateMeasurement('mcgill', 'extensors', v)} unit="SEG" />
+                </SectionGrid>
+              </div>
+            )}
+
+            {/* FUNCTIONAL */}
+            {activeTab === 'FUNCTIONAL' && (
+              <div className="space-y-4">
+                <SectionGrid title="Agilidad & Cambios de Dirección">
+                   <InputField label="Prueba de Frenado" value={measurements.functional.braking} onChange={v => updateMeasurement('functional', 'braking', v)} unit="SEG" />
+                   <InputField label="T Test" value={measurements.functional.t_test} onChange={v => updateMeasurement('functional', 't_test', v)} unit="SEG" />
+                   <InputField label="Edgren Side Step" value={measurements.functional.edgren} onChange={v => updateMeasurement('functional', 'edgren', v)} unit="REPS" />
+                </SectionGrid>
+                <SectionGrid title="CMAS (Escala de C. de Dirección)">
+                   <InputField label="CMAS 45º Der" value={measurements.functional.cmas_45_r} onChange={v => updateMeasurement('functional', 'cmas_45_r', v)} type="text" />
+                   <InputField label="CMAS 45º Izq" value={measurements.functional.cmas_45_l} onChange={v => updateMeasurement('functional', 'cmas_45_l', v)} type="text" />
+                   <InputField label="CMAS 90º Der" value={measurements.functional.cmas_90_r} onChange={v => updateMeasurement('functional', 'cmas_90_r', v)} type="text" />
+                   <InputField label="CMAS 90º Izq" value={measurements.functional.cmas_90_l} onChange={v => updateMeasurement('functional', 'cmas_90_l', v)} type="text" />
+                </SectionGrid>
+              </div>
             )}
 
           </div>
