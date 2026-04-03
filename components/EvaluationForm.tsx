@@ -425,11 +425,7 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
             {/* JUMPS_H */}
             {activeTab === 'JUMPS_H' && (
               <div className="space-y-4">
-                <SectionGrid title="Single Hop Test">
-                  <InputField label="Distancia Der" value={measurements.jumps_horizontal.single_hop_r} onChange={v => updateMeasurement('jumps_horizontal', 'single_hop_r', v)} unit="CM" />
-                  <InputField label="Distancia Izq" value={measurements.jumps_horizontal.single_hop_l} onChange={v => updateMeasurement('jumps_horizontal', 'single_hop_l', v)} unit="CM" />
-                </SectionGrid>
-                <SectionGrid title="Triple Hop Test">
+                <SectionGrid title="Saltos Horizontales">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest border-l-4 border-primary-500 pl-3">Single Hop (cm)</h4>
