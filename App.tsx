@@ -1,19 +1,6 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import { Sidebar } from './components/Sidebar';
-import { SoundSettings } from './components/SoundSettings';
-import { PatientList } from './components/PatientList';
-import { PatientDetail } from './components/PatientDetail';
-import { ExerciseLibrary } from './components/ExerciseLibrary';
-import { Login } from './components/Login';
-import { RecepcionView } from './components/RecepcionView';
-import { PatientView } from './components/PatientView';
-import { ShopAdmin } from './components/ShopAdmin';
-import { StaffAdmin } from './components/StaffAdmin';
-import { MOCK_PATIENTS, EXERCISES as INITIAL_EXERCISES, MOCK_PRODUCTS, MOCK_APPOINTMENTS } from './constants';
-import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment } from './types';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { db, isConfigValid } from './firebase';
-import { Download, X, LogOut } from 'lucide-react';
+import { Download, X, LogOut, Activity } from 'lucide-react';
 import { 
   collection, 
   onSnapshot, 
@@ -24,7 +11,30 @@ import {
   query,
   addDoc
 } from 'firebase/firestore';
+import { MOCK_PATIENTS, EXERCISES as INITIAL_EXERCISES, MOCK_PRODUCTS, MOCK_APPOINTMENTS } from './constants';
+import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment } from './types';
 
+// Lazy loaded components for better performance
+const Sidebar = lazy(() => import('./components/Sidebar').then(m => ({ default: m.Sidebar })));
+const PatientList = lazy(() => import('./components/PatientList').then(m => ({ default: m.PatientList })));
+const PatientDetail = lazy(() => import('./components/PatientDetail').then(m => ({ default: m.PatientDetail })));
+const ExerciseLibrary = lazy(() => import('./components/ExerciseLibrary').then(m => ({ default: m.ExerciseLibrary })));
+const Login = lazy(() => import('./components/Login').then(m => ({ default: m.Login })));
+const RecepcionView = lazy(() => import('./components/RecepcionView').then(m => ({ default: m.RecepcionView })));
+const PatientView = lazy(() => import('./components/PatientView').then(m => ({ default: m.PatientView })));
+const ShopAdmin = lazy(() => import('./components/ShopAdmin').then(m => ({ default: m.ShopAdmin })));
+const StaffAdmin = lazy(() => import('./components/StaffAdmin').then(m => ({ default: m.StaffAdmin })));
+const SoundSettings = lazy(() => import('./components/SoundSettings').then(m => ({ default: m.SoundSettings })));
+
+// Componente Loading reutilizable para Suspense
+const ViewLoader = () => (
+  <div className="flex-1 flex items-center justify-center bg-slate-50">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-[3px] border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+      <p className="text-[10px] font-black text-primary-600 uppercase tracking-widest">Cargando Vista...</p>
+    </div>
+  </div>
+);
 const App: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [exercises, setExercises] = useState<ExerciseDefinition[]>(INITIAL_EXERCISES);
@@ -503,7 +513,11 @@ const App: React.FC = () => {
   }
 
   if (view === 'LOGIN' || !currentUserRole) {
-    return <Login onLogin={handleLogin} staff={staff} />;
+    return (
+      <Suspense fallback={<ViewLoader />}>
+        <Login onLogin={handleLogin} staff={staff} />
+      </Suspense>
+    );
   }
 
   return (
@@ -528,107 +542,109 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {showExerciseLibrary && (
-        <ExerciseLibrary 
-          exercises={exercises}
-          onAddExercise={handleAddExercise}
-          onUpdateExercise={handleUpdateExercise}
-          onDeleteExercise={handleDeleteExercise}
-          onClose={() => setShowExerciseLibrary(false)}
-        />
-      )}
-
-      {showSoundSettings && (
-        <SoundSettings 
-          options={soundOptions}
-          selectedUrl={notificationSound}
-          onSelect={handleSelectSound}
-          onClose={() => setShowSoundSettings(false)}
-        />
-      )}
-
-      {currentUserRole === UserRole.KINE && (
-        <Sidebar 
-            activePatients={sidebarPatients}
-            selectedPatientId={selectedPatientId}
-            onSelectPatient={(id) => { setSelectedPatientId(id); setView('PATIENT_DETAIL'); }}
-            onOpenSettings={() => setShowSoundSettings(true)}
-            onRemoveActive={(id, e) => {
-                e.stopPropagation();
-                setActivePatientIds(prev => prev.filter(p => p !== id));
-                if (selectedPatientId === id) { setSelectedPatientId(null); setView('HOME'); }
-            }}
-            onGoHome={() => { setView('HOME'); setSelectedPatientId(null); }}
-            onOpenLibrary={() => setShowExerciseLibrary(true)}
-            onOpenStaffAdmin={() => setView('STAFF_ADMIN')}
-            isOnline={isOnline}
-        />
-      )}
-
-      {view === 'STAFF_ADMIN' && currentUserRole === UserRole.KINE && (
-        <StaffAdmin 
-          staff={staff}
-          onAddStaff={handleAddStaff}
-          onDeleteStaff={handleDeleteStaff}
-          onClose={() => setView('HOME')}
-        />
-      )}
-
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Logout button for all roles */}
-        <button 
-          onClick={handleLogout}
-          className="fixed bottom-6 right-6 z-[100] w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center text-red-500 border border-slate-100 hover:bg-red-50 transition-all"
-        >
-          <LogOut size={20} />
-        </button>
-
-        {currentUserRole === UserRole.RECEPCION ? (
-          <RecepcionView 
-            patients={patients}
-            onAddPatient={handleAddPatient}
-            onUpdatePatient={handleUpdatePatient}
-            onDeletePatient={handleDeletePatient}
-            onClearWaitingRoom={handleClearWaitingRoom}
-            products={products}
-            onAddProduct={handleAddProduct}
-            onUpdateProduct={handleUpdateProduct}
-            onDeleteProduct={handleDeleteProduct}
-            appointments={appointments}
-            onAddAppointment={handleAddAppointment}
-            onUpdateAppointment={handleUpdateAppointment}
-            onDeleteAppointment={handleDeleteAppointment}
+      <Suspense fallback={<ViewLoader />}>
+        {showExerciseLibrary && (
+          <ExerciseLibrary 
+            exercises={exercises}
+            onAddExercise={handleAddExercise}
+            onUpdateExercise={handleUpdateExercise}
+            onDeleteExercise={handleDeleteExercise}
+            onClose={() => setShowExerciseLibrary(false)}
           />
-        ) : currentUserRole === UserRole.PATIENT ? (
-          loggedPatient ? (
-            <PatientView patient={loggedPatient} products={products} exercises={exercises} onUpdatePatient={handleUpdatePatient} />
-          ) : (
-            <div className="flex-1 flex items-center justify-center p-8 text-center">
-              <div>
-                <h2 className="text-2xl font-black text-slate-900 mb-2">Paciente no encontrado</h2>
-                <p className="text-slate-500 mb-2">El DNI ingresado <strong>({loggedPatientDni})</strong> no corresponde a ningún paciente registrado.</p>
-                <p className="text-slate-400 text-xs mb-6">Asegúrese de que el profesional lo haya registrado correctamente.</p>
-                <button onClick={handleLogout} className="bg-primary-600 text-white px-8 py-3 rounded-2xl font-black">Volver</button>
-              </div>
-            </div>
-          )
-        ) : (
-          // KINE VIEW
-          view === 'HOME' ? (
-            <PatientList 
-                patients={patients} 
-                onSelectPatient={handleSelectPatient} 
-            />
-          ) : currentPatient && (
-            <PatientDetail 
-                patient={currentPatient}
-                role={currentUserRole}
-                exercises={exercises}
-                onUpdatePatient={handleUpdatePatient}
-            />
-          )
         )}
-      </main>
+
+        {showSoundSettings && (
+          <SoundSettings 
+            options={soundOptions}
+            selectedUrl={notificationSound}
+            onSelect={handleSelectSound}
+            onClose={() => setShowSoundSettings(false)}
+          />
+        )}
+
+        {currentUserRole === UserRole.KINE && (
+          <Sidebar 
+              activePatients={sidebarPatients}
+              selectedPatientId={selectedPatientId}
+              onSelectPatient={(id) => { setSelectedPatientId(id); setView('PATIENT_DETAIL'); }}
+              onOpenSettings={() => setShowSoundSettings(true)}
+              onRemoveActive={(id, e) => {
+                  e.stopPropagation();
+                  setActivePatientIds(prev => prev.filter(p => p !== id));
+                  if (selectedPatientId === id) { setSelectedPatientId(null); setView('HOME'); }
+              }}
+              onGoHome={() => { setView('HOME'); setSelectedPatientId(null); }}
+              onOpenLibrary={() => setShowExerciseLibrary(true)}
+              onOpenStaffAdmin={() => setView('STAFF_ADMIN')}
+              isOnline={isOnline}
+          />
+        )}
+
+        {view === 'STAFF_ADMIN' && currentUserRole === UserRole.KINE && (
+          <StaffAdmin 
+            staff={staff}
+            onAddStaff={handleAddStaff}
+            onDeleteStaff={handleDeleteStaff}
+            onClose={() => setView('HOME')}
+          />
+        )}
+
+        <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+          {/* Logout button for all roles */}
+          <button 
+            onClick={handleLogout}
+            className="fixed bottom-6 right-6 z-[100] w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center text-red-500 border border-slate-100 hover:bg-red-50 transition-all"
+          >
+            <LogOut size={20} />
+          </button>
+
+          {currentUserRole === UserRole.RECEPCION ? (
+            <RecepcionView 
+              patients={patients}
+              onAddPatient={handleAddPatient}
+              onUpdatePatient={handleUpdatePatient}
+              onDeletePatient={handleDeletePatient}
+              onClearWaitingRoom={handleClearWaitingRoom}
+              products={products}
+              onAddProduct={handleAddProduct}
+              onUpdateProduct={handleUpdateProduct}
+              onDeleteProduct={handleDeleteProduct}
+              appointments={appointments}
+              onAddAppointment={handleAddAppointment}
+              onUpdateAppointment={handleUpdateAppointment}
+              onDeleteAppointment={handleDeleteAppointment}
+            />
+          ) : currentUserRole === UserRole.PATIENT ? (
+            loggedPatient ? (
+              <PatientView patient={loggedPatient} products={products} exercises={exercises} onUpdatePatient={handleUpdatePatient} />
+            ) : (
+              <div className="flex-1 flex items-center justify-center p-8 text-center">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 mb-2">Paciente no encontrado</h2>
+                  <p className="text-slate-500 mb-2">El DNI ingresado <strong>({loggedPatientDni})</strong> no corresponde a ningún paciente registrado.</p>
+                  <p className="text-slate-400 text-xs mb-6">Asegúrese de que el profesional lo haya registrado correctamente.</p>
+                  <button onClick={handleLogout} className="bg-primary-600 text-white px-8 py-3 rounded-2xl font-black">Volver</button>
+                </div>
+              </div>
+            )
+          ) : (
+            // KINE VIEW
+            view === 'HOME' ? (
+              <PatientList 
+                  patients={patients} 
+                  onSelectPatient={handleSelectPatient} 
+              />
+            ) : currentPatient && (
+              <PatientDetail 
+                  patient={currentPatient}
+                  role={currentUserRole}
+                  exercises={exercises}
+                  onUpdatePatient={handleUpdatePatient}
+              />
+            )
+          )}
+        </main>
+      </Suspense>
     </div>
   );
 };
