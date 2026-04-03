@@ -132,7 +132,7 @@ export const processEvaluation = (measurements: any): { conclusions: string[], m
       });
   }
 
-  // 4. SALTOS (LSI & RSI)
+  // 4. SALTOS VERTICALES (LSI & RSI)
   if (jumps_vertical) {
       if (jumps_vertical.cmj_1p_height_r && jumps_vertical.cmj_1p_height_l) {
           const lsi = calculateLSI(jumps_vertical.cmj_1p_height_r, jumps_vertical.cmj_1p_height_l, dominant, injured);
@@ -144,19 +144,33 @@ export const processEvaluation = (measurements: any): { conclusions: string[], m
               interpretation: getInterpretation(lsi, 90)
           });
       }
+      if (jumps_vertical.cmj_1p_rsi_r && jumps_vertical.cmj_1p_rsi_l) {
+        const lsi = calculateLSI(jumps_vertical.cmj_1p_rsi_r, jumps_vertical.cmj_1p_rsi_l, dominant, injured);
+        metrics.push({
+            label: 'LSI CMJ Unipodal (RSI)',
+            value: lsi,
+            unit: '%',
+            category: 'Saltos',
+            interpretation: getInterpretation(lsi, 90)
+        });
+    }
   }
 
+  // 5. SALTOS HORIZONTALES (LSI)
   if (jumps_horizontal) {
       const hopTests = [
-          { r: 'single_hop_r', l: 'single_hop_l', label: 'Single Hop' },
+          { r: 'single_row_r', l: 'single_row_l', label: 'Single Hop' },
           { r: 'triple_hop_dist_r', l: 'triple_hop_dist_l', label: 'Triple Hop Dist' },
           { r: 'crossover_hop_dist_r', l: 'crossover_hop_dist_l', label: 'Crossover Hop' },
-          { r: 'side_hop_r', l: 'side_hop_l', label: 'Side Hop' },
+          { r: 'medial_side_triple_hop_r', l: 'medial_side_triple_hop_l', label: 'Medial Side' },
+          { r: 'medial_rotation_hop_r', l: 'medial_rotation_hop_l', label: 'Medial Rot' },
       ];
 
       hopTests.forEach(test => {
-          if (jumps_horizontal[test.r] && jumps_horizontal[test.l]) {
-              const lsi = calculateLSI(jumps_horizontal[test.r], jumps_horizontal[test.l], dominant, injured);
+          const valR = (jumps_horizontal as any)[test.r];
+          const valL = (jumps_horizontal as any)[test.l];
+          if (valR && valL) {
+              const lsi = calculateLSI(valR, valL, dominant, injured);
               metrics.push({
                   label: `LSI ${test.label}`,
                   value: lsi,
@@ -164,9 +178,62 @@ export const processEvaluation = (measurements: any): { conclusions: string[], m
                   category: 'Saltos',
                   interpretation: getInterpretation(lsi, 90)
               });
-              if (lsi < 90) conclusions.push(`Asimetría en saltos horizontales (${test.label}): ${getDeficit(lsi)}%.`);
+              if (lsi < 90) conclusions.push(`Asimetría en ${test.label}: ${getDeficit(lsi)}% de déficit.`);
           }
       });
+  }
+
+  // 6. CONTROL MOTOR (Déficits)
+  if (motor_control) {
+      const mcTests = [
+          { r: 'bipodal_squat_r', l: 'bipodal_squat_l', label: 'Sentadilla Bipodal' },
+          { r: 'hip_hinge_r', l: 'hip_hinge_l', label: 'Bisagra de Cadera' },
+          { r: 'sls_sagittal_r', l: 'sls_sagittal_l', label: 'SLS Sagital' },
+      ];
+
+      mcTests.forEach(test => {
+          const valR = (motor_control as any)[test.r];
+          const valL = (motor_control as any)[test.l];
+          if (valR > 1 || valL > 1) { // Asumiendo que > 1 indica algún déficit o nivel de dolor
+              conclusions.push(`Control motor alterado en ${test.label}.`);
+          }
+      });
+  }
+
+  // 7. VBT (Potencia)
+  if (vbt) {
+      if (vbt.squat_r && vbt.squat_l) {
+          const lsi = calculateLSI(vbt.squat_r, vbt.squat_l, dominant, injured);
+          metrics.push({
+              label: 'LSI VBT Sentadilla',
+              value: lsi,
+              unit: '%',
+              category: 'Potencia (VBT)',
+              interpretation: getInterpretation(lsi, 90)
+          });
+      }
+  }
+
+  // 8. FUNCIONAL (Agilidad)
+  if (functional) {
+      if (functional.t_test) {
+          metrics.push({
+              label: 'T-Test Agilidad',
+              value: functional.t_test,
+              unit: 'seg',
+              category: 'Funcional',
+              interpretation: functional.t_test < 11 ? 'normal' : 'warning'
+          });
+      }
+      if (functional.ikdc) {
+        metrics.push({
+            label: 'IKDC (Score)',
+            value: functional.ikdc,
+            unit: 'pts',
+            category: 'Funcional',
+            interpretation: functional.ikdc > 70 ? 'normal' : 'warning'
+        });
+      }
   }
 
   return { 

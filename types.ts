@@ -269,6 +269,17 @@ export interface ClinicalEvaluation {
       bench_press_vas?: number;
       pull_ups_reps?: number;
       pull_ups_vas?: number;
+      // Agregados del Excel
+      braking_test?: number;
+      t_test?: number;
+      edgren_side_step?: number;
+      cmas_45_r?: number;
+      cmas_45_l?: number;
+      cmas_90_r?: number;
+      cmas_90_l?: number;
+      ikdc?: number;
+      lca_rsi?: number;
+      hagos?: number;
     };
     strength: {
       hip_flex_0_r?: number;

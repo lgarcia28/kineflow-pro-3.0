@@ -57,23 +57,36 @@ export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ 
             <div className="lg:col-span-2 space-y-8">
               <section>
                 <h3 className="text-[11px] font-black text-primary-600 uppercase tracking-[0.2em] mb-4">Resultados Clave (LSI / RSI)</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {evaluation.results.metrics.map((m, idx) => (
-                    <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{m.label}</p>
-                        <p className="text-xl font-black text-slate-800">{m.value}{m.unit}</p>
-                      </div>
-                      <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${
-                        m.interpretation === 'normal' ? 'bg-green-100 text-green-600' : 
-                        m.interpretation === 'warning' ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'
-                      }`}>
-                        {m.interpretation}
+                <div className="space-y-6">
+                  {Object.entries(
+                    evaluation.results.metrics.reduce((acc: any, m) => {
+                      if (!acc[m.category]) acc[m.category] = [];
+                      acc[m.category].push(m);
+                      return acc;
+                    }, {})
+                  ).map(([category, categoryMetrics]: [string, any]) => (
+                    <div key={category} className="space-y-3">
+                      <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">{category}</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {categoryMetrics.map((m: any, idx: number) => (
+                          <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
+                            <div>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{m.label}</p>
+                              <p className="text-xl font-black text-slate-800">{m.value}{m.unit}</p>
+                            </div>
+                            <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${
+                              m.interpretation === 'normal' ? 'bg-green-100 text-green-600' : 
+                              m.interpretation === 'warning' ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'
+                            }`}>
+                              {m.interpretation}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
                   {evaluation.results.metrics.length === 0 && (
-                    <div className="col-span-2 py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    <div className="py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No hay métricas específicas calculadas</p>
                     </div>
                   )}
