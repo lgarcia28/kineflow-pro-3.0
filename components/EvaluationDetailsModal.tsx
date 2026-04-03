@@ -121,7 +121,7 @@ export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ 
                     </div>
                     <div className="flex justify-between items-end border-b border-slate-200 pb-2">
                         <span className="text-xs font-black text-slate-400 uppercase">Dolor</span>
-                        <span className="text-sm font-black text-slate-700">{evaluation.measurements.basic?.painLevel || 0}/10</span>
+                        <span className="text-sm font-black text-slate-700">{evaluation.measurements.basic?.pain_during_eval || 'No'}</span>
                     </div>
                     {evaluation.measurements.basic?.injuredLeg !== 'ninguna' && (
                         <div className="flex justify-between items-end border-b border-slate-200 pb-2">
@@ -130,11 +130,11 @@ export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ 
                         </div>
                     )}
                 </div>
-                {evaluation.measurements.basic?.injuryComments && (
+                {evaluation.measurements.basic?.injury_comments && (
                   <div className="mt-6">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Comentarios</p>
                     <p className="text-xs font-bold text-slate-600 leading-relaxed italic">
-                      "{evaluation.measurements.basic.injuryComments}"
+                      "{evaluation.measurements.basic.injury_comments}"
                     </p>
                   </div>
                 )}

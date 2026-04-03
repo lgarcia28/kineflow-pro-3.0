@@ -148,18 +148,18 @@ export interface ClinicalEvaluation {
   measurements: {
     basic: {
       date: string;
-      prevSessionTraining?: string;
+      evaluator?: string;
+      pre_session_training?: string;
       age?: number;
-      weight?: number;
       height?: number;
-      dominantLeg: 'derecha' | 'izquierda';
-      injuredLeg: 'derecha' | 'izquierda' | 'ninguna';
+      weight?: number;
+      dominantLeg?: 'derecha' | 'izquierda';
+      injuredLeg?: 'derecha' | 'izquierda' | 'ninguna';
       injuryType?: string;
-      injuryComments?: string;
-      antecedents?: string;
-      referringDoctor?: string;
-      painLevel?: number; // 0-10
-      notes?: string;
+      injury_comments?: string;
+      medical_history?: string;
+      referring_doctor?: string;
+      pain_during_eval?: 'Sí' | 'No';
     };
     mobility: {
       hip_ir_90_r?: number;
@@ -180,18 +180,18 @@ export interface ClinicalEvaluation {
       shoulder_er_l?: number;
     };
     flexibility: {
-      thomas_psoas_r: 'normal' | 'corto';
-      thomas_psoas_l: 'normal' | 'corto';
-      thomas_rectus_r: 'normal' | 'corto';
-      thomas_rectus_l: 'normal' | 'corto';
-      thomas_sartorius_r: 'normal' | 'corto';
-      thomas_sartorius_l: 'normal' | 'corto';
-      ake_r?: number;
-      ake_l?: number;
-      askling_r: 'negativo' | 'positivo';
-      askling_l: 'negativo' | 'positivo';
-      slump_r: 'negativo' | 'positivo';
-      slump_l: 'negativo' | 'positivo';
+      thomas_test_psoas_r?: 'OK' | 'X';
+      thomas_test_rectus_r?: 'OK' | 'X';
+      thomas_test_sartorius_r?: 'OK' | 'X';
+      thomas_test_psoas_l?: 'OK' | 'X';
+      thomas_test_rectus_l?: 'OK' | 'X';
+      thomas_test_sartorius_l?: 'OK' | 'X';
+      hams_r?: number;
+      hams_l?: number;
+      askling_h_r?: 'OK' | 'X';
+      askling_h_l?: 'OK' | 'X';
+      slump_test_r?: 'OK' | 'X';
+      slump_test_l?: 'OK' | 'X';
       bkfo_r?: number;
       bkfo_l?: number;
     };

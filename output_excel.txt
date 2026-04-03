@@ -1,0 +1,964 @@
+﻿--- SHEETS ---
+[ 'A completar', 'Resultados', 'Definici├│n operativa' ]
+
+=== SHEET: A completar ===
+Dumping first 15 rows:
+[
+  [
+    "Variables",
+    null,
+    "Datos"
+  ],
+  [
+    "Nombre y Apellido"
+  ],
+  [
+    "Fecha"
+  ],
+  [
+    "Entrenamiento previo a la sesi├│n"
+  ],
+  [
+    "Edad "
+  ],
+  [
+    "Altura en cm"
+  ],
+  [
+    "Peso en kg"
+  ],
+  [
+    "Pierna dominante"
+  ],
+  [
+    "Pierna lesionada"
+  ],
+  [
+    "Tipo de lesi├│n"
+  ],
+  [
+    "Comentarios de la lesi├│n",
+    null,
+    null,
+    "Completar con: tipo de lesi├│n, fecha de lesi├│n, fecha de cirug├¡a, tipo de injerto, lesi├│n asociada, mecanismo de lesi├│n"
+  ],
+  [
+    "Antecedentes"
+  ],
+  [
+    "M├®dico derivante"
+  ],
+  [
+    "Dolor durante la evaluaci├│n"
+  ],
+  [
+    "Rotaci├│n interna de cadera 90┬║",
+    "Derecha"
+  ]
+]
+
+Formulas found in A completar:
+
+=== SHEET: Resultados ===
+Dumping first 15 rows:
+[
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [
+    "PACIENTE",
+    "",
+    "FECHA",
+    "",
+    null,
+    "ENTRENAMIENTO PREVIO A LA SESI├ôN",
+    null,
+    ""
+  ],
+  [
+    "EDAD",
+    "",
+    "ALTURA EN CM",
+    "",
+    null,
+    "PESO EN KG",
+    null,
+    ""
+  ],
+  [
+    "PIERNA DOMINANTE",
+    "",
+    "PIERNA LESIONADA",
+    "",
+    "TIPO DE LESI├ôN",
+    ""
+  ],
+  [
+    ""
+  ],
+  [
+    "ANTECEDENTES",
+    ""
+  ],
+  [
+    "M├ëDICO DERIVANTE",
+    "",
+    null,
+    "DOLOR DURANTE LA EVALUACI├ôN",
+    null,
+    "No"
+  ],
+  [
+    "Todas las pruebas fueron realizadas sin dolor y a continuaci├│n se destacan los aspectos m├ís relevantes."
+  ],
+  [
+    "RANGO DE MOVILIDAD ARTICULAR - CADERA"
+  ]
+]
+
+Formulas found in Resultados:
+Cell C8: Formula -> 'A completar'!C2 | Value -> 
+Cell E8: Formula -> 'A completar'!C3 | Value -> 
+Cell I8: Formula -> 'A completar'!C4 | Value -> 
+Cell C9: Formula -> 'A completar'!C5 | Value -> 
+Cell E9: Formula -> 'A completar'!C6 | Value -> 
+Cell I9: Formula -> 'A completar'!C7 | Value -> 
+Cell C10: Formula -> 'A completar'!C8 | Value -> 
+Cell E10: Formula -> 'A completar'!C9 | Value -> 
+Cell G10: Formula -> 'A completar'!C10 | Value -> 
+Cell B11: Formula -> 'A completar'!C11 | Value -> 
+Cell C12: Formula -> 'A completar'!C12 | Value -> 
+Cell C13: Formula -> 'A completar'!C13 | Value -> 
+Cell B14: Formula -> IF(G13="No", "Todas las pruebas fueron realizadas sin dolor y a continuaci├│n se destacan los aspectos m├ís relevantes.", "El paciente present├│ dolor a lo largo de las evaluaciones y a continuaci├│n se destacan los aspectos m├ís relevantes.")
+ | Value -> Todas las pruebas fueron realizadas sin dolor y a continuaci├│n se destacan los aspectos m├ís relevantes.
+Cell D17: Formula -> 'A completar'!C15 | Value -> 
+Cell E17: Formula -> 'A completar'!C16 | Value -> 
+Cell D18: Formula -> 'A completar'!C17 | Value -> 
+Cell E18: Formula -> 'A completar'!C18 | Value -> 
+Cell D19: Formula -> D17+D18 | Value -> 0
+Cell E19: Formula -> E17+E18 | Value -> 0
+Cell B21: Formula -> IF(AND(D19>=85,E19>=85),
+   "El rango de movimiento total de cadera en ambas piernas se encuentra normal.",
+   IF(AND(D19<85,E19>=85),
+      "El rango de movimiento total de cadera en la pierna derecha se encuentra disminuido.",
+      IF(AND(D19>=85,E19<85),
+         "El rango de movimiento total de cadera en la pierna izquierda se encuentra disminuido.",
+         "El rango de movimiento total de cadera en ambas piernas se encuentra disminuido."))) | Value -> El rango de movimiento total de cadera en ambas piernas se encuentra disminuido.
+Cell D24: Formula -> 'A completar'!C19 | Value -> 
+Cell E24: Formula -> 'A completar'!C20 | Value -> 
+Cell D27: Formula -> 'A completar'!C21 | Value -> 
+Cell E27: Formula -> 'A completar'!C22 | Value -> 
+Cell F27: Formula -> E27-D27 | Value -> 0
+Cell D28: Formula -> 'A completar'!C23 | Value -> 
+Cell E28: Formula -> 'A completar'!C24 | Value -> 
+Cell F28: Formula -> E28-D28 | Value -> 0
+Cell B30: Formula -> IF(AND(D24=0,E24=0),
+"No presenta d├®ficit de extensi├│n.",
+"Se presenta d├®ficit de extensi├│n de la rodilla.") | Value -> No presenta d├®ficit de extensi├│n.
+Cell B31: Formula -> IF(OR(F27<-10,F27>10),
+"Se presenta un d├®ficit de flexi├│n activa de la rodilla.",
+"La flexi├│n activa de rodilla se encuentra normal.") | Value -> La flexi├│n activa de rodilla se encuentra normal.
+Cell B32: Formula -> IF(OR(F28<-10,F28>10),
+"Se presenta un d├®ficit de flexi├│n pasiva de la rodilla.",
+"La flexi├│n pasiva de rodilla se encuentra normal.") | Value -> La flexi├│n pasiva de rodilla se encuentra normal.
+Cell D35: Formula -> 'A completar'!C25 | Value -> 
+Cell E35: Formula -> 'A completar'!C26 | Value -> 
+Cell B37: Formula -> IF(AND(D35<39, E35<39), "Presenta un d├®ficit de flexi├│n dorsal del tobillo de ambas piernas.", 
+IF(D35<39, "Presenta un d├®ficit de flexi├│n dorsal del tobillo de la pierna derecha.", 
+IF(E35<39, "Presenta un d├®ficit de flexi├│n dorsal del tobillo de la pierna izquierda.", 
+"No presenta d├®ficit en la flexi├│n dorsal del tobillo."))) | Value -> Presenta un d├®ficit de flexi├│n dorsal del tobillo de ambas piernas.
+Cell D40: Formula -> 'A completar'!C27 | Value -> 
+Cell E40: Formula -> 'A completar'!C28 | Value -> 
+Cell F40: Formula -> E40-D40 | Value -> 0
+Cell D41: Formula -> 'A completar'!C29 | Value -> 
+Cell E41: Formula -> 'A completar'!C30 | Value -> 
+Cell F41: Formula -> E41-D41 | Value -> 0
+Cell D42: Formula -> D40+D41 | Value -> 0
+Cell E42: Formula -> E40+E41 | Value -> 0
+Cell F42: Formula -> E42-D42 | Value -> 0
+Cell B44: Formula -> IF(OR(F40<-18,F40>18),
+"Se presenta un d├®ficit de rotaci├│n interna del hombro.",
+"No se presenta un d├®ficit de rotaci├│n interna del hombro.") | Value -> No se presenta un d├®ficit de rotaci├│n interna del hombro.
+Cell B45: Formula -> IF(AND(F42>=-5,F42<=5),
+"Se presenta un normal arco total del movimiento del hombro",
+"Se presenta un d├®ficit del arco total del movimiento del hombro")
+ | Value -> Se presenta un normal arco total del movimiento del hombro
+Cell C48: Formula -> 'A completar'!C31 | Value -> 
+Cell D48: Formula -> 'A completar'!C32 | Value -> 
+Cell E48: Formula -> D48-C48 | Value -> 0
+Cell C49: Formula -> 'A completar'!C33 | Value -> 
+Cell D49: Formula -> 'A completar'!C34 | Value -> 
+Cell E49: Formula -> D49-C49 | Value -> 0
+Cell B51: Formula -> IF(E48=0,
+"No se presenta un d├®ficit en el per├¡metro de muslo.",
+"Se presenta un d├®ficit en el per├¡metro de muslo de "&E48&" cm.")
+ | Value -> No se presenta un d├®ficit en el per├¡metro de muslo.
+Cell B52: Formula -> IF(E49=0,
+"No se presenta un d├®ficit en el per├¡metro de pantorilla",
+"Se presenta un d├®ficit en el per├¡metro de pantorilla de "&E49&" cm")
+ | Value -> No se presenta un d├®ficit en el per├¡metro de pantorilla
+Cell E55: Formula -> 'A completar'!C35 | Value -> 
+Cell F55: Formula -> 'A completar'!C36 | Value -> 
+Cell G55: Formula -> 'A completar'!C37 | Value -> 
+Cell E56: Formula -> 'A completar'!C38 | Value -> 
+Cell F56: Formula -> 'A completar'!C39 | Value -> 
+Cell G56: Formula -> 'A completar'!C40 | Value -> 
+Cell D59: Formula -> 'A completar'!C41 | Value -> 
+Cell E59: Formula -> 'A completar'!C42 | Value -> 
+Cell D60: Formula -> 'A completar'!C43 | Value -> 
+Cell E60: Formula -> 'A completar'!C44 | Value -> 
+Cell D61: Formula -> 'A completar'!C45 | Value -> 
+Cell E61: Formula -> 'A completar'!C46 | Value -> 
+Cell D64: Formula -> 'A completar'!C47 | Value -> 
+Cell E64: Formula -> 'A completar'!C48 | Value -> 
+Cell B66: Formula -> IF(AND(E55="X", F55="OK", G55="OK"), "En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco.",
+IF(AND(E55="X", F55="X", G55="OK"), "En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco y del Recto Anterior.",
+IF(AND(E55="X", F55="X", G55="X"), "En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco, del Recto Anterior y del Sartorio.",
+IF(AND(E55="X", F55="OK", G55="X"), "En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco y del Sartorio.",
+IF(AND(E55="OK", F55="X", G55="OK"), "En la pierna derecha, se presenta un acortamiento del Recto Anterior.",
+IF(AND(E55="OK", F55="X", G55="X"), "En la pierna derecha, se presenta un acortamiento del Recto Anterior y del Sartorio.",
+IF(AND(E55="OK", F55="OK", G55="X"), "En la pierna derecha, se presenta un acortamiento del Sartorio.",
+IF(AND(E55="OK", F55="OK", G55="OK"), "En la pierna derecha, no se presenta un acortamiento de los flexores de cadera.",
+"")))))))) | Value -> 
+Cell B67: Formula -> IF(AND(E56="X", F56="OK", G56="OK"), "En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco.",
+IF(AND(E56="X", F56="X", G56="OK"), "En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco y del Recto Anterior.",
+IF(AND(E56="X", F56="X", G56="X"), "En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco, del Recto Anterior y del Sartorio.",
+IF(AND(E56="X", F56="OK", G56="X"), "En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco y del Sartorio.",
+IF(AND(E56="OK", F56="X", G56="OK"), "En la pierna izquierda, se presenta un acortamiento del Recto Anterior.",
+IF(AND(E56="OK", F56="X", G56="X"), "En la pierna izquierda, se presenta un acortamiento del Recto Anterior y del Sartorio.",
+IF(AND(E56="OK", F56="OK", G56="X"), "En la pierna izquierda, se presenta un acortamiento del Sartorio.",
+IF(AND(E56="OK", F56="OK", G56="OK"), "En la pierna izquierda, no se presenta un acortamiento de los flexores de cadera.",
+"")))))))) | Value -> 
+Cell B68: Formula -> IF(AND(D59>=70, E59>=70), "No se presenta acortamiento de los isquiotibiales.",
+IF(AND(D59<70, E59>=70), "Se presenta un acortamiento del isquiotibial de la pierna derecha.",
+IF(AND(D59>=70, E59<70), "Se presenta un acortamiento del isquiotibial de la pierna izquierda.",
+IF(AND(D59<70, E59<70), "Se presenta un acortamiento de los isquiotibiales en ambas piernas.",
+"")))) | Value -> Se presenta un acortamiento de los isquiotibiales en ambas piernas.
+Cell B69: Formula -> IF(AND(D60="OK",E60="OK"),
+   "No se refiere dolor o inseguridad durante el Askling H-test en ninguna de las piernas.",
+   IF(AND(D60="X",E60="OK"),
+      "Refiere dolor o inseguridad en la pierna derecha durante el Askling H-test.",
+      IF(AND(D60="OK",E60="X"),
+         "Refiere dolor o inseguridad en la pierna izquierda durante el Askling H-test.",
+         "Refiere dolor o inseguridad en ambas piernas durante el Askling H-test.")))
+ | Value -> Refiere dolor o inseguridad en ambas piernas durante el Askling H-test.
+Cell B70: Formula -> IF(AND(D61="OK",E61="OK"),
+   "No se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en ninguna de las piernas mediante la prueba de Slump test.",
+   IF(AND(D61="X",E61="OK"),
+      "Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en la pierna derecha mediante la prueba de Slump test.",
+      IF(AND(D61="OK",E61="X"),
+         "Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en la pierna izquierda mediante la prueba de Slump test.",
+         "Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en ambos miembros mediante la prueba de Slump test.")))
+ | Value -> Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en ambos miembros mediante la prueba de Slump test.
+Cell B71: Formula -> IF(AND(D64<=17.4,E64<=17.4),
+"No se presenta acortamiento de aductores",
+IF(AND(D64>17.4,E64<=17.4),
+"Se presenta acortamiento de aductor de la pierna derecha",
+IF(AND(D64<=17.4,E64>17.4),
+"Se presenta acortamiento de aductor de la pierna izquierda",
+"Se presenta acortamiento de aductores de ambas piernas")))
+ | Value -> No se presenta acortamiento de aductores
+Cell C75: Formula -> 'A completar'!C49 | Value -> 
+Cell D75: Formula -> 'A completar'!C50 | Value -> 
+Cell E75: Formula -> 'A completar'!C51 | Value -> 
+Cell F75: Formula -> 'A completar'!C52 | Value -> 
+Cell G75: Formula -> 'A completar'!C53 | Value -> 
+Cell H75: Formula -> 'A completar'!C54 | Value -> 
+Cell C76: Formula -> 'A completar'!C55 | Value -> 
+Cell D76: Formula -> 'A completar'!C56 | Value -> 
+Cell E76: Formula -> 'A completar'!C57 | Value -> 
+Cell F76: Formula -> 'A completar'!C58 | Value -> 
+Cell G76: Formula -> 'A completar'!C59 | Value -> 
+Cell H76: Formula -> 'A completar'!C60 | Value -> 
+Cell C77: Formula -> 'A completar'!C61 | Value -> 
+Cell D77: Formula -> 'A completar'!C62 | Value -> 
+Cell E77: Formula -> 'A completar'!C63 | Value -> 
+Cell F77: Formula -> 'A completar'!C64 | Value -> 
+Cell G77: Formula -> 'A completar'!C65 | Value -> 
+Cell H77: Formula -> 'A completar'!C66 | Value -> 
+Cell C78: Formula -> 'A completar'!C67 | Value -> 
+Cell D78: Formula -> 'A completar'!C68 | Value -> 
+Cell E78: Formula -> 'A completar'!C69 | Value -> 
+Cell F78: Formula -> 'A completar'!C70 | Value -> 
+Cell G78: Formula -> 'A completar'!C71 | Value -> 
+Cell H78: Formula -> 'A completar'!C72 | Value -> 
+Cell C79: Formula -> 'A completar'!C73 | Value -> 
+Cell F79: Formula -> 'A completar'!C74 | Value -> 
+Cell C80: Formula -> 'A completar'!C75 | Value -> 
+Cell F80: Formula -> 'A completar'!C76 | Value -> 
+Cell C83: Formula -> 'A completar'!C77 | Value -> 
+Cell D83: Formula -> 'A completar'!C78 | Value -> 
+Cell C84: Formula -> 'A completar'!C79 | Value -> 
+Cell D84: Formula -> 'A completar'!C80 | Value -> 
+Cell C85: Formula -> 'A completar'!C85 | Value -> 
+Cell D85: Formula -> 'A completar'!C86 | Value -> 
+Cell E86: Formula -> 'A completar'!C81 | Value -> 
+Cell F86: Formula -> 'A completar'!C82 | Value -> 
+Cell G86: Formula -> 'A completar'!C83 | Value -> 
+Cell H86: Formula -> 'A completar'!C84 | Value -> 
+Cell D89: Formula -> 'A completar'!C88 | Value -> 
+Cell E89: Formula -> 'A completar'!C91 | Value -> 
+Cell F89: Formula -> E89-D89 | Value -> 0
+Cell D90: Formula -> 'A completar'!C89 | Value -> 
+Cell E90: Formula -> 'A completar'!C92 | Value -> 
+Cell F90: Formula -> E90-D90 | Value -> 0
+Cell D91: Formula -> 'A completar'!C90 | Value -> 
+Cell E91: Formula -> 'A completar'!C93 | Value -> 
+Cell F91: Formula -> E91-D91 | Value -> 0
+Cell D92: Formula -> ((D89+D90+D91)/(3*'A completar'!C87))*100
+ | Value -> #DIV/0!
+Cell E92: Formula -> ((E89+E90+E91)/(3*'A completar'!C87))*100
+ | Value -> #DIV/0!
+Cell D95: Formula -> 'A completar'!C94 | Value -> 
+Cell F95: Formula -> 'A completar'!C96 | Value -> 
+Cell D96: Formula -> 'A completar'!C95 | Value -> 
+Cell F96: Formula -> 'A completar'!C97 | Value -> 
+Cell D97: Formula -> 'A completar'!C98 | Value -> 
+Cell F97: Formula -> 'A completar'!C100 | Value -> 
+Cell D98: Formula -> 'A completar'!C99 | Value -> 
+Cell F98: Formula -> 'A completar'!C101 | Value -> 
+Cell B100: Formula -> IF(AND(F89>=-4,F89<=4),
+"El alcance anterior se encuentra normal.",
+"El alcance anterior se encuentra en d├®ficit.")
+ | Value -> El alcance anterior se encuentra normal.
+Cell B101: Formula -> IF(AND(F90>=-4,F90<=4),
+"El alcance posteromedial se encuentra normal.",
+"El alcance posteromedial se encuentra en d├®ficit.")
+ | Value -> El alcance posteromedial se encuentra normal.
+Cell B102: Formula -> IF(AND(F91>=-4,F91<=4),
+"El alcance posterolateral se encuentra normal.",
+"El alcance posterolateral se encuentra en d├®ficit.")
+ | Value -> El alcance posterolateral se encuentra normal.
+Cell B103: Formula -> IF(AND(D92>=94, E92>=94), 
+   "El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) se encuentra dentro de los valores de referencia.",
+IF(AND(D92<94, E92>=94), 
+   "El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) de la pierna derecha se encuentra por debajo de los valores de referencia.",
+IF(AND(D92>=94, E92<94), 
+   "El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) de la pierna izquierda se encuentra por debajo de los valores de referencia.",
+IF(AND(D92<94, E92<94), 
+   "El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) de ambas piernas se encuentran por debajo de los valores de referencia.",
+""))))
+ | Value -> #DIV/0!
+Cell B104: Formula -> IF(AND(D95>=45,F95>=45),
+"Se presenta un correcto balance monopodal con ojos abiertos",
+IF(AND(D95<45,F95>=45),
+"Se presenta un d├®ficit en el balance monopodal con ojos abiertos de la pierna derecha",
+IF(AND(D95>=45,F95<45),
+"Se presenta un d├®ficit en el balance monopodal con ojos abiertos de la pierna izquierda",
+"Se presenta un d├®ficit en el balance monopodal con ojos abiertos de ambas piernas")))
+ | Value -> Se presenta un d├®ficit en el balance monopodal con ojos abiertos de ambas piernas
+Cell B105: Formula -> IF(AND(D96>=9,F96>=9),
+"Se presenta un correcto balance monopodal con ojos cerrados",
+IF(AND(D96<9,F96>=9),
+"Se presenta un d├®ficit en el balance monopodal con ojos cerrados de la pierna derecha",
+IF(AND(D96>=9,F96<9),
+"Se presenta un d├®ficit en el balance monopodal con ojos cerrados de la pierna izquierda",
+"Se presenta un d├®ficit en el balance monopodal con ojos cerrados de ambas piernas")))
+ | Value -> Se presenta un d├®ficit en el balance monopodal con ojos cerrados de ambas piernas
+Cell B106: Formula -> IF(AND(D97="OK", D98="OK", F97="OK", F98="OK"),
+"La prueba de balance vestibular fue satisfactoria en ambas piernas en ambos movimientos.",
+IF(AND(D97="X", D98="X", F97="OK", F98="OK"),
+"Se presenta un d├®ficit vestibular en la pierna derecha en ambos movimientos.",
+IF(AND(F97="X", F98="X", D97="OK", D98="OK"),
+"Se presenta un d├®ficit vestibular en la pierna izquierda en ambos movimientos.",
+IF(AND(D97="X", F97="X", D98="OK", F98="OK"),
+"Se presenta un d├®ficit de balance vestibular en movimiento lateral en ambas piernas.",
+IF(AND(D98="X", F98="X", D97="OK", F97="OK"),
+"Se presenta un d├®ficit de balance vestibular en movimiento vertical en ambas piernas.",
+IF(AND(D97="X", D98="OK", F97="OK", F98="OK"),
+"Se presenta un d├®ficit vestibular en movimiento lateral de la pierna derecha.",
+IF(AND(D97="OK", D98="X", F97="OK", F98="OK"),
+"Se presenta un d├®ficit vestibular en movimiento vertical de la pierna izquierda.",
+IF(AND(F97="X", F98="OK", D97="OK", D98="OK"),
+"Se presenta un d├®ficit vestibular en movimiento lateral de la pierna derecha.",
+IF(AND(F97="OK", F98="X", D97="OK", D98="OK"),
+"Se presenta un d├®ficit vestibular en movimiento vertical de la pierna izquierda.",
+"Se presenta d├®ficit vestibular en m├║ltiples combinaciones.")))))))))
+ | Value -> Se presenta d├®ficit vestibular en m├║ltiples combinaciones.
+Cell D109: Formula -> 'A completar'!C102 | Value -> 
+Cell E109: Formula -> 'A completar'!C103 | Value -> 
+Cell G109: Formula -> (D109*100)/E109 | Value -> #DIV/0!
+Cell D110: Formula -> 'A completar'!C104 | Value -> 
+Cell D111: Formula -> 'A completar'!C105 | Value -> 
+Cell D112: Formula -> D110/D111 | Value -> #DIV/0!
+Cell D113: Formula -> 'A completar'!C106 | Value -> 
+Cell E113: Formula -> 'A completar'!C107 | Value -> 
+Cell G113: Formula -> (D113*100)/E113 | Value -> #DIV/0!
+Cell D114: Formula -> 'A completar'!C108 | Value -> 
+Cell E114: Formula -> 'A completar'!C109 | Value -> 
+Cell D115: Formula -> 'A completar'!C110 | Value -> 
+Cell E115: Formula -> 'A completar'!C111 | Value -> 
+Cell G115: Formula -> (D115*100)/E115 | Value -> #DIV/0!
+Cell D116: Formula -> 'A completar'!C112 | Value -> 
+Cell E116: Formula -> 'A completar'!C113 | Value -> 
+Cell D117: Formula -> 'A completar'!C114 | Value -> 
+Cell E117: Formula -> 'A completar'!C115 | Value -> 
+Cell G117: Formula -> (D117*100)/E117 | Value -> #DIV/0!
+Cell D118: Formula -> 'A completar'!C116 | Value -> 
+Cell E118: Formula -> 'A completar'!C117 | Value -> 
+Cell B120: Formula -> IF(OR(D109<85, E109<85), 
+   "Se presenta un d├®ficit de fuerza resistencia en los inclinadores laterales de tronco.", 
+   "Se presenta buena fuerza resistencia de inclinadores laterales de tronco alcanzando los valores de referencia.")
+ | Value -> Se presenta un d├®ficit de fuerza resistencia en los inclinadores laterales de tronco.
+Cell B121: Formula -> IF(OR(D110<130), 
+   "Se presenta un d├®ficit de fuerza resistencia en los flexores de tronco.", 
+   "Se presenta buena fuerza resistencia de flexores de tronco alcanzando los valores de referencia.")
+ | Value -> Se presenta un d├®ficit de fuerza resistencia en los flexores de tronco.
+Cell B122: Formula -> IF(OR(D111<170), 
+   "Se presenta un d├®ficit de fuerza resistencia en los extensores de tronco.", 
+   "Se presenta buena fuerza resistencia de extensores de tronco alcanzando los valores de referencia.")
+ | Value -> Se presenta un d├®ficit de fuerza resistencia en los extensores de tronco.
+Cell B123: Formula -> IF(AND(D112>=0.75,D112<=0.77),
+"La relaci├│n flexores - extensores de tronco se encuentra normal.",
+"La relaci├│n flexores - extensores de tronco se encuentra alterada.")
+ | Value -> #DIV/0!
+Cell B124: Formula -> IF(AND(D113<20, E113>=20), "Se presenta un d├®ficit de fuerza resistencia de gl├║teo de la pierna derecha.",
+IF(AND(D113>=20, E113<20), "Se presenta un d├®ficit de fuerza resistencia de gl├║teo de la pierna izquierda.",
+IF(AND(D113<20, E113<20), "Se presenta un d├®ficit de fuerza resistencia de gl├║teo en ambas piernas.",
+"Se presenta buena fuerza resistencia de gl├║teo alcanzando los valores de referencia.")))
+ | Value -> Se presenta un d├®ficit de fuerza resistencia de gl├║teo en ambas piernas.
+Cell B125: Formula -> IF(AND(D115<20, E115>=20), "Se presenta un d├®ficit de fuerza resistencia de gemelo de la pierna derecha.",
+IF(AND(D115>=20, E115<20), "Se presenta un d├®ficit de fuerza resistencia de gemelo de la pierna izquierda.",
+IF(AND(D115<20, E115<20), "Se presenta un d├®ficit de fuerza resistencia de los gemelos en ambas piernas.",
+"Se presenta buena fuerza resistencia de los gemelos alcanzando los valores de referencia.")))
+ | Value -> Se presenta un d├®ficit de fuerza resistencia de los gemelos en ambas piernas.
+Cell B126: Formula -> IF(AND(D117<20, E117>=20), "Se presenta un d├®ficit de fuerza resistencia de cu├ídriceps de la pierna derecha.",
+IF(AND(D117>=20, E117<20), "Se presenta un d├®ficit de fuerza resistencia de cu├ídriceps de la pierna izquierda.",
+IF(AND(D117<20, E117<20), "Se presenta un d├®ficit de fuerza resistencia del cu├ídriceps en ambas piernas.",
+"Se presenta buena fuerza resistencia del cu├ídriceps alcanzando los valores de referencia.")))
+ | Value -> Se presenta un d├®ficit de fuerza resistencia del cu├ídriceps en ambas piernas.
+Cell D129: Formula -> 'A completar'!C118 | Value -> 
+Cell E129: Formula -> 'A completar'!C119 | Value -> 
+Cell F129: Formula -> (D129*100)/E129 | Value -> #DIV/0!
+Cell D130: Formula -> 'A completar'!C120 | Value -> 
+Cell E130: Formula -> 'A completar'!C121 | Value -> 
+Cell D131: Formula -> 'A completar'!C122 | Value -> 
+Cell D132: Formula -> 'A completar'!C123 | Value -> 
+Cell D133: Formula -> 'A completar'!C124 | Value -> 
+Cell D134: Formula -> 'A completar'!C125 | Value -> 
+Cell B136: Formula -> IF(AND(F128>=90,F128<=110),
+"Se presenta una correcta simetr├¡a de fuerza resistencia en el ejercicio press de hombro",
+"Se presenta una asimetr├¡a de fuerza resistencia en el ejercicio press de hombro")
+ | Value -> Se presenta una asimetr├¡a de fuerza resistencia en el ejercicio press de hombro
+Cell C139: Formula -> 'A completar'!C126 | Value -> 
+Cell D139: Formula -> 'A completar'!C127 | Value -> 
+Cell E139: Formula -> C139/I9 | Value -> #DIV/0!
+Cell H139: Formula -> (C139*100)/D139 | Value -> #DIV/0!
+Cell C140: Formula -> 'A completar'!C128 | Value -> 
+Cell D140: Formula -> 'A completar'!C129 | Value -> 
+Cell C141: Formula -> 'A completar'!C130 | Value -> 
+Cell D141: Formula -> 'A completar'!C131 | Value -> 
+Cell E141: Formula -> C141/I9 | Value -> #DIV/0!
+Cell H141: Formula -> (C141*100)/D141 | Value -> #DIV/0!
+Cell C142: Formula -> 'A completar'!C132 | Value -> 
+Cell D142: Formula -> 'A completar'!C133 | Value -> 
+Cell C143: Formula -> 'A completar'!C134 | Value -> 
+Cell E143: Formula -> C143/I9 | Value -> #DIV/0!
+Cell C144: Formula -> 'A completar'!C135 | Value -> 
+Cell C145: Formula -> 'A completar'!C136 | Value -> 
+Cell D145: Formula -> 'A completar'!C137 | Value -> 
+Cell E145: Formula -> C145/I9 | Value -> #DIV/0!
+Cell F145: Formula -> D145/I9 | Value -> #DIV/0!
+Cell H145: Formula -> (C145*100)/D145 | Value -> #DIV/0!
+Cell C146: Formula -> 'A completar'!C138 | Value -> 
+Cell D146: Formula -> 'A completar'!C139 | Value -> 
+Cell C147: Formula -> 'A completar'!C140 | Value -> 
+Cell D147: Formula -> 'A completar'!C141 | Value -> 
+Cell E147: Formula -> C147/I9 | Value -> #DIV/0!
+Cell F147: Formula -> D147/I9 | Value -> #DIV/0!
+Cell H147: Formula -> (C147*100)/D147 | Value -> #DIV/0!
+Cell C148: Formula -> 'A completar'!C142 | Value -> 
+Cell D148: Formula -> 'A completar'!C143 | Value -> 
+Cell C149: Formula -> C145/C147 | Value -> #DIV/0!
+Cell D149: Formula -> D145/D147 | Value -> #DIV/0!
+Cell B151: Formula -> IF(AND(H139>=90,H139<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de flexores de cadera en la prueba de 0-0┬║.",
+"Se presenta una asimetr├¡a de de flexores de cadera en la prueba de 0-0┬║.")
+ | Value -> #DIV/0!
+Cell B152: Formula -> IF(AND(H141>=90,H141<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de flexores de cadera en la prueba de 0-90┬║.",
+"Se presenta una asimetr├¡a de de flexores de cadera en la prueba de 0-90┬║.")
+ | Value -> #DIV/0!
+Cell B153: Formula -> IF(E143<3.6,
+"Los valores de fuerza muscular de aductores en el Squeeze test est├ín por debajo de los valores de referencia.",
+"Los valores de fuerza muscular de aductores en el Squeeze test alcanzan los valores de referencia.")
+ | Value -> #DIV/0!
+Cell B154: Formula -> IF(AND(H145>=90,H145<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de aductores.",
+"Se presenta una asimetr├¡a de fuerza muscular de aductores.")
+ | Value -> #DIV/0!
+Cell B155: Formula -> IF(AND(E145>=2.99,F145>=2.99),
+"Los valores de fuerza muscular unilateral de aductores alcanzan los valores de referencia.",
+IF(AND(E145<2.99,E146>=2.99),
+"Los valores de fuerza muscular unilateral de aductores del lado derecho est├ín por debajo de los valores de referencia.",
+IF(AND(E145>=2.99,E146<2.99),
+"Los valores de fuerza muscular unilateral de aductores del lado izquierdo est├ín por debajo de los valores de referencia.",
+"Los valores de fuerza muscular unilateral de aductores de ambos lados est├ín por debajo de los valores de referencia.")))
+ | Value -> #DIV/0!
+Cell B156: Formula -> IF(AND(H147>=90,H147<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de abductores.",
+"Se presenta una asimetr├¡a de fuerza muscular de abductores.")
+ | Value -> #DIV/0!
+Cell B157: Formula -> IF(AND(E147>=2.59,F147>=2.59),
+"Los valores de fuerza muscular unilateral de aductores alcanzan los valores de referencia.",
+IF(AND(E147<2.99,E148>=2.99),
+"Los valores de fuerza muscular unilateral de aductores del lado derecho est├ín por debajo de los valores de referencia.",
+IF(AND(E147>=2.99,E148<2.99),
+"Los valores de fuerza muscular unilateral de aductores del lado izquierdo est├ín por debajo de los valores de referencia.",
+"Los valores de fuerza muscular unilateral de aductores de ambos lados est├ín por debajo de los valores de referencia.")))
+ | Value -> #DIV/0!
+Cell B158: Formula -> IF(AND(C149>=1.16,C149<=1.18),
+"La relaci├│n aductores - abductores de la pierna derecha se encuentra normal.",
+"La relaci├│n aductores - abductores de la pierna derecha se encuentra alterada.")
+ | Value -> #DIV/0!
+Cell B159: Formula -> IF(AND(D149>=1.16,D149<=1.18),
+"La relaci├│n aductores - abductores de la pierna izquierda se encuentra normal.",
+"La relaci├│n aductores - abductores de la pierna izquierda se encuentra alterada.")
+ | Value -> #DIV/0!
+Cell C162: Formula -> 'A completar'!C144 | Value -> 
+Cell D162: Formula -> 'A completar'!C145 | Value -> 
+Cell E162: Formula -> C162/I9 | Value -> #DIV/0!
+Cell F162: Formula -> D162/I9 | Value -> #DIV/0!
+Cell H162: Formula -> (C162*100)/D162 | Value -> #DIV/0!
+Cell C163: Formula -> 'A completar'!C146 | Value -> 
+Cell D163: Formula -> 'A completar'!C147 | Value -> 
+Cell C164: Formula -> 'A completar'!C148 | Value -> 
+Cell D164: Formula -> 'A completar'!C149 | Value -> 
+Cell E164: Formula -> C164/I9 | Value -> #DIV/0!
+Cell F164: Formula -> D164/I9 | Value -> #DIV/0!
+Cell H164: Formula -> (C164*100)/D164 | Value -> #DIV/0!
+Cell C165: Formula -> 'A completar'!C150 | Value -> 
+Cell D165: Formula -> 'A completar'!C151 | Value -> 
+Cell C166: Formula -> C164/C162 | Value -> #DIV/0!
+Cell D166: Formula -> D164/D162 | Value -> #DIV/0!
+Cell B168: Formula -> IF(AND(H162>=90,H162<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de cu├ídriceps.",
+"Se presenta una asimetr├¡a de fuerza muscular de cu├ídriceps.")
+ | Value -> #DIV/0!
+Cell B169: Formula -> IF(AND(H164>=90,H164<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de isquiotibiales.",
+"Se presenta una asimetr├¡a de fuerza muscular de isquiotibiales.")
+ | Value -> #DIV/0!
+Cell C172: Formula -> 'A completar'!C152 | Value -> 
+Cell D172: Formula -> 'A completar'!C153 | Value -> 
+Cell E172: Formula -> C172/I9 | Value -> #DIV/0!
+Cell F172: Formula -> D172/I9 | Value -> #DIV/0!
+Cell H172: Formula -> (C172*100)/D172 | Value -> #DIV/0!
+Cell C173: Formula -> 'A completar'!C154 | Value -> 
+Cell D173: Formula -> 'A completar'!C155 | Value -> 
+Cell C174: Formula -> 'A completar'!C156 | Value -> 
+Cell D174: Formula -> 'A completar'!C157 | Value -> 
+Cell E174: Formula -> C174/I9 | Value -> #DIV/0!
+Cell F174: Formula -> D174/I9 | Value -> #DIV/0!
+Cell H174: Formula -> (C174*100)/D174 | Value -> #DIV/0!
+Cell C175: Formula -> 'A completar'!C158 | Value -> 
+Cell D175: Formula -> 'A completar'!C159 | Value -> 
+Cell C176: Formula -> 'A completar'!C160 | Value -> 
+Cell D176: Formula -> 'A completar'!C161 | Value -> 
+Cell E176: Formula -> C176/I9 | Value -> #DIV/0!
+Cell F176: Formula -> D176/I9 | Value -> #DIV/0!
+Cell H176: Formula -> (C176*100)/D176 | Value -> #DIV/0!
+Cell C177: Formula -> 'A completar'!C162 | Value -> 
+Cell D177: Formula -> 'A completar'!C163 | Value -> 
+Cell C178: Formula -> C176/C174 | Value -> #DIV/0!
+Cell D178: Formula -> D176/D174 | Value -> #DIV/0!
+Cell B180: Formula -> IF(AND(H172>=90,H172<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular del tr├¡ceps sural.",
+"Se presenta una asimetr├¡a de fuerza muscular del tr├¡ceps sural.")
+ | Value -> #DIV/0!
+Cell B181: Formula -> IF(AND(H174>=90,H174<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de abductores de tobillo.",
+"Se presenta una asimetr├¡a de fuerza muscular de abductores de tobillo.")
+ | Value -> #DIV/0!
+Cell B182: Formula -> IF(AND(H176>=90,H176<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de aductores de tobillo.",
+"Se presenta una asimetr├¡a de fuerza muscular de aductores de tobillo.")
+ | Value -> #DIV/0!
+Cell D185: Formula -> 'A completar'!C164 | Value -> 
+Cell D186: Formula -> D185/I9 | Value -> #DIV/0!
+Cell D187: Formula -> 'A completar'!C165 | Value -> 
+Cell E187: Formula -> 'A completar'!C166 | Value -> 
+Cell F187: Formula -> (D187*100)/E187 | Value -> #DIV/0!
+Cell B189: Formula -> IF(AND(F187>=90,F187<=110),
+"Se presenta una correcta simetr├¡a de fuerza pico unilateral.",
+"Se presenta una asimetr├¡a de fuerza pico unilateral.")
+ | Value -> #DIV/0!
+Cell C192: Formula -> 'A completar'!C167 | Value -> 
+Cell D192: Formula -> 'A completar'!C168 | Value -> 
+Cell E192: Formula -> C192/I9 | Value -> #DIV/0!
+Cell F192: Formula -> D192/I9 | Value -> #DIV/0!
+Cell H192: Formula -> (C192*100)/D192 | Value -> #DIV/0!
+Cell C193: Formula -> 'A completar'!C169 | Value -> 
+Cell D193: Formula -> 'A completar'!C170 | Value -> 
+Cell C194: Formula -> 'A completar'!C171 | Value -> 
+Cell D194: Formula -> 'A completar'!C172 | Value -> 
+Cell E194: Formula -> C194/I9 | Value -> #DIV/0!
+Cell F194: Formula -> D194/I9 | Value -> #DIV/0!
+Cell H194: Formula -> (C194*100)/D194 | Value -> #DIV/0!
+Cell C195: Formula -> 'A completar'!C173 | Value -> 
+Cell D195: Formula -> 'A completar'!C174 | Value -> 
+Cell C196: Formula -> C192/C194 | Value -> #DIV/0!
+Cell D196: Formula -> D192/D194 | Value -> #DIV/0!
+Cell C197: Formula -> 'A completar'!C175 | Value -> 
+Cell D197: Formula -> 'A completar'!C176 | Value -> 
+Cell E197: Formula -> C197/I9 | Value -> #DIV/0!
+Cell F197: Formula -> D197/I9 | Value -> #DIV/0!
+Cell H197: Formula -> (C197*100)/D197 | Value -> #DIV/0!
+Cell C198: Formula -> 'A completar'!C177 | Value -> 
+Cell D198: Formula -> 'A completar'!C178 | Value -> 
+Cell C199: Formula -> 'A completar'!C179 | Value -> 
+Cell D199: Formula -> 'A completar'!C180 | Value -> 
+Cell E199: Formula -> C199/I9 | Value -> #DIV/0!
+Cell F199: Formula -> D199/I9 | Value -> #DIV/0!
+Cell H199: Formula -> (C199*100)/D199 | Value -> #DIV/0!
+Cell C200: Formula -> 'A completar'!C181 | Value -> 
+Cell D200: Formula -> 'A completar'!C182 | Value -> 
+Cell C201: Formula -> 'A completar'!C183 | Value -> 
+Cell D201: Formula -> 'A completar'!C184 | Value -> 
+Cell E201: Formula -> C201/I9 | Value -> #DIV/0!
+Cell F201: Formula -> D201/I9 | Value -> #DIV/0!
+Cell H201: Formula -> (C201*100)/D201 | Value -> #DIV/0!
+Cell C202: Formula -> 'A completar'!C185 | Value -> 
+Cell D202: Formula -> 'A completar'!C186 | Value -> 
+Cell B204: Formula -> IF(AND(H192>=90,H192<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de rotadores internos de hombro.",
+"Se presenta una asimetr├¡a de fuerza muscular de rotadores internos de hombro.")
+ | Value -> #DIV/0!
+Cell B205: Formula -> IF(AND(H194>=90,H194<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de rotadores externos de hombro.",
+"Se presenta una asimetr├¡a de fuerza muscular de rotadores externos de hombro.")
+ | Value -> #DIV/0!
+Cell B206: Formula -> IF(AND(H197>=90,H197<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular en el Ash Test I.",
+"Se presenta una asimetr├¡a de fuerza muscular en el Ash Test I.")
+ | Value -> #DIV/0!
+Cell B207: Formula -> IF(AND(H199>=90,H199<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular en el Ash Test Y.",
+"Se presenta una asimetr├¡a de fuerza muscular en el Ash Test Y.")
+ | Value -> #DIV/0!
+Cell B208: Formula -> IF(AND(H200>=90,H200<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular en el Ash Test T.",
+"Se presenta una asimetr├¡a de fuerza muscular en el Ash Test T.")
+ | Value -> Se presenta una asimetr├¡a de fuerza muscular en el Ash Test T.
+Cell D211: Formula -> 'A completar'!C187 | Value -> 
+Cell E211: Formula -> 'A completar'!C188 | Value -> 
+Cell F211: Formula -> (D211*100)/E211 | Value -> #DIV/0!
+Cell B213: Formula -> IF(AND(F211>=90,F211<=110),
+"Se presenta una correcta simetr├¡a de fuerza en el handrip.",
+"Se presenta una asimetr├¡a de fuerza en el handrip.")
+ | Value -> #DIV/0!
+Cell B216: Formula -> 'A completar'!A189 | Value -> Cu├ídriceps derecho
+Cell C216: Formula -> 'A completar'!C189 | Value -> 
+Cell D216: Formula -> 'A completar'!C190 | Value -> 
+Cell E216: Formula -> (D216-C216)/C216*100 | Value -> #DIV/0!
+Cell B217: Formula -> 'A completar'!A191 | Value -> Cu├ídriceps izquierdo
+Cell C217: Formula -> 'A completar'!C191 | Value -> 
+Cell D217: Formula -> 'A completar'!C192 | Value -> 
+Cell E217: Formula -> (D217-C217)/C217*100 | Value -> #DIV/0!
+Cell B218: Formula -> 'A completar'!A193 | Value -> Isquiotibiales derecho
+Cell C218: Formula -> 'A completar'!C193 | Value -> 
+Cell D218: Formula -> 'A completar'!C194 | Value -> 
+Cell E218: Formula -> (D218-C218)/C218*100 | Value -> #DIV/0!
+Cell B219: Formula -> 'A completar'!A195 | Value -> Isquiotibiales izquierdo
+Cell C219: Formula -> 'A completar'!C195 | Value -> 
+Cell D219: Formula -> 'A completar'!C196 | Value -> 
+Cell E219: Formula -> (D219-C219)/C219*100 | Value -> #DIV/0!
+Cell B221: Formula -> "Se presenta una mejora en "&B216&" de un "&TEXT(E216/100,"0%") | Value -> #DIV/0!
+Cell B222: Formula -> "Se presenta una mejora en "&B217&" de un "&TEXT(E217/100,"0%") | Value -> #DIV/0!
+Cell B223: Formula -> "Se presenta una mejora en "&B218&" de un "&TEXT(E218/100,"0%") | Value -> #DIV/0!
+Cell B224: Formula -> "Se presenta una mejora en "&B219&" de un "&TEXT(E219/100,"0%") | Value -> #DIV/0!
+Cell D227: Formula -> 'A completar'!C197 | Value -> 
+Cell E227: Formula -> 'A completar'!C198 | Value -> 
+Cell F227: Formula -> (D227*100)/E227 | Value -> #DIV/0!
+Cell H227: Formula -> 'A completar'!C199 | Value -> 
+Cell D228: Formula -> 'A completar'!C200 | Value -> 
+Cell E228: Formula -> 'A completar'!C201 | Value -> 
+Cell F228: Formula -> (D228*100)/E228 | Value -> #DIV/0!
+Cell H228: Formula -> 'A completar'!C202 | Value -> 
+Cell D229: Formula -> 'A completar'!C203 | Value -> 
+Cell E229: Formula -> 'A completar'!C204 | Value -> 
+Cell F229: Formula -> (D229*100)/E229 | Value -> #DIV/0!
+Cell H229: Formula -> 'A completar'!C205 | Value -> 
+Cell D230: Formula -> 'A completar'!C206 | Value -> 
+Cell E230: Formula -> 'A completar'!C207 | Value -> 
+Cell F230: Formula -> (D230*100)/E230 | Value -> #DIV/0!
+Cell H230: Formula -> 'A completar'!C208 | Value -> 
+Cell B232: Formula -> IF(AND(F227>=90,F227<=110),
+"En la Sentadilla, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.",
+"En la Sentadilla, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.")
+ | Value -> #DIV/0!
+Cell B233: Formula -> IF(AND(F228>=90,F228<=110),
+"En el Peso Muerto, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.",
+"En el Peso Muerto, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.")
+ | Value -> #DIV/0!
+Cell B234: Formula -> IF(AND(F229>=90,F229<=110),
+"En el Puente Gl├║teo, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.",
+"En el Puente Gl├║teo, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.")
+ | Value -> #DIV/0!
+Cell B235: Formula -> IF(AND(F230>=90,F230<=110),
+"En la sentadilla b├║lgara, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.",
+"En la sentadilla b├╣lgara, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.")
+ | Value -> #DIV/0!
+Cell D238: Formula -> 'A completar'!C209 | Value -> 
+Cell D239: Formula -> 'A completar'!C210 | Value -> 
+Cell E239: Formula -> 'A completar'!C211 | Value -> 
+Cell F239: Formula -> (D239*100)/E239 | Value -> #DIV/0!
+Cell D240: Formula -> 'A completar'!C212 | Value -> 
+Cell E240: Formula -> 'A completar'!C213 | Value -> 
+Cell F240: Formula -> (D240*100)/E240 | Value -> #DIV/0!
+Cell D241: Formula -> 'A completar'!C214 | Value -> 
+Cell E241: Formula -> 'A completar'!C215 | Value -> 
+Cell F241: Formula -> (D241*100)/E241 | Value -> #DIV/0!
+Cell D242: Formula -> 'A completar'!C216 | Value -> 
+Cell D243: Formula -> 'A completar'!C217 | Value -> 
+Cell E243: Formula -> 'A completar'!C218 | Value -> 
+Cell F243: Formula -> (D243*100)/E243 | Value -> #DIV/0!
+Cell D244: Formula -> 'A completar'!C219 | Value -> 
+Cell E244: Formula -> 'A completar'!C220 | Value -> 
+Cell F244: Formula -> (D244*100)/E244 | Value -> #DIV/0!
+Cell D245: Formula -> 'A completar'!C221 | Value -> 
+Cell E245: Formula -> 'A completar'!C222 | Value -> 
+Cell F245: Formula -> (D245*100)/E245 | Value -> #DIV/0!
+Cell D246: Formula -> 'A completar'!C223 | Value -> 
+Cell E246: Formula -> 'A completar'!C224 | Value -> 
+Cell F246: Formula -> (D246*100)/E246 | Value -> #DIV/0!
+Cell D247: Formula -> 'A completar'!C225 | Value -> 
+Cell E247: Formula -> 'A completar'!C226 | Value -> 
+Cell F247: Formula -> (D247*100)/E247 | Value -> #DIV/0!
+Cell D248: Formula -> 'A completar'!C227 | Value -> 
+Cell D249: Formula -> 'A completar'!C228 | Value -> 
+Cell E249: Formula -> 'A completar'!C229 | Value -> 
+Cell F249: Formula -> (D249*100)/E249 | Value -> #DIV/0!
+Cell D250: Formula -> 'A completar'!C230 | Value -> 
+Cell D251: Formula -> 'A completar'!C231 | Value -> 
+Cell E251: Formula -> 'A completar'!C232 | Value -> 
+Cell F251: Formula -> (D251*100)/E251 | Value -> #DIV/0!
+Cell D252: Formula -> 'A completar'!C233 | Value -> 
+Cell E252: Formula -> 'A completar'!C234 | Value -> 
+Cell F252: Formula -> (E252*100)/D252 | Value -> #DIV/0!
+Cell D253: Formula -> 'A completar'!C235 | Value -> 
+Cell E253: Formula -> 'A completar'!C236 | Value -> 
+Cell F253: Formula -> (D253*100)/E253 | Value -> #DIV/0!
+Cell B255: Formula -> IF(AND(F239>=90,F239<=110),
+"En el CMJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza de frenado.",
+"En el CMJ a 2 piernas, se presenta una asimetr├¡a en la fuerza de frenado.")
+ | Value -> #DIV/0!
+Cell B256: Formula -> IF(AND(F240>=90,F240<=110),
+"En el CMJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza propulsiva.",
+"En el CMJ a 2 piernas, se presenta una asimetr├¡a en la fuerza propulsiva.")
+ | Value -> #DIV/0!
+Cell B257: Formula -> IF(AND(F241>=90,F241<=110),
+"En el CMJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza de aterrizaje.",
+"En el CMJ a 2 piernas, se presenta una asimetr├¡a en la fuerza de aterrizaje.")
+ | Value -> #DIV/0!
+Cell B258: Formula -> IF(AND(F243>=90,F243<=110),
+"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la altura del salto.",
+"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la altura del salto.")
+ | Value -> #DIV/0!
+Cell B259: Formula -> IF(AND(F244>=90,F244<=110),
+"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la fuerza de frenado.",
+"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la fuerza de frenado.")
+ | Value -> #DIV/0!
+Cell B260: Formula -> IF(AND(F245>=90,F245<=110),
+"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la fuerza propulsiva.",
+"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la fuerza propulsiva.")
+ | Value -> #DIV/0!
+Cell B261: Formula -> IF(AND(F246>=90,F246<=110),
+"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la fuerza de aterrizaje.",
+"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la fuerza de aterrizaje.")
+ | Value -> #DIV/0!
+Cell B262: Formula -> IF(AND(F249>=90,F249<=110),
+"En el DJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza pico de contacto.",
+"En el DJ a 2 piernas, se presenta una asimetr├¡a en la fuerza pico de contacto.")
+ | Value -> #DIV/0!
+Cell B263: Formula -> IF(AND(F251>=90,F251<=110),
+"En el DJ a 1 pierna, se presenta una correcta simetr├¡a en la altura del salto.",
+"En el DJ a 1 pierna, se presenta una asimetr├¡a en la altura del salto.")
+ | Value -> #DIV/0!
+Cell B264: Formula -> IF(AND(F252>=90,F252<=110),
+"En el DJ a 1 pierna, se presenta una correcta simetr├¡a en el tiempo de contacto.",
+"En el DJ a 1 pierna, se presenta una asimetr├¡a en el tiempo de contacto.")
+ | Value -> #DIV/0!
+Cell D267: Formula -> 'A completar'!C237 | Value -> 
+Cell E267: Formula -> 'A completar'!C238 | Value -> 
+Cell F267: Formula -> (D267*100)/E267 | Value -> #DIV/0!
+Cell D268: Formula -> 'A completar'!C239 | Value -> 
+Cell E268: Formula -> 'A completar'!C240 | Value -> 
+Cell F268: Formula -> (D268*100)/E268 | Value -> #DIV/0!
+Cell D269: Formula -> 'A completar'!C241 | Value -> 
+Cell E269: Formula -> 'A completar'!C242 | Value -> 
+Cell F269: Formula -> (E269*100)/D269 | Value -> #DIV/0!
+Cell D270: Formula -> 'A completar'!C243 | Value -> 
+Cell E270: Formula -> 'A completar'!C244 | Value -> 
+Cell F270: Formula -> (D270*100)/E270 | Value -> #DIV/0!
+Cell D271: Formula -> 'A completar'!C245 | Value -> 
+Cell E271: Formula -> 'A completar'!C246 | Value -> 
+Cell F271: Formula -> (E271*100)/D271 | Value -> #DIV/0!
+Cell D272: Formula -> 'A completar'!C247 | Value -> 
+Cell E272: Formula -> 'A completar'!C248 | Value -> 
+Cell F272: Formula -> (D272*100)/E272 | Value -> #DIV/0!
+Cell D273: Formula -> 'A completar'!C249 | Value -> 
+Cell E273: Formula -> 'A completar'!C250 | Value -> 
+Cell F273: Formula -> (D273*100)/E273 | Value -> #DIV/0!
+Cell D274: Formula -> 'A completar'!C251 | Value -> 
+Cell E274: Formula -> 'A completar'!C252 | Value -> 
+Cell F274: Formula -> (D274*100)/E274 | Value -> #DIV/0!
+Cell B276: Formula -> IF(AND(F267>=90,F267<=110),
+"En el Single Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.",
+"En el Single Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.")
+ | Value -> #DIV/0!
+Cell B277: Formula -> IF(AND(F268>=90,F268<=110),
+"En el Triple Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.",
+"En el Triple Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.")
+ | Value -> #DIV/0!
+Cell B278: Formula -> IF(AND(F269>=90,F269<=110),
+"En el Triple Hop Test, se presenta una correcta simetr├¡a en el tiempo de contacto con el suelo.",
+"En el Triple Hop Test, se presenta una asimetr├¡a en el tiempo de contacto con el suelo.")
+ | Value -> #DIV/0!
+Cell B279: Formula -> IF(AND(F270>=90,F270<=110),
+"En el Crossover Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.",
+"En el Crossover Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.")
+ | Value -> #DIV/0!
+Cell B280: Formula -> IF(AND(F271>=90,F271<=110),
+"En el Crossover Hop Test, se presenta una correcta simetr├¡a en el tiempo de contacto con el suelo.",
+"En el Crossover Hop Test, se presenta una asimetr├¡a en el tiempo de contacto con el suelo.")
+ | Value -> #DIV/0!
+Cell B281: Formula -> IF(AND(F272>=90,F272<=110),
+"En el Medial Side Triple Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.",
+"En el Medial Side Triple Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.")
+ | Value -> #DIV/0!
+Cell B282: Formula -> IF(AND(F273>=90,F273<=110),
+"En el 90 Medial Rotation Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.",
+"En el 90 Medial Rotation Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.")
+ | Value -> #DIV/0!
+Cell B283: Formula -> IF(AND(F274>=90,F274<=110),
+"En el Side Hop Test, se presenta una correcta simetr├¡a en la cantidad de saltos.",
+"En el Side Hop Test, se presenta una asimetr├¡a en la cantidad de saltos.")
+ | Value -> #DIV/0!
+Cell D286: Formula -> 'A completar'!C253 | Value -> 
+Cell E286: Formula -> 'A completar'!C254 | Value -> 
+Cell F286: Formula -> 'A completar'!C255 | Value -> 
+Cell G286: Formula -> 'A completar'!C256 | Value -> 
+Cell D287: Formula -> 'A completar'!C257 | Value -> 
+Cell E287: Formula -> 'A completar'!C258 | Value -> 
+Cell F287: Formula -> 'A completar'!C259 | Value -> 
+Cell G287: Formula -> 'A completar'!C260 | Value -> 
+Cell D288: Formula -> 'A completar'!C261 | Value -> 
+Cell D290: Formula -> 'A completar'!C263 | Value -> 
+Cell D292: Formula -> 'A completar'!C265 | Value -> 
+Cell D294: Formula -> 'A completar'!C267 | Value -> 
+Cell D296: Formula -> 'A completar'!C269 | Value -> 
+Cell B299: Formula -> IF(AND(D286="OK", E286="OK", F286="OK", G286="OK"),
+   "En la vista frontal, no se detectan d├®ficits en la pierna lesionada.",
+   "En la vista frontal de la pierna lesionada presenta un d├®ficit de" &
+   IF(D286="X", " tronco", "") &
+   IF(AND(D286="X", OR(E286="X", F286="X", G286="X")), ",", "") &
+   IF(E286="X", " pelvis", "") &
+   IF(AND(E286="X", OR(F286="X", G286="X")), ",", "") &
+   IF(F286="X", " cadera", "") &
+   IF(AND(F286="X", G286="X"), ",", "") &
+   IF(G286="X", " rodilla", "") & "."
+)
+ | Value -> En la vista frontal de la pierna lesionada presenta un d├®ficit de.
+Cell B300: Formula -> IF(AND(D287="OK", E287="OK", F287="OK", G287="OK"),
+   "En la vista frontal, no se detectan d├®ficits en la pierna sana.",
+   "En la vista frontal de la pierna sana presenta un d├®ficit de" &
+   IF(D287="X", " tronco", "") &
+   IF(AND(D287="X", OR(E287="X", F287="X", G287="X")), ",", "") &
+   IF(E287="X", " pelvis", "") &
+   IF(AND(E287="X", OR(F287="X", G287="X")), ",", "") &
+   IF(F287="X", " cadera", "") &
+   IF(AND(F287="X", G287="X"), ",", "") &
+   IF(G287="X", " rodilla", "") & "."
+)
+ | Value -> En la vista frontal de la pierna sana presenta un d├®ficit de.
+Cell C303: Formula -> 'A completar'!C271 | Value -> 
+Cell C304: Formula -> 'A completar'!C272 | Value -> 
+Cell C305: Formula -> 'A completar'!C273 | Value -> 
+Cell C306: Formula -> 'A completar'!C274 | Value -> 
+Cell D306: Formula -> 'A completar'!C275 | Value -> 
+Cell C307: Formula -> 'A completar'!C276 | Value -> 
+Cell D307: Formula -> 'A completar'!C277 | Value -> 
+Cell B309: Formula -> IF(C303="OK",
+"Se realiza una correcta prueba de frenado.",
+"Se presenta un d├®ficit en la prueba de frenado.")
+ | Value -> Se presenta un d├®ficit en la prueba de frenado.
+Cell B310: Formula -> IF(C304<=9.5,
+"Se presenta una correcta prueba de agilidad T Test.",
+"Se presenta un d├®ficit en la prueba de agilidad T Test.")
+ | Value -> Se presenta una correcta prueba de agilidad T Test.
+Cell B311: Formula -> IF(AND(C306<=3,D306<=3),
+"Se presenta un correcto cambio de direcci├│n a 45┬║ en ambas piernas.",
+IF(AND(C306>3,D306<=3),
+"Se presenta un d├®ficit en el cambio de direcci├│n a 45┬║ en la pierna derecha.",
+IF(AND(C306<=3,D306>3),
+"Se presenta un d├®ficit en el cambio de direcci├│n a 45┬║ en la pierna izquierda.",
+"Se presenta un d├®ficit en el cambio de direcci├│n a 45┬║ en ambas piernas.")))
+ | Value -> Se presenta un correcto cambio de direcci├│n a 45┬║ en ambas piernas.
+Cell B312: Formula -> IF(AND(C307<=3,D307<=3),
+"Se presenta un correcto cambio de direcci├│n a 90┬║ en ambas piernas.",
+IF(AND(C307>3,D307<=3),
+"Se presenta un d├®ficit en el cambio de direcci├│n a 90┬║ en la pierna derecha.",
+IF(AND(C307<=3,D307>3),
+"Se presenta un d├®ficit en el cambio de direcci├│n a 90┬║ en la pierna izquierda.",
+"Se presenta un d├®ficit en el cambio de direcci├│n a 90┬║ en ambas piernas.")))
+ | Value -> Se presenta un correcto cambio de direcci├│n a 90┬║ en ambas piernas.
+Cell C315: Formula -> 'A completar'!C280 | Value -> 
+Cell C316: Formula -> 'A completar'!C278 | Value -> 
+Cell C317: Formula -> 'A completar'!C279 | Value -> 
+Cell B319: Formula -> IF(C315>=81, "La puntuaci├│n del cuestionario auto reportado se encuentra normal, lo que demuestra una sensaci├│n de seguridad y confianza en la funci├│n de los isquiotibiales."
+   ,"La puntuaci├│n del cuestionario auto reportado se encuentra disminuida, lo que demuestra una falta de seguridad y confianza en la funci├│n de los isquiotibiales."
+   )
+ | Value -> La puntuaci├│n del cuestionario auto reportado se encuentra disminuida, lo que demuestra una falta de seguridad y confianza en la funci├│n de los isquiotibiales.
+Cell B320: Formula -> IF(OR(C316<85, C317<65), 
+"La puntuaci├│n en los cuestionarios se encuentran bajos, esto se traduce a todav├¡a falta sensaci├│n de seguridad, confianza y funci├│n de la rodilla.", 
+"La puntuaci├│n en los cuestionarios auto reportados se encuentran normales, lo que demuestra una sensaci├│n de seguridad y confianza en la funci├│n de la rodilla.")
+ | Value -> La puntuaci├│n en los cuestionarios se encuentran bajos, esto se traduce a todav├¡a falta sensaci├│n de seguridad, confianza y funci├│n de la rodilla.
+
+=== SHEET: Definici├│n operativa ===
+Dumping first 15 rows:
+[
+  [
+    "3 minutos en cinta caminata, rodilla al pecho en caminata, elongacion de cuadriceps en caminata, rodillas al pecho, talones a la cola, todos ida y vuelta del espacio verde"
+  ],
+  [
+    "Rotaci├│n interna de cadera 90┬║",
+    "PASIVO. "
+  ],
+  [],
+  [
+    "Rotaci├│n externa de cadera 90┬║"
+  ],
+  [],
+  [
+    "Extensi├│n pasiva de rodilla",
+    "Inclin├│metro (regla L), buscar superficie dura"
+  ],
+  [],
+  [
+    "Flexi├│n activa de rodilla",
+    "Dec├║bito prono, inclin├│metro en la tibia, sin entrada en calor"
+  ],
+  [],
+  [
+    "Flexi├│n pasiva de rodilla",
+    "Dec├║bito prono, inclin├│metro en la tibia, sin entrada en calor"
+  ],
+  [],
+  [
+    "Flexi├│n dorsal de tobillo",
+    "Incl├¡nometro borde anterior de tibia, moverlo 3 veces antes, no puede levantar tal├│n, una sola medici├│n, sin apoyar rodilla contraria en el suelo"
+  ],
+  [],
+  [
+    "Rotaci├│n interna de hombro",
+    "Fijaci├│n a la antepulsi├│n con mano del evaluador, inclin├│metro parte dorsal del antebrazo, dec├║bito supino completamente"
+  ],
+  []
+]
+
+Formulas found in Definici├│n operativa:

@@ -234,20 +234,20 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
                   <InputField label="Dominancia" value={measurements.basic.dominantLeg} onChange={v => updateMeasurement('basic', 'dominantLeg', v)} type="select" options={['derecha', 'izquierda']} />
                   <InputField label="Pierna Lesión" value={measurements.basic.injuredLeg} onChange={v => updateMeasurement('basic', 'injuredLeg', v)} type="select" options={['ninguna', 'derecha', 'izquierda']} />
                   <InputField label="Tipo Lesión" value={measurements.basic.injuryType} onChange={v => updateMeasurement('basic', 'injuryType', v)} type="text" />
-                  <InputField label="Médico Derivante" value={measurements.basic.referringDoctor} onChange={v => updateMeasurement('basic', 'referringDoctor', v)} type="text" />
+                  <InputField label="Médico Derivante" value={measurements.basic.referring_doctor} onChange={v => updateMeasurement('basic', 'referring_doctor', v)} type="text" />
                 </SectionGrid>
                 <SectionGrid title="Dolor & Entrenamiento" cols={2}>
-                    <VASSelector label="Dolor durante la sesión (1-10)" value={measurements.basic.painLevel} onChange={v => updateMeasurement('basic', 'painLevel', v)} />
-                    <InputField label="Entrenamiento previo a sesión" value={measurements.basic.prevSessionTraining} onChange={v => updateMeasurement('basic', 'prevSessionTraining', v)} type="text" />
+                    <InputField label="Dolor durante evaluación" value={measurements.basic.pain_during_eval} onChange={v => updateMeasurement('basic', 'pain_during_eval', v)} type="select" options={['No', 'Sí']} />
+                    <InputField label="Entrenamiento previo a sesión" value={measurements.basic.pre_session_training} onChange={v => updateMeasurement('basic', 'pre_session_training', v)} type="text" />
                 </SectionGrid>
                 <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comentarios Lesión / Antecedentes</label>
-                        <textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm focus:border-primary-500 min-h-[100px]" value={measurements.basic.injuryComments || ''} onChange={e => updateMeasurement('basic', 'injuryComments', e.target.value)} />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comentarios Lesión</label>
+                        <textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm focus:border-primary-500 min-h-[100px]" value={measurements.basic.injury_comments || ''} onChange={e => updateMeasurement('basic', 'injury_comments', e.target.value)} />
                     </div>
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Antecedentes Generales</label>
-                        <textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm focus:border-primary-500 min-h-[100px]" value={measurements.basic.antecedents || ''} onChange={e => updateMeasurement('basic', 'antecedents', e.target.value)} />
+                        <textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm focus:border-primary-500 min-h-[100px]" value={measurements.basic.medical_history || ''} onChange={e => updateMeasurement('basic', 'medical_history', e.target.value)} />
                     </div>
                 </div>
               </div>
@@ -285,22 +285,22 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
             {activeTab === 'FLEXIBILITY' && (
               <div className="space-y-2">
                 <SectionGrid title="Thomas Test (DERECHA)">
-                  <InputField label="Psoas Ilíaco" value={measurements.flexibility.thomas_psoas_r} onChange={v => updateMeasurement('flexibility', 'thomas_psoas_r', v)} type="select" options={['normal', 'corto']} />
-                  <InputField label="Recto Anterior" value={measurements.flexibility.thomas_rectus_r} onChange={v => updateMeasurement('flexibility', 'thomas_rectus_r', v)} type="select" options={['normal', 'corto']} />
-                  <InputField label="Sartorio" value={measurements.flexibility.thomas_sartorius_r} onChange={v => updateMeasurement('flexibility', 'thomas_sartorius_r', v)} type="select" options={['normal', 'corto']} />
+                  <InputField label="Psoas Ilíaco" value={measurements.flexibility.thomas_test_psoas_r} onChange={v => updateMeasurement('flexibility', 'thomas_test_psoas_r', v)} type="select" options={['OK', 'X']} />
+                  <InputField label="Recto Anterior" value={measurements.flexibility.thomas_test_rectus_r} onChange={v => updateMeasurement('flexibility', 'thomas_test_rectus_r', v)} type="select" options={['OK', 'X']} />
+                  <InputField label="Sartorio" value={measurements.flexibility.thomas_test_sartorius_r} onChange={v => updateMeasurement('flexibility', 'thomas_test_sartorius_r', v)} type="select" options={['OK', 'X']} />
                 </SectionGrid>
                 <SectionGrid title="Thomas Test (IZQUIERDA)">
-                  <InputField label="Psoas Ilíaco" value={measurements.flexibility.thomas_psoas_l} onChange={v => updateMeasurement('flexibility', 'thomas_psoas_l', v)} type="select" options={['normal', 'corto']} />
-                  <InputField label="Recto Anterior" value={measurements.flexibility.thomas_rectus_l} onChange={v => updateMeasurement('flexibility', 'thomas_rectus_l', v)} type="select" options={['normal', 'corto']} />
-                  <InputField label="Sartorio" value={measurements.flexibility.thomas_sartorius_l} onChange={v => updateMeasurement('flexibility', 'thomas_sartorius_l', v)} type="select" options={['normal', 'corto']} />
+                  <InputField label="Psoas Ilíaco" value={measurements.flexibility.thomas_test_psoas_l} onChange={v => updateMeasurement('flexibility', 'thomas_test_psoas_l', v)} type="select" options={['OK', 'X']} />
+                  <InputField label="Recto Anterior" value={measurements.flexibility.thomas_test_rectus_l} onChange={v => updateMeasurement('flexibility', 'thomas_test_rectus_l', v)} type="select" options={['OK', 'X']} />
+                  <InputField label="Sartorio" value={measurements.flexibility.thomas_test_sartorius_l} onChange={v => updateMeasurement('flexibility', 'thomas_test_sartorius_l', v)} type="select" options={['OK', 'X']} />
                 </SectionGrid>
                 <SectionGrid title="Tests Neuro-Ortopédicos">
-                  <InputField label="AKE Der" value={measurements.flexibility.ake_r} onChange={v => updateMeasurement('flexibility', 'ake_r', v)} unit="º" />
-                  <InputField label="AKE Izq" value={measurements.flexibility.ake_l} onChange={v => updateMeasurement('flexibility', 'ake_l', v)} unit="º" />
-                  <InputField label="Askling Der" value={measurements.flexibility.askling_r} onChange={v => updateMeasurement('flexibility', 'askling_r', v)} type="select" options={['negativo', 'positivo']} />
-                  <InputField label="Askling Izq" value={measurements.flexibility.askling_l} onChange={v => updateMeasurement('flexibility', 'askling_l', v)} type="select" options={['negativo', 'positivo']} />
-                  <InputField label="Slump Der" value={measurements.flexibility.slump_r} onChange={v => updateMeasurement('flexibility', 'slump_r', v)} type="select" options={['negativo', 'positivo']} />
-                  <InputField label="Slump Izq" value={measurements.flexibility.slump_l} onChange={v => updateMeasurement('flexibility', 'slump_l', v)} type="select" options={['negativo', 'positivo']} />
+                  <InputField label="Isquio (AKE) Der" value={measurements.flexibility.hams_r} onChange={v => updateMeasurement('flexibility', 'hams_r', v)} unit="º" />
+                  <InputField label="Isquio (AKE) Izq" value={measurements.flexibility.hams_l} onChange={v => updateMeasurement('flexibility', 'hams_l', v)} unit="º" />
+                  <InputField label="Askling Der" value={measurements.flexibility.askling_h_r} onChange={v => updateMeasurement('flexibility', 'askling_h_r', v)} type="select" options={['OK', 'X']} />
+                  <InputField label="Askling Izq" value={measurements.flexibility.askling_h_l} onChange={v => updateMeasurement('flexibility', 'askling_h_l', v)} type="select" options={['OK', 'X']} />
+                  <InputField label="Slump Der" value={measurements.flexibility.slump_test_r} onChange={v => updateMeasurement('flexibility', 'slump_test_r', v)} type="select" options={['OK', 'X']} />
+                  <InputField label="Slump Izq" value={measurements.flexibility.slump_test_l} onChange={v => updateMeasurement('flexibility', 'slump_test_l', v)} type="select" options={['OK', 'X']} />
                   <InputField label="BKFO Der" value={measurements.flexibility.bkfo_r} onChange={v => updateMeasurement('flexibility', 'bkfo_r', v)} unit="CM" />
                   <InputField label="BKFO Izq" value={measurements.flexibility.bkfo_l} onChange={v => updateMeasurement('flexibility', 'bkfo_l', v)} unit="CM" />
                 </SectionGrid>
