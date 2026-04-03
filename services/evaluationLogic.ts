@@ -185,8 +185,8 @@ export const processEvaluation = (measurements: any): { conclusions: string[], m
       }
 
       // Balance Monopodal
-      const eoR = Number(balance.sls_eo_r);
-      const eoL = Number(balance.sls_eo_l);
+      const eoR = Number(balance.eyes_open_r);
+      const eoL = Number(balance.eyes_open_l);
       if (eoR && eoL) {
           if (eoR >= 45 && eoL >= 45) conclusions.push("Se presenta un correcto balance monopodal con ojos abiertos.");
           else if (eoR < 45 && eoL >= 45) conclusions.push("Se presenta un déficit en el balance monopodal con ojos abiertos de la pierna derecha.");
@@ -194,8 +194,8 @@ export const processEvaluation = (measurements: any): { conclusions: string[], m
           else conclusions.push("Se presenta un déficit en el balance monopodal con ojos abiertos de ambas piernas.");
       }
 
-      const ecR = Number(balance.sls_ec_r);
-      const ecL = Number(balance.sls_ec_l);
+      const ecR = Number(balance.eyes_closed_r);
+      const ecL = Number(balance.eyes_closed_l);
       if (ecR && ecL) {
           if (ecR >= 9 && ecL >= 9) conclusions.push("Se presenta un correcto balance monopodal con ojos cerrados.");
           else if (ecR < 9 && ecL >= 9) conclusions.push("Se presenta un déficit en el balance monopodal con ojos cerrados de la pierna derecha.");

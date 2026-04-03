@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ClinicalEvaluation, Patient } from '../types';
 
-export const generateEvaluationPDF = (evaluation: ClinicalEvaluation, patient: Patient) => {
+export const generateEvaluationPDF = async (evaluation: ClinicalEvaluation, patient: Patient) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
@@ -20,34 +20,58 @@ export const generateEvaluationPDF = (evaluation: ClinicalEvaluation, patient: P
   doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.rect(0, 0, pageWidth, 45, 'F');
 
+  // --- Helper to Load Images Asynchronously for jsPDF ---
+  const addImageAsync = (url: string, format: string, x: number, y: number, w: number, h: number) => {
+    return new Promise<void>((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        doc.addImage(img, format, x, y, w, h);
+        resolve();
+      };
+      img.onerror = () => {
+        resolve(); // resolve anyway to avoid hanging
+      };
+      img.src = url;
+    });
+  };
+
   // Logo (from Excel asset)
   try {
-    // image7.png was identified as a possible logo candidate by size
-    doc.addImage('/assets/image7.png', 'PNG', 15, 8, 30, 30);
+    await addImageAsync('/assets/image7.png', 'PNG', 15, 8, 30, 30);
   } catch (e) {
     // Fallback if image not found
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
-    doc.text('KINEFLOW', 15, 25);
+    doc.text('MRS LAB', 15, 25);
   }
 
   // Professionals (from Excel assets)
   try {
-     // image2 and image3 likely professional photos
-     doc.addImage('/assets/image2.png', 'PNG', pageWidth - 45, 8, 15, 15);
-     doc.addImage('/assets/image3.png', 'PNG', pageWidth - 25, 8, 15, 15);
+     await addImageAsync('/assets/image4.png', 'PNG', 105, 8, 10, 10);
+     doc.setTextColor(255, 255, 255);
+     doc.setFontSize(6);
+     doc.text('Leandro Pisani\nLic. en Kinesiologia\nMat. 1664/2', 117, 11);
+
+     await addImageAsync('/assets/image2.png', 'PNG', 140, 8, 10, 10);
+     doc.text('Ezequiel Plaza\nLic. en Kinesiologia\nMat. 3269/2', 152, 11);
+     
+     await addImageAsync('/assets/image3.png', 'PNG', 175, 8, 10, 10);
+     doc.text('Pedro Costamagna\nLic. en Kinesiologia\nMat. 3236/2', 187, 11);
   } catch(e) {}
 
   // Header Text
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('INFORME DE EVALUACIÓN', 55, 20);
+  doc.text('INFORME DE EVALUACIÓN', 45, 20);
   
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text('Protocolo Clínico de Rendimiento y Funcionalidad', 55, 30);
-  doc.text(`${new Date(evaluation.date).toLocaleDateString('es-AR')}`, pageWidth - 45, 35, { align: 'right' });
+  doc.text('Protocolo Clínico de Rendimiento y Funcionalidad', 45, 28);
+  
+  doc.setFontSize(8);
+  doc.text(`${new Date(evaluation.date).toLocaleDateString('es-AR')}`, 45, 34);
 
   // --- 2. PACIENT INFO ---
   doc.setFillColor(248, 250, 252); // Slate 50
@@ -65,24 +89,115 @@ export const generateEvaluationPDF = (evaluation: ClinicalEvaluation, patient: P
   doc.text(`Edad: ${evaluation.measurements.basic?.age || 'N/A'} años`, 100, 75);
   doc.text(`Condición: ${patient.condition}`, 100, 82);
 
-  // --- 3. RESULTS SUMMARY ---
+  // --- 3. VALORES DE LOS RESULTADOS ---
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('CONCLUSIONES CLÍNICAS:', 20, 105);
+  doc.text('RESULTADOS BRUTOS (VALORES):', 20, 105);
+
+  const rawRows: string[][] = [];
+  const addRow = (section: string, test: string, r: any, l: any, ref: string = '-') => {
+      if (r !== undefined || l !== undefined) {
+          rawRows.push([section, test, r !== undefined ? String(r) : '-', l !== undefined ? String(l) : '-', ref]);
+      }
+  }
+
+  const { mobility, flexibility, strength, balance, jumps_vertical, jumps_horizontal } = evaluation.measurements;
+
+  if (mobility) {
+      addRow('Movilidad (º)', 'RI Cadera', mobility.hip_ir_90_r, mobility.hip_ir_90_l);
+      addRow('Movilidad (º)', 'RE Cadera', mobility.hip_er_90_r, mobility.hip_er_90_l);
+      addRow('Movilidad (º)', 'Flexión Act. Rodilla', mobility.knee_flex_act_r, mobility.knee_flex_act_l);
+      addRow('Movilidad (CM)', 'Dorsiflexión Tobillo', mobility.ankle_dorsiflex_r, mobility.ankle_dorsiflex_l, '>= 39');
+      addRow('Movilidad (º)', 'RI Hombro', mobility.shoulder_ir_r, mobility.shoulder_ir_l);
+      addRow('Movilidad (º)', 'RE Hombro', mobility.shoulder_er_r, mobility.shoulder_er_l);
+  }
+
+  if (flexibility) {
+      addRow('Flexibilidad', 'Thomas Test (Psoas)', flexibility.thomas_test_psoas_r, flexibility.thomas_test_psoas_l, 'OK');
+      addRow('Flexibilidad', 'Thomas Test (Recto)', flexibility.thomas_test_rectus_r, flexibility.thomas_test_rectus_l, 'OK');
+      addRow('Flexibilidad', 'Thomas Test (Sartorio)', flexibility.thomas_test_sartorius_r, flexibility.thomas_test_sartorius_l, 'OK');
+      addRow('Flexibilidad (º)', 'Isquiosurales (AKE)', flexibility.hams_r, flexibility.hams_l, '>= 70');
+      addRow('Neuroortop.', 'Askling H-Test', flexibility.askling_h_r, flexibility.askling_h_l, 'OK');
+      addRow('Neuroortop.', 'Slump Test', flexibility.slump_test_r, flexibility.slump_test_l, 'OK');
+      addRow('Neuroortop.', 'Aductores (BKFO)', flexibility.bkfo_r, flexibility.bkfo_l, '<= 17.4cm');
+  }
+
+  if (balance) {
+      addRow('Balance (Seg)', 'Ojos Abiertos', balance.eyes_open_r, balance.eyes_open_l, '>= 45');
+      addRow('Balance (Seg)', 'Ojos Cerrados', balance.eyes_closed_r, balance.eyes_closed_l, '>= 9');
+      addRow('Y-Balance (CM)', 'Anterior', balance.y_balance_ant_r, balance.y_balance_ant_l);
+      addRow('Y-Balance (CM)', 'Post-Medial', balance.y_balance_pm_r, balance.y_balance_pm_l);
+      addRow('Y-Balance (CM)', 'Post-Lateral', balance.y_balance_pl_r, balance.y_balance_pl_l);
+  }
+
+  if (strength) {
+      addRow('Fuerza (KG)', 'Cuádriceps', strength.quads_r, strength.quads_l);
+      addRow('Fuerza (KG)', 'Isquiosurales', strength.hams_r, strength.hams_l);
+      addRow('Fuerza (KG)', 'Aductores', strength.adductor_r, strength.adductor_l);
+      addRow('Fuerza (KG)', 'Abductores', strength.abductor_r, strength.abductor_l);
+  }
+
+  if (jumps_vertical) {
+      addRow('Saltos Verticales', 'CMJ 1p (Altura)', jumps_vertical.cmj_1p_height_r, jumps_vertical.cmj_1p_height_l);
+  }
+  
+  if (jumps_horizontal) {
+      addRow('Saltos Horizont.', 'Single Hop', (jumps_horizontal as any).single_hop_r, (jumps_horizontal as any).single_hop_l);
+      addRow('Saltos Horizont.', 'Triple Hop', (jumps_horizontal as any).triple_hop_dist_r, (jumps_horizontal as any).triple_hop_dist_l);
+  }
+
+  autoTable(doc, {
+    startY: 110,
+    head: [['CATEGORÍA', 'TEST', 'DERECHA', 'IZQUIERDA', 'REFERENCIA']],
+    body: rawRows,
+    theme: 'grid',
+    headStyles: { fillColor: accentColor, textColor: [255, 255, 255], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [249, 250, 251] },
+    columnStyles: {
+      0: { cellWidth: 35, fontStyle: 'bold' },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 25, halign: 'center' },
+      3: { cellWidth: 25, halign: 'center' },
+      4: { cellWidth: 25, halign: 'center', fontStyle: 'italic' }
+    }
+  });
+
+  let currentY = (doc as any).lastAutoTable.finalY + 15;
+
+  // --- 4. CONCLUSIONES CLÍNICAS ---
+  if (currentY > pageHeight - 40) {
+      doc.addPage();
+      currentY = 20;
+  }
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('CONCLUSIONES CLÍNICAS:', 20, currentY);
   
   doc.setFontSize(9);
   doc.setFont('helvetica', 'italic');
-  let yPos = 115;
+  currentY += 10;
   evaluation.results.conclusions.forEach(conclusion => {
     const splitText = doc.splitTextToSize(`• ${conclusion}`, pageWidth - 40);
-    doc.text(splitText, 25, yPos);
-    yPos += (splitText.length * 5);
+    if (currentY + (splitText.length * 5) > pageHeight - 20) {
+        doc.addPage();
+        currentY = 20;
+    }
+    doc.text(splitText, 25, currentY);
+    currentY += (splitText.length * 5);
   });
 
-  // --- 4. DATA TABLES ---
+  // --- 5. MÉTRICAS (SIMETRÍAS LSI) ---
+  if (currentY > pageHeight - 40) {
+      doc.addPage();
+      currentY = 20;
+  } else {
+      currentY += 10;
+  }
+
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('MÉTRICAS Y RESULTADOS:', 20, yPos + 10);
+  doc.text('MÉTRICAS Y SIMETRÍAS (LSI):', 20, currentY);
 
   const tableRows = evaluation.results.metrics.map(m => [
     m.category.toUpperCase(),
@@ -92,7 +207,7 @@ export const generateEvaluationPDF = (evaluation: ClinicalEvaluation, patient: P
   ]);
 
   autoTable(doc, {
-    startY: yPos + 15,
+    startY: currentY + 5,
     head: [['CATEGORÍA', 'TEST', 'RESULTADO', 'ESTADO']],
     body: tableRows,
     theme: 'grid',
