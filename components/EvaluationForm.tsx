@@ -23,6 +23,13 @@ const SectionGrid = ({ title, children, cols = 4 }: { title: string, children: R
 );
 
 const VASSelector = ({ label, value, onChange }: { label: string, value: number, onChange: (v: number) => void }) => {
+  const getColorClasses = (val: number) => {
+    if (!val) return 'bg-white border-slate-100 text-slate-800';
+    if (val <= 3) return 'bg-green-100 border-green-300 text-green-800';
+    if (val <= 6) return 'bg-orange-100 border-orange-300 text-orange-800';
+    return 'bg-red-100 border-red-300 text-red-800';
+  };
+
   return (
     <div className="space-y-1">
       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest line-clamp-1" title={label}>{label}</label>
@@ -30,20 +37,21 @@ const VASSelector = ({ label, value, onChange }: { label: string, value: number,
         <select 
           value={value || ''}
           onChange={e => onChange(parseInt(e.target.value))}
-          className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 text-sm focus:border-primary-500 focus:ring-0 transition-all shadow-sm appearance-none"
+          className={`w-full border-2 rounded-xl p-3 font-bold text-sm focus:border-primary-500 focus:ring-0 transition-all shadow-sm appearance-none ${getColorClasses(value)}`}
         >
-          <option value="" disabled>Seleccionar (1-10)...</option>
+          <option value="" disabled className="bg-white text-slate-800">Seleccionar (1-10)...</option>
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-            <option key={num} value={num}>{num}</option>
+            <option key={num} value={num} className="bg-white text-slate-800">{num}</option>
           ))}
         </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
           <ChevronDown size={14} />
         </div>
       </div>
     </div>
   );
 };
+
 
 const InputField = ({ label, value, onChange, type = 'number', options, unit }: { 
   label: string, value: any, onChange: (v: any) => void, type?: 'number' | 'text' | 'select' | 'date', options?: string[], unit?: string 
