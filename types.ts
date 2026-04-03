@@ -147,14 +147,17 @@ export interface ClinicalEvaluation {
   // Datos crudos ingresados de la hoja "A completar"
   measurements: {
     basic: {
+      date: string;
+      prevSessionTraining?: string;
       age?: number;
       weight?: number;
       height?: number;
       dominantLeg: 'derecha' | 'izquierda';
       injuredLeg: 'derecha' | 'izquierda' | 'ninguna';
       injuryType?: string;
-      injuryDate?: string;
-      surgeryDate?: string;
+      injuryComments?: string;
+      antecedents?: string;
+      referringDoctor?: string;
       painLevel?: number; // 0-10
       notes?: string;
     };
@@ -181,22 +184,48 @@ export interface ClinicalEvaluation {
       thomas_psoas_l: 'normal' | 'corto';
       thomas_rectus_r: 'normal' | 'corto';
       thomas_rectus_l: 'normal' | 'corto';
+      thomas_sartorius_r: 'normal' | 'corto';
+      thomas_sartorius_l: 'normal' | 'corto';
       ake_r?: number;
       ake_l?: number;
       askling_r: 'negativo' | 'positivo';
       askling_l: 'negativo' | 'positivo';
       slump_r: 'negativo' | 'positivo';
       slump_l: 'negativo' | 'positivo';
+      bkfo_r?: number;
+      bkfo_l?: number;
+    };
+    palpation: {
+      psoas_r: { palpation?: number; contraction?: number; stretching?: number };
+      psoas_l: { palpation?: number; contraction?: number; stretching?: number };
+      pubis_r: { palpation?: number; contraction?: number; stretching?: number };
+      pubis_l: { palpation?: number; contraction?: number; stretching?: number };
+      abs_r: { palpation?: number; contraction?: number; stretching?: number };
+      abs_l: { palpation?: number; contraction?: number; stretching?: number };
+      adductor_r: { palpation?: number; contraction?: number; stretching?: number };
+      adductor_l: { palpation?: number; contraction?: number; stretching?: number };
+      glute_med_r: { palpation?: number };
+      glute_med_l: { palpation?: number };
+      q_lumbar_r: { palpation?: number };
+      q_lumbar_l: { palpation?: number };
+      hip_impingement_r: 'negativo' | 'positivo';
+      hip_impingement_l: 'negativo' | 'positivo';
+      hip_labrum_r: 'negativo' | 'positivo';
+      hip_labrum_l: 'negativo' | 'positivo';
+      spine_flexion?: number;
+      spine_extension?: number;
+      spine_inc_r?: number;
+      spine_inc_l?: number;
+      sacroiliac_r: 'negativo' | 'positivo';
+      sacroiliac_l: 'negativo' | 'positivo';
     };
     perimetry: {
-      thigh_10cm_r?: number;
-      thigh_10cm_l?: number;
-      thigh_20cm_r?: number;
-      thigh_20cm_l?: number;
-      calf_max_r?: number;
-      calf_max_l?: number;
+      thigh_r?: number;
+      thigh_l?: number;
+      calf_r?: number;
+      calf_l?: number;
     };
-    stability: {
+    balance: {
       y_balance_ant_r?: number;
       y_balance_pm_r?: number;
       y_balance_pl_r?: number;
@@ -204,6 +233,14 @@ export interface ClinicalEvaluation {
       y_balance_pm_l?: number;
       y_balance_pl_l?: number;
       leg_length?: number;
+      eyes_open_r?: number;
+      eyes_closed_r?: number;
+      eyes_open_l?: number;
+      eyes_closed_l?: number;
+      vestibular_side_r?: number;
+      vestibular_up_r?: number;
+      vestibular_side_l?: number;
+      vestibular_up_l?: number;
     };
     mcgill: {
       flexor_endurance?: number;
@@ -224,6 +261,14 @@ export interface ClinicalEvaluation {
       single_leg_squat_l?: number;
       single_leg_squat_vas_r?: number;
       single_leg_squat_vas_l?: number;
+      shoulder_press_r?: number;
+      shoulder_press_l?: number;
+      shoulder_press_vas_r?: number;
+      shoulder_press_vas_l?: number;
+      bench_press_reps?: number;
+      bench_press_vas?: number;
+      pull_ups_reps?: number;
+      pull_ups_vas?: number;
     };
     strength: {
       hip_flex_0_r?: number;
@@ -252,17 +297,125 @@ export interface ClinicalEvaluation {
       hams_l?: number;
       hams_vas_r?: number;
       hams_vas_l?: number;
+      triceps_sural_r?: number;
+      triceps_sural_l?: number;
+      triceps_sural_vas_r?: number;
+      triceps_sural_vas_l?: number;
+      tobillo_abd_r?: number;
+      tobillo_abd_l?: number;
+      tobillo_abd_vas_r?: number;
+      tobillo_abd_vas_l?: number;
+      tobillo_add_r?: number;
+      tobillo_add_l?: number;
+      tobillo_add_vas_r?: number;
+      tobillo_add_vas_l?: number;
+      imtp_peak?: number;
+      imtp_r?: number;
+      imtp_l?: number;
+      shoulder_ri_r?: number;
+      shoulder_ri_l?: number;
+      shoulder_ri_vas_r?: number;
+      shoulder_ri_vas_l?: number;
+      shoulder_re_r?: number;
+      shoulder_re_l?: number;
+      shoulder_re_vas_r?: number;
+      shoulder_re_vas_l?: number;
+      ash_i_r?: number;
+      ash_i_l?: number;
+      ash_i_vas_r?: number;
+      ash_i_vas_l?: number;
+      ash_y_r?: number;
+      ash_y_l?: number;
+      ash_y_vas_r?: number;
+      ash_y_vas_l?: number;
+      ash_t_r?: number;
+      ash_t_l?: number;
+      ash_t_vas_r?: number;
+      ash_t_vas_l?: number;
+      handgrip_r?: number;
+      handgrip_l?: number;
     };
-    jumps: {
-      cmj_height?: number;
-      cmj_rsi?: number;
-      sj_height?: number;
-      sj_rsi?: number;
-      broad_jump?: number;
-      triple_hop_r?: number;
-      triple_hop_l?: number;
+    vbt: {
+      squat_r?: number;
+      squat_l?: number;
+      squat_weight?: number;
+      deadlift_r?: number;
+      deadlift_l?: number;
+      deadlift_weight?: number;
+      glute_bridge_r?: number;
+      glute_bridge_l?: number;
+      glute_bridge_weight?: number;
+      bulgarian_r?: number;
+      bulgarian_l?: number;
+      bulgarian_weight?: number;
+    };
+    jumps_vertical: {
+      cmj_2p_height?: number;
+      cmj_2p_brake_r?: number;
+      cmj_2p_brake_l?: number;
+      cmj_2p_prop_r?: number;
+      cmj_2p_prop_l?: number;
+      cmj_2p_land_r?: number;
+      cmj_2p_land_l?: number;
+      cmj_2p_rsi?: number;
+      cmj_1p_height_r?: number;
+      cmj_1p_height_l?: number;
+      cmj_1p_brake_r?: number;
+      cmj_1p_brake_l?: number;
+      cmj_1p_prop_r?: number;
+      cmj_1p_prop_l?: number;
+      cmj_1p_land_r?: number;
+      cmj_1p_land_l?: number;
+      cmj_1p_rsi_r?: number;
+      cmj_1p_rsi_l?: number;
+      dj_2p_height?: number;
+      dj_2p_peak_force_r?: number;
+      dj_2p_peak_force_l?: number;
+      dj_2p_rsi?: number;
+      dj_1p_height_r?: number;
+      dj_1p_height_l?: number;
+      dj_1p_contact_r?: number;
+      dj_1p_contact_l?: number;
+      dj_1p_rsi_r?: number;
+      dj_1p_rsi_l?: number;
+    };
+    jumps_horizontal: {
+      single_hop_r?: number;
+      single_hop_l?: number;
+      triple_hop_dist_r?: number;
+      triple_hop_dist_l?: number;
+      triple_hop_contact_r?: number;
+      triple_hop_contact_l?: number;
+      crossover_hop_dist_r?: number;
+      crossover_hop_dist_l?: number;
+      crossover_hop_contact_r?: number;
+      crossover_hop_contact_l?: number;
+      medial_side_triple_hop_r?: number;
+      medial_side_triple_hop_l?: number;
+      medial_rotation_hop_r?: number;
+      medial_rotation_hop_l?: number;
+      side_hop_r?: number;
+      side_hop_l?: number;
+    };
+    motor_control: {
+      sls_frontal_trunk_r?: number;
+      sls_frontal_pelvis_r?: number;
+      sls_frontal_hip_r?: number;
+      sls_frontal_knee_r?: number;
+      sls_frontal_trunk_l?: number;
+      sls_frontal_pelvis_l?: number;
+      sls_frontal_hip_l?: number;
+      sls_frontal_knee_l?: number;
+      sls_sagittal_r?: number;
+      sls_sagittal_l?: number;
+      bipodal_squat_r?: number;
+      bipodal_squat_l?: number;
+      hip_hinge_r?: number;
+      hip_hinge_l?: number;
+      lunge_fms?: number;
     };
   };
+
   
   // Resultados calculados de la hoja "Resultados"
   results: {

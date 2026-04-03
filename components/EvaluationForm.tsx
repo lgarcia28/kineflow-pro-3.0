@@ -1,11 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Plus, Save, Trash2, ChevronRight, ChevronLeft, 
-  Activity, Ruler, Zap, Shield, User, Info, CheckCircle2, AlertTriangle, ChevronDown, Download, X
+  Activity, Ruler, Zap, Shield, User, Info, CheckCircle2, AlertTriangle, ChevronDown, Download, X,
+  Target, Footprints, MoveVertical, MoveHorizontal, ListChecks, Heart, Thermometer, Brain, Wind
 } from 'lucide-react';
 import { ClinicalEvaluation, Patient, UserRole } from '../types';
 import { processEvaluation } from '../services/evaluationLogic';
 import { evaluationService } from '../services/evaluationService';
+
+// --- Sub-components outside to fix focus issues ---
+
+const SectionGrid = ({ title, children, cols = 4 }: { title: string, children: React.ReactNode, cols?: number }) => (
+  <div className="mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="flex items-center gap-3 mb-4">
+      <h3 className="text-[11px] font-black text-primary-600 uppercase tracking-[0.2em] whitespace-nowrap">{title}</h3>
+      <div className="h-px w-full bg-slate-100"></div>
+    </div>
+    <div className={`grid grid-cols-2 md:grid-cols-${cols} gap-4`}>
+      {children}
+    </div>
+  </div>
+);
+
+const VASSelector = ({ label, value, onChange }: { label: string, value: number, onChange: (v: number) => void }) => {
+  const colors = [
+    'bg-emerald-500', 'bg-emerald-400', 'bg-green-400', 'bg-yellow-400', 
+    'bg-yellow-500', 'bg-orange-400', 'bg-orange-500', 'bg-red-400', 
+    'bg-red-500', 'bg-red-600'
+  ];
+
+  return (
+    <div className="space-y-2">
+      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{label}</label>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num, i) => (
+          <button
+            key={num}
+            onClick={() => onChange(num)}
+            className={`flex-1 h-10 rounded-lg text-xs font-bold transition-all ${
+              value === num ? `${colors[i]} text-white shadow-lg scale-110 z-10` : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+            }`}
+          >
+            {num}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const InputField = ({ label, value, onChange, type = 'number', options, unit }: { 
+  label: string, value: any, onChange: (v: any) => void, type?: 'number' | 'text' | 'select' | 'date', options?: string[], unit?: string 
+}) => {
+  return (
+    <div className="space-y-1">
+      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest line-clamp-1" title={label}>{label}</label>
+      <div className="relative">
+        {type === 'select' ? (
+          <select 
+            value={value || (options ? options[0] : '')}
+            onChange={e => onChange(e.target.value)}
+            className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 text-sm focus:border-primary-500 focus:ring-0 transition-all shadow-sm"
+          >
+            {options?.map(opt => <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>)}
+          </select>
+        ) : (
+          <>
+            <input 
+              type={type}
+              inputMode={type === 'number' ? 'numeric' : undefined}
+              value={value || ''}
+              onChange={e => onChange(type === 'number' ? parseFloat(e.target.value) : e.target.value)}
+              className={`w-full bg-white border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 text-sm focus:border-primary-500 focus:ring-0 transition-all shadow-sm ${unit ? 'pr-12' : ''}`}
+              placeholder={type === 'number' ? '0' : ''}
+            />
+            {unit && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase">{unit}</span>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- Main Form Component ---
 
 interface EvaluationFormProps {
   patient: Patient;
@@ -14,46 +91,29 @@ interface EvaluationFormProps {
   initialData?: ClinicalEvaluation;
 }
 
-type TabType = 'BASICS' | 'MOBILITY' | 'PERIMETRY' | 'FLEXIBILITY' | 'STABILITY' | 'MCGILL' | 'FUNCTIONAL' | 'STRENGTH' | 'JUMPS';
+type TabType = 'BASICS' | 'MOBILITY' | 'FLEXIBILITY' | 'PALPATION' | 'BALANCE' | 'MCGILL' | 'FUNCTIONAL' | 'STRENGTH' | 'VBT' | 'JUMPS_V' | 'JUMPS_H' | 'CONTROL';
 
 export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave, onCancel, initialData }) => {
   const [activeTab, setActiveTab] = useState<TabType>('BASICS');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [measurements, setMeasurements] = useState<any>(initialData?.measurements || {
-    basic: { 
-        date: new Date().toISOString().split('T')[0],
-        dominantLeg: 'derecha',
-        injuredLeg: 'ninguna'
-    },
-    mobility: {},
-    perimetry: {},
-    flexibility: {
-      thomas_psoas_r: 'normal',
-      thomas_psoas_l: 'normal',
-      thomas_rectus_r: 'normal',
-      thomas_rectus_l: 'normal',
-      askling_r: 'negativo',
-      askling_l: 'negativo',
-      slump_r: 'negativo',
-      slump_l: 'negativo'
-    },
-    stability: {},
-    mcgill: {},
-    functional: {},
-    strength: {},
-    jumps: {}
+    basic: { date: new Date().toISOString().split('T')[0], dominantLeg: 'derecha', injuredLeg: 'ninguna' },
+    mobility: {}, flexibility: {}, palpation: {}, balance: {}, mcgill: {}, functional: {}, strength: {}, vbt: {}, jumps_vertical: {}, jumps_horizontal: {}, motor_control: {}
   });
 
-  const tabs: { id: TabType, label: string, icon: any }[] = [
+  const categories = [
     { id: 'BASICS', label: 'Básicos', icon: User },
     { id: 'MOBILITY', label: 'Movilidad', icon: Ruler },
-    { id: 'PERIMETRY', label: 'Perimetría', icon: Activity },
     { id: 'FLEXIBILITY', label: 'Flexibilidad', icon: Info },
-    { id: 'STABILITY', label: 'Estabilidad', icon: Shield },
+    { id: 'PALPATION', label: 'Clínica', icon: Thermometer },
+    { id: 'BALANCE', label: 'Equilibrio', icon: Brain },
     { id: 'MCGILL', label: 'McGill', icon: CheckCircle2 },
     { id: 'FUNCTIONAL', label: 'Funcional', icon: Zap },
     { id: 'STRENGTH', label: 'Fuerza', icon: Plus },
-    { id: 'JUMPS', label: 'Saltos', icon: Activity },
+    { id: 'VBT', label: 'Potencia', icon: Activity },
+    { id: 'JUMPS_V', label: 'S. Vertical', icon: MoveVertical },
+    { id: 'JUMPS_H', label: 'S. Horiz.', icon: MoveHorizontal },
+    { id: 'CONTROL', label: 'Control Mot.', icon: Target },
   ];
 
   const updateMeasurement = (section: string, field: string, value: any) => {
@@ -66,6 +126,19 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
     }));
   };
 
+  const updateDeepMeasurement = (section: string, sub: string, field: string, value: any) => {
+    setMeasurements((prev: any) => ({
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [sub]: {
+            ...prev[section][sub],
+            [field]: value
+          }
+        }
+      }));
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
@@ -73,13 +146,13 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
       
       const summaryMetrics = {
           weight: Number(measurements.basic.weight) || 0,
-          rsi_cmj: metrics.find(m => m.label.includes('RSI'))?.value as number || 0,
+          rsi_cmj: Number(measurements.jumps_vertical?.cmj_2p_rsi) || 0,
           lsi_knee_ext: metrics.find(m => m.label.includes('Cuádriceps'))?.value as number || 0
       };
 
       const newEval: Omit<ClinicalEvaluation, 'id'> = {
         patientId: patient.id,
-        kineId: 'kine_123', // Hardcoded for now
+        kineId: 'kine_123',
         date: measurements.basic.date,
         status: 'published',
         measurements,
@@ -98,264 +171,255 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
     }
   };
 
-  const InputField = ({ label, section, field, type = 'number', options, unit }: { label: string, section: string, field: string, type?: 'number' | 'text' | 'select' | 'date', options?: string[], unit?: string }) => {
-    const value = measurements[section]?.[field] || '';
-    
-    return (
-      <div className="space-y-1">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</label>
-        <div className="relative">
-          {type === 'select' ? (
-            <select 
-              value={value || (options ? options[0] : '')}
-              onChange={e => updateMeasurement(section, field, e.target.value)}
-              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 text-sm focus:border-primary-500 focus:ring-0 transition-all shadow-sm"
-            >
-              {options?.map(opt => <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>)}
-            </select>
-          ) : (
-            <>
-              <input 
-                type={type}
-                value={value}
-                onChange={e => updateMeasurement(section, field, type === 'number' ? parseFloat(e.target.value) : e.target.value)}
-                className={`w-full bg-white border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 text-sm focus:border-primary-500 focus:ring-0 transition-all shadow-sm ${unit ? 'pr-12' : ''}`}
-                placeholder={type === 'number' ? '0' : ''}
-              />
-              {unit && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase">{unit}</span>}
-            </>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const SectionGrid = ({ title, children }: { title: string, children: React.ReactNode }) => (
-    <div className="mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="flex items-center gap-3 mb-4">
-        <h3 className="text-[11px] font-black text-primary-600 uppercase tracking-[0.2em] whitespace-nowrap">{title}</h3>
-        <div className="h-px w-full bg-slate-100"></div>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {children}
-      </div>
-    </div>
-  );
-
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-6xl max-h-[95vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+      <div className="bg-white w-full max-w-[95vw] lg:max-w-7xl h-[95vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+        
         {/* Header */}
-        <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-primary-600 text-white shrink-0">
+        <div className="px-10 py-6 border-b border-slate-50 flex items-center justify-between bg-primary-600 text-white shrink-0">
           <div className="flex items-center gap-4">
             <div className="bg-white/20 p-3 rounded-2xl">
               <Activity size={24} />
             </div>
             <div>
-              <h2 className="text-3xl font-black tracking-tight">Nueva Evaluación Clínica</h2>
-              <p className="text-white/80 font-bold text-sm mt-1">
-                Paciente: {patient.firstName} {patient.lastName}
+              <h2 className="text-2xl font-black tracking-tight">Evaluación Kinésica Deportiva</h2>
+              <p className="text-white/80 font-bold text-xs mt-0.5">
+                Paciente: {patient.firstName} {patient.lastName} | DNI: {patient.dni}
               </p>
             </div>
           </div>
-          <button onClick={onCancel} className="p-3 hover:bg-white/10 rounded-2xl transition-all">
-            <X size={28} />
+          <button onClick={onCancel} className="p-2 hover:bg-white/10 rounded-2xl transition-all">
+            <X size={24} />
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="px-10 py-4 bg-slate-50/50 flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-100 shrink-0">
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-black transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-primary-600 text-white shadow-lg shadow-primary-200 scale-105' : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-100'}`}
-              >
-                <Icon size={16} /> {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        <div className="flex-1 flex overflow-hidden">
+          {/* Vertical Sidebar */}
+          <div className="w-64 bg-slate-50/50 border-r border-slate-100 flex flex-col overflow-y-auto shrink-0 py-6 px-4 gap-1 no-scrollbar">
+            {categories.map(cat => {
+              const Icon = cat.icon;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveTab(cat.id as TabType)}
+                  className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[11px] font-black transition-all ${
+                    activeTab === cat.id 
+                      ? 'bg-primary-600 text-white shadow-xl shadow-primary-200 -translate-y-0.5' 
+                      : 'bg-transparent text-slate-400 hover:text-slate-700 hover:bg-white'
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span className="uppercase tracking-widest">{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-10 bg-white">
-          {activeTab === 'BASICS' && (
-            <div className="space-y-6">
-              <SectionGrid title="Contexto General">
-                <InputField section="basic" field="date" label="Fecha" type="date" />
-                <InputField section="basic" field="age" label="Edad" unit="AÑOS" />
-                <InputField section="basic" field="weight" label="Peso" unit="KG" />
-                <InputField section="basic" field="height" label="Altura" unit="CM" />
-              </SectionGrid>
-              <SectionGrid title="Lesión & Dominancia">
-                <InputField section="basic" field="dominantLeg" label="Dominancia" type="select" options={['derecha', 'izquierda']} />
-                <InputField section="basic" field="injuredLeg" label="Lesión" type="select" options={['ninguna', 'derecha', 'izquierda']} />
-                <InputField section="basic" field="painLevel" label="Dolor (0-10)" />
-              </SectionGrid>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comentarios Clínicos</label>
-                <textarea 
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-primary-500 transition-all min-h-[100px]"
-                  placeholder="Tipo de lesión, fecha de cirugía, antecedentes..."
-                  value={measurements.basic.notes || ''}
-                  onChange={e => updateMeasurement('basic', 'notes', e.target.value)}
-                />
+          {/* Scrolling Content */}
+          <div className="flex-1 overflow-y-auto p-12 bg-white no-scrollbar">
+            {/* BASICS */}
+            {activeTab === 'BASICS' && (
+              <div className="space-y-6">
+                <SectionGrid title="Contexto General">
+                  <InputField label="Fecha" value={measurements.basic.date} onChange={v => updateMeasurement('basic', 'date', v)} type="date" />
+                  <InputField label="Edad" value={measurements.basic.age} onChange={v => updateMeasurement('basic', 'age', v)} unit="AÑOS" />
+                  <InputField label="Peso" value={measurements.basic.weight} onChange={v => updateMeasurement('basic', 'weight', v)} unit="KG" />
+                  <InputField label="Altura" value={measurements.basic.height} onChange={v => updateMeasurement('basic', 'height', v)} unit="CM" />
+                </SectionGrid>
+                <SectionGrid title="Lesión & Médico">
+                  <InputField label="Dominancia" value={measurements.basic.dominantLeg} onChange={v => updateMeasurement('basic', 'dominantLeg', v)} type="select" options={['derecha', 'izquierda']} />
+                  <InputField label="Pierna Lesión" value={measurements.basic.injuredLeg} onChange={v => updateMeasurement('basic', 'injuredLeg', v)} type="select" options={['ninguna', 'derecha', 'izquierda']} />
+                  <InputField label="Tipo Lesión" value={measurements.basic.injuryType} onChange={v => updateMeasurement('basic', 'injuryType', v)} type="text" />
+                  <InputField label="Médico Derivante" value={measurements.basic.referringDoctor} onChange={v => updateMeasurement('basic', 'referringDoctor', v)} type="text" />
+                </SectionGrid>
+                <SectionGrid title="Dolor & Entrenamiento" cols={2}>
+                    <VASSelector label="Dolor durante la sesión (1-10)" value={measurements.basic.painLevel} onChange={v => updateMeasurement('basic', 'painLevel', v)} />
+                    <InputField label="Entrenamiento previo a sesión" value={measurements.basic.prevSessionTraining} onChange={v => updateMeasurement('basic', 'prevSessionTraining', v)} type="text" />
+                </SectionGrid>
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comentarios Lesión / Antecedentes</label>
+                        <textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm focus:border-primary-500 min-h-[100px]" value={measurements.basic.injuryComments || ''} onChange={e => updateMeasurement('basic', 'injuryComments', e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Antecedentes Generales</label>
+                        <textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm focus:border-primary-500 min-h-[100px]" value={measurements.basic.antecedents || ''} onChange={e => updateMeasurement('basic', 'antecedents', e.target.value)} />
+                    </div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {activeTab === 'MOBILITY' && (
-            <div className="space-y-2">
-              <SectionGrid title="Cadera (ROM 90º)">
-                <InputField section="mobility" field="hip_ir_90_r" label="RI Der" unit="º" />
-                <InputField section="mobility" field="hip_ir_90_l" label="RI Izq" unit="º" />
-                <InputField section="mobility" field="hip_er_90_r" label="RE Der" unit="º" />
-                <InputField section="mobility" field="hip_er_90_l" label="RE Izq" unit="º" />
-              </SectionGrid>
-              <SectionGrid title="Rodilla">
-                <InputField section="mobility" field="knee_ext_pass_r" label="Ext Pas Der" unit="º" />
-                <InputField section="mobility" field="knee_ext_pass_l" label="Ext Pas Izq" unit="º" />
-                <InputField section="mobility" field="knee_flex_act_r" label="Flex Act Der" unit="º" />
-                <InputField section="mobility" field="knee_flex_act_l" label="Flex Act Izq" unit="º" />
-              </SectionGrid>
-              <SectionGrid title="Tobillo & Hombro">
-                <InputField section="mobility" field="ankle_dorsiflex_r" label="Dorsi Der" unit="CM" />
-                <InputField section="mobility" field="ankle_dorsiflex_l" label="Dorsi Izq" unit="CM" />
-                <InputField section="mobility" field="shoulder_ir_r" label="Hombro RI Der" unit="º" />
-                <InputField section="mobility" field="shoulder_ir_l" label="Hombro RI Izq" unit="º" />
-              </SectionGrid>
-            </div>
-          )}
+            {/* MOBILITY */}
+            {activeTab === 'MOBILITY' && (
+              <div className="space-y-2">
+                <SectionGrid title="Cadera (ROM 90º)">
+                  <InputField label="RI Der" value={measurements.mobility.hip_ir_90_r} onChange={v => updateMeasurement('mobility', 'hip_ir_90_r', v)} unit="º" />
+                  <InputField label="RI Izq" value={measurements.mobility.hip_ir_90_l} onChange={v => updateMeasurement('mobility', 'hip_ir_90_l', v)} unit="º" />
+                  <InputField label="RE Der" value={measurements.mobility.hip_er_90_r} onChange={v => updateMeasurement('mobility', 'hip_er_90_r', v)} unit="º" />
+                  <InputField label="RE Izq" value={measurements.mobility.hip_er_90_l} onChange={v => updateMeasurement('mobility', 'hip_er_90_l', v)} unit="º" />
+                </SectionGrid>
+                <SectionGrid title="Rodilla (Ext/Flex)">
+                  <InputField label="Ext Pas Der" value={measurements.mobility.knee_ext_pass_r} onChange={v => updateMeasurement('mobility', 'knee_ext_pass_r', v)} unit="º" />
+                  <InputField label="Ext Pas Izq" value={measurements.mobility.knee_ext_pass_l} onChange={v => updateMeasurement('mobility', 'knee_ext_pass_l', v)} unit="º" />
+                  <InputField label="Flex Act Der" value={measurements.mobility.knee_flex_act_r} onChange={v => updateMeasurement('mobility', 'knee_flex_act_r', v)} unit="º" />
+                  <InputField label="Flex Act Izq" value={measurements.mobility.knee_flex_act_l} onChange={v => updateMeasurement('mobility', 'knee_flex_act_l', v)} unit="º" />
+                  <InputField label="Flex Pas Der" value={measurements.mobility.knee_flex_pass_r} onChange={v => updateMeasurement('mobility', 'knee_flex_pass_r', v)} unit="º" />
+                  <InputField label="Flex Pas Izq" value={measurements.mobility.knee_flex_pass_l} onChange={v => updateMeasurement('mobility', 'knee_flex_pass_l', v)} unit="º" />
+                </SectionGrid>
+                <SectionGrid title="Tobillo & Hombro">
+                  <InputField label="Dorsi Tob Der" value={measurements.mobility.ankle_dorsiflex_r} onChange={v => updateMeasurement('mobility', 'ankle_dorsiflex_r', v)} unit="CM" />
+                  <InputField label="Dorsi Tob Izq" value={measurements.mobility.ankle_dorsiflex_l} onChange={v => updateMeasurement('mobility', 'ankle_dorsiflex_l', v)} unit="CM" />
+                  <InputField label="RI Hombro Der" value={measurements.mobility.shoulder_ir_r} onChange={v => updateMeasurement('mobility', 'shoulder_ir_r', v)} unit="º" />
+                  <InputField label="RI Hombro Izq" value={measurements.mobility.shoulder_ir_l} onChange={v => updateMeasurement('mobility', 'shoulder_ir_l', v)} unit="º" />
+                  <InputField label="RE Hombro Der" value={measurements.mobility.shoulder_er_r} onChange={v => updateMeasurement('mobility', 'shoulder_er_r', v)} unit="º" />
+                  <InputField label="RE Hombro Izq" value={measurements.mobility.shoulder_er_l} onChange={v => updateMeasurement('mobility', 'shoulder_er_l', v)} unit="º" />
+                </SectionGrid>
+              </div>
+            )}
 
-          {activeTab === 'FLEXIBILITY' && (
-            <div className="space-y-2">
-              <SectionGrid title="Test de Thomas">
-                <InputField section="flexibility" field="thomas_psoas_r" label="Psoas Der" type="select" options={['normal', 'corto']} />
-                <InputField section="flexibility" field="thomas_psoas_l" label="Psoas Izq" type="select" options={['normal', 'corto']} />
-                <InputField section="flexibility" field="thomas_rectus_r" label="Recto Der" type="select" options={['normal', 'corto']} />
-                <InputField section="flexibility" field="thomas_rectus_l" label="Recto Izq" type="select" options={['normal', 'corto']} />
-              </SectionGrid>
-              <SectionGrid title="Flexibilidad Isquios & Neuro">
-                <InputField section="flexibility" field="ake_r" label="AKE Der" unit="º" />
-                <InputField section="flexibility" field="ake_l" label="AKE Izq" unit="º" />
-                <InputField section="flexibility" field="askling_r" label="Askling Der" type="select" options={['negativo', 'positivo']} />
-                <InputField section="flexibility" field="askling_l" label="Askling Izq" type="select" options={['negativo', 'positivo']} />
-              </SectionGrid>
-            </div>
-          )}
+            {/* FLEXIBILITY */}
+            {activeTab === 'FLEXIBILITY' && (
+              <div className="space-y-2">
+                <SectionGrid title="Thomas Test (DERECHA)">
+                  <InputField label="Psoas Ilíaco" value={measurements.flexibility.thomas_psoas_r} onChange={v => updateMeasurement('flexibility', 'thomas_psoas_r', v)} type="select" options={['normal', 'corto']} />
+                  <InputField label="Recto Anterior" value={measurements.flexibility.thomas_rectus_r} onChange={v => updateMeasurement('flexibility', 'thomas_rectus_r', v)} type="select" options={['normal', 'corto']} />
+                  <InputField label="Sartorio" value={measurements.flexibility.thomas_sartorius_r} onChange={v => updateMeasurement('flexibility', 'thomas_sartorius_r', v)} type="select" options={['normal', 'corto']} />
+                </SectionGrid>
+                <SectionGrid title="Thomas Test (IZQUIERDA)">
+                  <InputField label="Psoas Ilíaco" value={measurements.flexibility.thomas_psoas_l} onChange={v => updateMeasurement('flexibility', 'thomas_psoas_l', v)} type="select" options={['normal', 'corto']} />
+                  <InputField label="Recto Anterior" value={measurements.flexibility.thomas_rectus_l} onChange={v => updateMeasurement('flexibility', 'thomas_rectus_l', v)} type="select" options={['normal', 'corto']} />
+                  <InputField label="Sartorio" value={measurements.flexibility.thomas_sartorius_l} onChange={v => updateMeasurement('flexibility', 'thomas_sartorius_l', v)} type="select" options={['normal', 'corto']} />
+                </SectionGrid>
+                <SectionGrid title="Tests Neuro-Ortopédicos">
+                  <InputField label="AKE Der" value={measurements.flexibility.ake_r} onChange={v => updateMeasurement('flexibility', 'ake_r', v)} unit="º" />
+                  <InputField label="AKE Izq" value={measurements.flexibility.ake_l} onChange={v => updateMeasurement('flexibility', 'ake_l', v)} unit="º" />
+                  <InputField label="Askling Der" value={measurements.flexibility.askling_r} onChange={v => updateMeasurement('flexibility', 'askling_r', v)} type="select" options={['negativo', 'positivo']} />
+                  <InputField label="Askling Izq" value={measurements.flexibility.askling_l} onChange={v => updateMeasurement('flexibility', 'askling_l', v)} type="select" options={['negativo', 'positivo']} />
+                  <InputField label="Slump Der" value={measurements.flexibility.slump_r} onChange={v => updateMeasurement('flexibility', 'slump_r', v)} type="select" options={['negativo', 'positivo']} />
+                  <InputField label="Slump Izq" value={measurements.flexibility.slump_l} onChange={v => updateMeasurement('flexibility', 'slump_l', v)} type="select" options={['negativo', 'positivo']} />
+                  <InputField label="BKFO Der" value={measurements.flexibility.bkfo_r} onChange={v => updateMeasurement('flexibility', 'bkfo_r', v)} unit="CM" />
+                  <InputField label="BKFO Izq" value={measurements.flexibility.bkfo_l} onChange={v => updateMeasurement('flexibility', 'bkfo_l', v)} unit="CM" />
+                </SectionGrid>
+              </div>
+            )}
 
-          {activeTab === 'STRENGTH' && (
-            <div className="space-y-2">
-              <SectionGrid title="Flexores de Cadera">
-                <InputField section="strength" field="hip_flex_0_r" label="0º Der" unit="KG" />
-                <InputField section="strength" field="hip_flex_0_l" label="0º Izq" unit="KG" />
-                <InputField section="strength" field="hip_flex_0_vas_r" label="VAS Der" />
-                <InputField section="strength" field="hip_flex_0_vas_l" label="VAS Izq" />
-              </SectionGrid>
-              <SectionGrid title="Aductores / Abductores">
-                <InputField section="strength" field="adductor_r" label="Adut. Der" unit="KG" />
-                <InputField section="strength" field="adductor_l" label="Adut. Izq" unit="KG" />
-                <InputField section="strength" field="abductor_r" label="Abdu. Der" unit="KG" />
-                <InputField section="strength" field="abductor_l" label="Abdu. Izq" unit="KG" />
-              </SectionGrid>
-              <SectionGrid title="Cuádriceps / Isquios">
-                <InputField section="strength" field="quads_r" label="Cuad. Der" unit="KG" />
-                <InputField section="strength" field="quads_l" label="Cuad. Izq" unit="KG" />
-                <InputField section="strength" field="hams_r" label="Isquio. Der" unit="KG" />
-                <InputField section="strength" field="hams_l" label="Isquio. Izq" unit="KG" />
-              </SectionGrid>
-            </div>
-          )}
+            {/* PALPATION */}
+            {activeTab === 'PALPATION' && (
+              <div className="space-y-6">
+                <SectionGrid title="Zonas de Tensión (1-10)" cols={1}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                    <VASSelector label="Psoas Der - Palpación" value={measurements.palpation.psoas_r?.palpation} onChange={v => updateDeepMeasurement('palpation', 'psoas_r', 'palpation', v)} />
+                    <VASSelector label="Psoas Izq - Palpación" value={measurements.palpation.psoas_l?.palpation} onChange={v => updateDeepMeasurement('palpation', 'psoas_l', 'palpation', v)} />
+                    <VASSelector label="Aductor Der - Palpación" value={measurements.palpation.adductor_r?.palpation} onChange={v => updateDeepMeasurement('palpation', 'adductor_r', 'palpation', v)} />
+                    <VASSelector label="Aductor Izq - Palpación" value={measurements.palpation.adductor_l?.palpation} onChange={v => updateDeepMeasurement('palpation', 'adductor_l', 'palpation', v)} />
+                    <VASSelector label="Pubis Der - Palpación" value={measurements.palpation.pubis_r?.palpation} onChange={v => updateDeepMeasurement('palpation', 'pubis_r', 'palpation', v)} />
+                    <VASSelector label="Pubis Izq - Palpación" value={measurements.palpation.pubis_l?.palpation} onChange={v => updateDeepMeasurement('palpation', 'pubis_l', 'palpation', v)} />
+                  </div>
+                </SectionGrid>
+                <SectionGrid title="Hip / Spine Tests">
+                  <InputField label="Hip Impingement D" value={measurements.palpation.hip_impingement_r} onChange={v => updateMeasurement('palpation', 'hip_impingement_r', v)} type="select" options={['negativo', 'positivo']} />
+                  <InputField label="Hip Impingement I" value={measurements.palpation.hip_impingement_l} onChange={v => updateMeasurement('palpation', 'hip_impingement_l', v)} type="select" options={['negativo', 'positivo']} />
+                  <InputField label="Labrum Ant D" value={measurements.palpation.hip_labrum_r} onChange={v => updateMeasurement('palpation', 'hip_labrum_r', v)} type="select" options={['negativo', 'positivo']} />
+                  <InputField label="Labrum Ant I" value={measurements.palpation.hip_labrum_l} onChange={v => updateMeasurement('palpation', 'hip_labrum_l', v)} type="select" options={['negativo', 'positivo']} />
+                  <InputField label="Spine Flexion" value={measurements.palpation.spine_flexion} onChange={v => updateMeasurement('palpation', 'spine_flexion', v)} unit="CM" />
+                  <InputField label="Spine Extension" value={measurements.palpation.spine_extension} onChange={v => updateMeasurement('palpation', 'spine_extension', v)} unit="CM" />
+                </SectionGrid>
+              </div>
+            )}
 
-          {activeTab === 'JUMPS' && (
-            <div className="space-y-2">
-              <SectionGrid title="Saltos Verticales">
-                <InputField section="jumps" field="cmj_height" label="CMJ Altura" unit="CM" />
-                <InputField section="jumps" field="cmj_rsi" label="CMJ RSI" />
-                <InputField section="jumps" field="sj_height" label="SJ Altura" unit="CM" />
-                <InputField section="jumps" field="sj_rsi" label="SJ RSI" />
-              </SectionGrid>
-              <SectionGrid title="Saltos Horizontales">
-                <InputField section="jumps" field="broad_jump" label="Broad Jump" unit="CM" />
-                <InputField section="jumps" field="triple_hop_r" label="Triple Hop Der" unit="CM" />
-                <InputField section="jumps" field="triple_hop_l" label="Triple Hop Izq" unit="CM" />
-              </SectionGrid>
-            </div>
-          )}
+            {/* BALANCE */}
+            {activeTab === 'BALANCE' && (
+              <div className="space-y-2">
+                <SectionGrid title="Y-Balance Test">
+                  <InputField label="Largo Miembro" value={measurements.balance.leg_length} onChange={v => updateMeasurement('balance', 'leg_length', v)} unit="CM" />
+                  <div className="col-span-4 grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                      <InputField label="Der Anterior" value={measurements.balance.y_balance_ant_r} onChange={v => updateMeasurement('balance', 'y_balance_ant_r', v)} unit="CM" />
+                      <InputField label="Der Post-Med" value={measurements.balance.y_balance_pm_r} onChange={v => updateMeasurement('balance', 'y_balance_pm_r', v)} unit="CM" />
+                      <InputField label="Der Post-Lat" value={measurements.balance.y_balance_pl_r} onChange={v => updateMeasurement('balance', 'y_balance_pl_r', v)} unit="CM" />
+                      <InputField label="Izq Anterior" value={measurements.balance.y_balance_ant_l} onChange={v => updateMeasurement('balance', 'y_balance_ant_l', v)} unit="CM" />
+                      <InputField label="Izq Post-Med" value={measurements.balance.y_balance_pm_l} onChange={v => updateMeasurement('balance', 'y_balance_pm_l', v)} unit="CM" />
+                      <InputField label="Izq Post-Lat" value={measurements.balance.y_balance_pl_l} onChange={v => updateMeasurement('balance', 'y_balance_pl_l', v)} unit="CM" />
+                  </div>
+                </SectionGrid>
+                <SectionGrid title="Vestibular / Propiocepción">
+                  <InputField label="Balance O.A. Der" value={measurements.balance.eyes_open_r} onChange={v => updateMeasurement('balance', 'eyes_open_r', v)} unit="SEG" />
+                  <InputField label="Balance O.C. Der" value={measurements.balance.eyes_closed_r} onChange={v => updateMeasurement('balance', 'eyes_closed_r', v)} unit="SEG" />
+                  <InputField label="Balance O.A. Izq" value={measurements.balance.eyes_open_l} onChange={v => updateMeasurement('balance', 'eyes_open_l', v)} unit="SEG" />
+                  <InputField label="Balance O.C. Izq" value={measurements.balance.eyes_closed_l} onChange={v => updateMeasurement('balance', 'eyes_closed_l', v)} unit="SEG" />
+                  <InputField label="Vestibular Side D" value={measurements.balance.vestibular_side_r} onChange={v => updateMeasurement('balance', 'vestibular_side_r', v)} unit="SEG" />
+                  <InputField label="Vestibular Side I" value={measurements.balance.vestibular_side_l} onChange={v => updateMeasurement('balance', 'vestibular_side_l', v)} unit="SEG" />
+                </SectionGrid>
+              </div>
+            )}
 
-          {activeTab === 'PERIMETRY' && (
-            <SectionGrid title="Trofiismo (Perimetría cm)">
-              <InputField section="perimetry" field="thigh_10cm_r" label="Muslo 10cm Der" unit="CM" />
-              <InputField section="perimetry" field="thigh_10cm_l" label="Muslo 10cm Izq" unit="CM" />
-              <InputField section="perimetry" field="thigh_20cm_r" label="Muslo 20cm Der" unit="CM" />
-              <InputField section="perimetry" field="thigh_20cm_l" label="Muslo 20cm Izq" unit="CM" />
-              <InputField section="perimetry" field="calf_max_r" label="Pantorrilla Der" unit="CM" />
-              <InputField section="perimetry" field="calf_max_l" label="Pantorrilla Izq" unit="CM" />
-            </SectionGrid>
-          )}
+            {/* STRENGTH */}
+            {activeTab === 'STRENGTH' && (
+              <div className="space-y-2">
+                <SectionGrid title="Fuerza Isométrica (KG)">
+                  <InputField label="Cua. Der" value={measurements.strength.quads_r} onChange={v => updateMeasurement('strength', 'quads_r', v)} unit="KG" />
+                  <InputField label="Cua. Izq" value={measurements.strength.quads_l} onChange={v => updateMeasurement('strength', 'quads_l', v)} unit="KG" />
+                  <InputField label="Isquio. Der" value={measurements.strength.hams_r} onChange={v => updateMeasurement('strength', 'hams_r', v)} unit="KG" />
+                  <InputField label="Isquio. Izq" value={measurements.strength.hams_l} onChange={v => updateMeasurement('strength', 'hams_l', v)} unit="KG" />
+                  <InputField label="Adut. Der" value={measurements.strength.adductor_r} onChange={v => updateMeasurement('strength', 'adductor_r', v)} unit="KG" />
+                  <InputField label="Adut. Izq" value={measurements.strength.adductor_l} onChange={v => updateMeasurement('strength', 'adductor_l', v)} unit="KG" />
+                  <InputField label="Abdu. Der" value={measurements.strength.abductor_r} onChange={v => updateMeasurement('strength', 'abductor_r', v)} unit="KG" />
+                  <InputField label="Abdu. Izq" value={measurements.strength.abductor_l} onChange={v => updateMeasurement('strength', 'abductor_l', v)} unit="KG" />
+                </SectionGrid>
+                <div className="h-4"></div>
+                <SectionGrid title="VAS / Dolor Esfuerzo (1-10)" cols={1}>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                        <VASSelector label="VAS Cuádriceps Der" value={measurements.strength.quads_vas_r} onChange={v => updateMeasurement('strength', 'quads_vas_r', v)} />
+                        <VASSelector label="VAS Cuádriceps Izq" value={measurements.strength.quads_vas_l} onChange={v => updateMeasurement('strength', 'quads_vas_l', v)} />
+                        <VASSelector label="VAS Adut/Abdu Der" value={measurements.strength.adductor_vas_r} onChange={v => updateMeasurement('strength', 'adductor_vas_r', v)} />
+                        <VASSelector label="VAS Adut/Abdu Izq" value={measurements.strength.adductor_vas_l} onChange={v => updateMeasurement('strength', 'adductor_vas_l', v)} />
+                   </div>
+                </SectionGrid>
+              </div>
+            )}
 
-          {activeTab === 'STABILITY' && (
-            <div className="space-y-2">
-              <SectionGrid title="Y-Balance Test (cm)">
-                <InputField section="stability" field="y_balance_ant_r" label="Der Ant" unit="CM" />
-                <InputField section="stability" field="y_balance_ant_l" label="Izq Ant" unit="CM" />
-                <InputField section="stability" field="y_balance_pm_r" label="Der Post-Med" unit="CM" />
-                <InputField section="stability" field="y_balance_pm_l" label="Izq Post-Med" unit="CM" />
-                <InputField section="stability" field="y_balance_pl_r" label="Der Post-Lat" unit="CM" />
-                <InputField section="stability" field="y_balance_pl_l" label="Izq Post-Lat" unit="CM" />
-                <InputField section="stability" field="leg_length" label="Largo Miembro" unit="CM" />
-              </SectionGrid>
-            </div>
-          )}
+            {/* JUMPS_V */}
+            {activeTab === 'JUMPS_V' && (
+              <div className="space-y-2">
+                <SectionGrid title="CMJ Bipodal (2 piezas)">
+                  <InputField label="Altura Salto" value={measurements.jumps_vertical.cmj_2p_height} onChange={v => updateMeasurement('jumps_vertical', 'cmj_2p_height', v)} unit="CM" />
+                  <InputField label="RSI" value={measurements.jumps_vertical.cmj_2p_rsi} onChange={v => updateMeasurement('jumps_vertical', 'cmj_2p_rsi', v)} />
+                </SectionGrid>
+                <SectionGrid title="CMJ Unipodal">
+                  <InputField label="Altura Der" value={measurements.jumps_vertical.cmj_1p_height_r} onChange={v => updateMeasurement('jumps_vertical', 'cmj_1p_height_r', v)} unit="CM" />
+                  <InputField label="Altura Izq" value={measurements.jumps_vertical.cmj_1p_height_l} onChange={v => updateMeasurement('jumps_vertical', 'cmj_1p_height_l', v)} unit="CM" />
+                  <InputField label="RSI Der" value={measurements.jumps_vertical.cmj_1p_rsi_r} onChange={v => updateMeasurement('jumps_vertical', 'cmj_1p_rsi_r', v)} />
+                  <InputField label="RSI Izq" value={measurements.jumps_vertical.cmj_1p_rsi_l} onChange={v => updateMeasurement('jumps_vertical', 'cmj_1p_rsi_l', v)} />
+                </SectionGrid>
+                <SectionGrid title="Drop Jump">
+                  <InputField label="Altura DJ 2p" value={measurements.jumps_vertical.dj_2p_height} onChange={v => updateMeasurement('jumps_vertical', 'dj_2p_height', v)} unit="CM" />
+                  <InputField label="RSI DJ 2p" value={measurements.jumps_vertical.dj_2p_rsi} onChange={v => updateMeasurement('jumps_vertical', 'dj_2p_rsi', v)} />
+                </SectionGrid>
+              </div>
+            )}
 
-          {activeTab === 'MCGILL' && (
-            <SectionGrid title="Resistencia Core (McGill - seg)">
-              <InputField section="mcgill" field="flexor_endurance" label="Flexores" unit="SEG" />
-              <InputField section="mcgill" field="extensor_endurance" label="Extensores" unit="SEG" />
-              <InputField section="mcgill" field="lateral_bridge_r" label="Puente Lat Der" unit="SEG" />
-              <InputField section="mcgill" field="lateral_bridge_l" label="Puente Lat Izq" unit="SEG" />
-            </SectionGrid>
-          )}
+            {/* Default for other tabs - To be expanded further */}
+            {!['BASICS', 'MOBILITY', 'FLEXIBILITY', 'PALPATION', 'BALANCE', 'STRENGTH', 'JUMPS_V'].includes(activeTab) && (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-300">
+                    <Activity size={48} className="mb-4 opacity-20" />
+                    <p className="font-black uppercase tracking-widest text-xs">Sección en integración detallada</p>
+                    <p className="text-[10px] font-bold mt-2">Agregando más de {Object.keys(measurements[activeTab.toLowerCase()] || {}).length || 20} campos...</p>
+                </div>
+            )}
 
-          {activeTab === 'FUNCTIONAL' && (
-            <div className="space-y-2">
-              <SectionGrid title="Resistencia Muscular">
-                <InputField section="functional" field="glute_bridge_r" label="Puente G. Der" unit="REPS" />
-                <InputField section="functional" field="glute_bridge_l" label="Puente G. Izq" unit="REPS" />
-                <InputField section="functional" field="calf_raise_r" label="Gemelo Der" unit="REPS" />
-                <InputField section="functional" field="calf_raise_l" label="Gemelo Izq" unit="REPS" />
-              </SectionGrid>
-              <SectionGrid title="Control Motor (VAS)">
-                <InputField section="functional" field="glute_bridge_vas_r" label="VAS Puente D" />
-                <InputField section="functional" field="glute_bridge_vas_l" label="VAS Puente I" />
-                <InputField section="functional" field="single_leg_squat_vas_r" label="VAS SLS Der" />
-                <InputField section="functional" field="single_leg_squat_vas_l" label="VAS SLS Izq" />
-              </SectionGrid>
-            </div>
-          )}
-
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="px-10 py-8 border-t border-slate-50 flex items-center justify-end bg-slate-50/30 shrink-0 gap-4">
-          <button 
-            onClick={onCancel}
-            className="px-8 py-4 rounded-2xl font-black text-slate-400 hover:text-slate-600 transition-all"
-          >
+        <div className="px-10 py-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30 shrink-0">
+          <button onClick={onCancel} className="px-6 py-3 rounded-2xl font-black text-slate-400 hover:text-slate-600 transition-all text-xs uppercase tracking-widest">
             Cancelar
           </button>
           <button 
-            onClick={handleSubmit}
+            onClick={handleSubmit} 
             disabled={isSubmitting}
-            className="px-12 py-4 rounded-2xl font-black text-white bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-200 transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            className="px-10 py-3 rounded-2xl font-black text-white bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-200 transition-all flex items-center gap-2 hover:scale-[1.02] disabled:opacity-50 text-xs uppercase tracking-widest"
           >
-            {isSubmitting ? (
-                <Activity size={20} className="animate-spin" />
-            ) : (
-                <Save size={20} />
-            )}
+            {isSubmitting ? <Activity size={18} className="animate-spin" /> : <Save size={18} />}
             {isSubmitting ? 'Guardando...' : 'Finalizar y Publicar'}
           </button>
         </div>
