@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Patient, Product, PlanType, RoutineExercise, RoutineDay, ExerciseDefinition } from '../types';
+import { Patient, Product, PlanType, RoutineExercise, RoutineDay, ExerciseDefinition, UserRole } from '../types';
 import { TabataTimer } from './TabataTimer';
 import { 
   Calendar, 
@@ -15,8 +15,10 @@ import {
   AlertCircle,
   Timer,
   X,
-  Maximize2
+  Maximize2,
+  Award
 } from 'lucide-react';
+import { EvaluationDashboard } from './EvaluationDashboard';
 
 interface PatientViewProps {
   patient: Patient;
@@ -31,7 +33,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
     const master = exercises.find(e => e.id === ex.definitionId);
     return master?.videoUrl || ex.definition?.videoUrl;
   };
-  const [activeTab, setActiveTab] = useState<'HOME' | 'ROUTINE' | 'HOME_ROUTINE' | 'TIMER'>('HOME');
+  const [activeTab, setActiveTab] = useState<'HOME' | 'ROUTINE' | 'HOME_ROUTINE' | 'TIMER' | 'EVALUATIONS'>('HOME');
   const [selectedDay, setSelectedDay] = useState<RoutineDay | null>(
     patient.routine.days[0] || null
   );
@@ -135,6 +137,12 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
           className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'TIMER' ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'text-slate-400'}`}
         >
           <Timer size={18} /> Timer
+        </button>
+        <button 
+          onClick={() => setActiveTab('EVALUATIONS')}
+          className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'EVALUATIONS' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-slate-400'}`}
+        >
+          <Award size={18} /> Resultados
         </button>
       </nav>
 
@@ -369,6 +377,14 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
 
         {activeTab === 'TIMER' && (
           <TabataTimer />
+        )}
+
+        {activeTab === 'EVALUATIONS' && (
+          <EvaluationDashboard 
+            patient={patient} 
+            role={UserRole.PATIENT} 
+            kineId="" 
+          />
         )}
       </div>
 

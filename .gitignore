@@ -3,3 +3,7 @@ dist/
 .env
 .DS_Store
 *.log
+*.pdf
+variables_list*.txt
+# spreadsheet_data.json  # Keeping this as it's part of the data mapping
+

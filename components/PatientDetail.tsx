@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Patient, RoutineExercise, Stage, UserRole, RoutineDay, ExerciseLog, ExerciseDefinition, CheckInStatus, PlanType } from '../types';
+import { Patient, RoutineExercise, Stage, UserRole, RoutineDay, ExerciseLog, ExerciseDefinition, CheckInStatus, PlanType, ClinicalEvaluation } from '../types';
+import { EvaluationDashboard } from './EvaluationDashboard';
 import { ExerciseCard } from './ExerciseCard';
 import { ProgressChart } from './ProgressChart';
 import { 
@@ -7,7 +8,7 @@ import {
 } from 'recharts';
 import { 
     FileText, Plus, Search, X, Calendar, Trash2, Edit2, Save,
-    Activity, Minus, Layers, TrendingUp, CheckSquare, Square, BarChart2, CheckCircle2, History, ChevronRightCircle, Timer, Dumbbell, Maximize2
+    Activity, Minus, Layers, TrendingUp, CheckSquare, Square, BarChart2, CheckCircle2, History, ChevronRightCircle, Timer, Dumbbell, Maximize2, Award
 } from 'lucide-react';
 
 interface PatientDetailProps {
@@ -26,9 +27,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
   // Estado local para la navegación
   const [routineType, setRoutineType] = useState<'CLINIC' | 'HOME'>('CLINIC');
   const [activeDayId, setActiveDayId] = useState<string>(patient.routine.days[0]?.id || '');
-  const [viewMode, setViewMode] = useState<'daily' | 'plan' | 'stats'>('daily');
+  const [viewMode, setViewMode] = useState<'daily' | 'plan' | 'stats' | 'evaluations'>('daily');
   const [showHistory, setShowHistory] = useState(false);
   const [showRoutineEditor, setShowRoutineEditor] = useState(false);
+  const [kineId, setKineId] = useState<string>('current-kine-id'); // En prod vendría del Auth context
   
   // Estados para modales y edición
   const [chartExercise, setChartExercise] = useState<RoutineExercise | null>(null);
@@ -293,6 +295,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
           <div className="flex items-center gap-2 border-l border-slate-300/50 pl-6 ml-2 shrink-0">
               <button onClick={() => setViewMode('plan')} title="Proyección Mensual" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'plan' ? 'bg-primary-600 text-white shadow-primary-500/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><Layers size={20} strokeWidth={2.5} /></button>
               <button onClick={() => setViewMode('stats')} title="Estadísticas" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'stats' ? 'bg-slate-900 text-white shadow-slate-900/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><BarChart2 size={20} strokeWidth={2.5} /></button>
+              <button onClick={() => setViewMode('evaluations')} title="Evaluaciones Clínicas" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'evaluations' ? 'bg-blue-600 text-white shadow-blue-500/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><Award size={20} strokeWidth={2.5} /></button>
           </div>
       </div>
 
@@ -482,6 +485,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                       )}
                   </div>
               </div>
+          ) : viewMode === 'evaluations' ? (
+              <EvaluationDashboard patient={patient} role={role} kineId={kineId} />
           ) : null}
         </div>
       </main>
