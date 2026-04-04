@@ -187,16 +187,16 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
         {view === 'WEEK' ? (
           <div className="min-w-[800px]">
             {/* Week Header */}
-            <div className="grid grid-cols-[100px_repeat(7,1fr)] border-b border-slate-100 sticky top-0 bg-white z-10">
-              <div className="p-4 border-r border-slate-50"></div>
+            <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-slate-100 sticky top-0 bg-white z-20 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]">
+              <div className="p-2 border-r border-slate-50"></div>
               {weekDays.map(day => (
                 <div key={day.toString()} className={cn(
-                  "p-4 text-center border-r border-slate-50 last:border-r-0",
+                  "py-2 px-1 flex flex-col items-center justify-center border-r border-slate-50 last:border-r-0",
                   isToday(day) && "bg-primary-50/30"
                 )}>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{format(day, 'EEE', { locale: es })}</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{format(day, 'EEE', { locale: es })}</p>
                   <p className={cn(
-                    "text-lg font-black",
+                    "text-sm font-black mt-1 leading-none",
                     isToday(day) ? "text-primary-600" : "text-slate-900"
                   )}>{format(day, 'd')}</p>
                 </div>
@@ -204,11 +204,11 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
             </div>
 
             {/* Week Grid */}
-            <div className="grid grid-cols-[100px_repeat(7,1fr)]">
+            <div className="grid grid-cols-[60px_repeat(7,1fr)]">
               {hours.map(hour => (
                 <React.Fragment key={hour}>
-                  <div className="p-4 border-b border-r border-slate-50 text-right">
-                    <span className="text-xs font-bold text-slate-400">{hour}:00</span>
+                  <div className="pr-2 py-0 border-b border-r border-slate-50 text-right sticky left-0 bg-white z-10 w-[60px]">
+                    <span className="text-[9px] font-bold text-slate-400 relative top-[-6px] bg-white px-1">{hour}:00</span>
                   </div>
                   {weekDays.map(day => {
                     const slotAppointments = getAppointmentsForSlot(day, hour);
@@ -216,7 +216,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                       <div 
                         key={`${day}-${hour}`} 
                         onClick={() => handleSlotClick(day, hour)}
-                        className="border-b border-r border-slate-50 last:border-r-0 min-h-[80px] p-1 hover:bg-slate-50/50 transition-colors cursor-pointer group relative"
+                        className="border-b border-r border-slate-100/50 last:border-r-0 min-h-[48px] p-[3px] hover:bg-slate-50/80 transition-colors cursor-pointer group relative"
                       >
                         {slotAppointments.map(app => {
                           const status = getAppStatus(app);
@@ -225,17 +225,17 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                               key={app.id}
                               onClick={(e) => { e.stopPropagation(); handleEditAppointment(app); }}
                               className={cn(
-                                "p-2 rounded-xl text-[10px] font-bold mb-1 shadow-sm border truncate",
-                                status === 'SCHEDULED' ? "bg-primary-50 border-primary-100 text-primary-700" :
-                                status === 'COMPLETED' ? "bg-emerald-50 border-emerald-100 text-emerald-700" :
-                                status === 'CANCELLED' ? "bg-red-50 border-red-100 text-red-700" :
-                                status === 'NOSHOW' ? "bg-slate-100 border-slate-200 text-slate-400" :
-                                "bg-slate-50 border-slate-100 text-slate-700"
+                                "px-1.5 py-1 rounded-[6px] text-[10px] font-bold mb-[3px] shadow-sm border truncate leading-tight transition-all hover:scale-[1.02]",
+                                status === 'SCHEDULED' ? "bg-primary-50 border-primary-100/50 text-primary-700 border-l-[3px] border-l-primary-500" :
+                                status === 'COMPLETED' ? "bg-emerald-50 border-emerald-100/50 text-emerald-700 border-l-[3px] border-l-emerald-500" :
+                                status === 'CANCELLED' ? "bg-red-50 border-red-100/50 text-red-700 border-l-[3px] border-l-red-500" :
+                                status === 'NOSHOW' ? "bg-slate-100 border-slate-200/50 text-slate-400 border-l-[3px] border-l-slate-400" :
+                                "bg-slate-50 border-slate-100/50 text-slate-700 border-l-[3px] border-l-slate-500"
                               )}
                             >
                               <div className="flex items-center justify-between">
                                 <span className="truncate">{app.patientName}</span>
-                                {app.isRecurring && <Repeat size={10} className="shrink-0" />}
+                                {app.isRecurring && <Repeat size={8} className="shrink-0 ml-1 opacity-50" />}
                               </div>
                             </div>
                           );
@@ -287,12 +287,12 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                           key={app.id} 
                           onClick={(e) => { e.stopPropagation(); handleEditAppointment(app); }}
                           className={cn(
-                            "px-2 py-1 rounded-lg text-[9px] font-bold truncate",
-                            status === 'SCHEDULED' ? "bg-primary-50 text-primary-700" :
-                            status === 'COMPLETED' ? "bg-emerald-50 text-emerald-700" :
-                            status === 'CANCELLED' ? "bg-red-50 text-red-700" :
-                            status === 'NOSHOW' ? "bg-slate-100 text-slate-400" :
-                            "bg-slate-100 text-slate-600"
+                            "px-1.5 py-1 rounded-[6px] text-[9px] font-bold truncate leading-tight transition-all hover:scale-[1.02]",
+                            status === 'SCHEDULED' ? "bg-primary-50 text-primary-700 border-l-[3px] border-l-primary-500" :
+                            status === 'COMPLETED' ? "bg-emerald-50 text-emerald-700 border-l-[3px] border-l-emerald-500" :
+                            status === 'CANCELLED' ? "bg-red-50 text-red-700 border-l-[3px] border-l-red-500" :
+                            status === 'NOSHOW' ? "bg-slate-100 text-slate-400 border-l-[3px] border-l-slate-400" :
+                            "bg-slate-50 text-slate-700 border-l-[3px] border-l-slate-500"
                           )}
                         >
                           {app.time} {app.patientName}
