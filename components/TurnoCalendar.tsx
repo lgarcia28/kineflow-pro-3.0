@@ -64,6 +64,10 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   
+  // --- Estados para el Modo Ráfaga (Multi-Booking) ---
+  const [isMultiBookingMode, setIsMultiBookingMode] = useState(false);
+  const [multiBookingPatientId, setMultiBookingPatientId] = useState('');
+  
   // Hours to display in week view (e.g., 8:00 to 20:00)
   const hours = Array.from({ length: 13 }, (_, i) => i + 8);
 
@@ -95,6 +99,26 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
   const handleSlotClick = (date: Date, hour: number) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+
+    if (isMultiBookingMode && multiBookingPatientId) {
+      const patient = patients.find(p => p.id === multiBookingPatientId);
+      if (!patient) return;
+
+      const newApp: Appointment = {
+        id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        patientId: patient.id,
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        date: dateStr,
+        time: timeStr,
+        duration: 60,
+        status: 'SCHEDULED',
+        isRecurring: false,
+        notes: ''
+      };
+      onAddAppointment(newApp);
+      return;
+    }
+
     setSelectedSlot({ date: dateStr, time: timeStr });
     setEditingAppointment(null);
     setShowAddModal(true);
@@ -173,6 +197,23 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
           <button onClick={handleNext} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
             <ChevronRight size={20} />
           </button>
+          
+          <button 
+            onClick={() => {
+              setIsMultiBookingMode(!isMultiBookingMode);
+              if (!isMultiBookingMode) setMultiBookingPatientId('');
+            }}
+            className={cn(
+              "ml-2 px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all border",
+              isMultiBookingMode 
+                ? "bg-primary-600 text-white border-primary-500 shadow-lg shadow-primary-500/20" 
+                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+            )}
+          >
+            <Repeat size={16} /> 
+            <span className="hidden sm:inline">{isMultiBookingMode ? 'Cerrar Modo Ráfaga' : 'Modo Ráfaga'}</span>
+          </button>
+
           <button 
             onClick={() => { setSelectedSlot(null); setShowAddModal(true); }}
             className="ml-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-black transition-all"
@@ -181,6 +222,44 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Floating Multi-Booking Bar */}
+      {isMultiBookingMode && (
+        <div className="mx-6 my-3 p-4 bg-primary-50 border border-primary-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-300 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-600/20">
+              <User size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-primary-600 uppercase tracking-widest leading-none mb-1">Modo Agendamiento Múltiple</p>
+              <p className="text-xs font-bold text-slate-600">Seleccioná un paciente y tocá los huecos libres para agendar al toque.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <select 
+              className="flex-1 sm:w-64 bg-white border border-primary-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all pointer-events-auto"
+              value={multiBookingPatientId}
+              onChange={(e) => setMultiBookingPatientId(e.target.value)}
+            >
+              <option value="">Elegir Paciente...</option>
+              {patients.map(p => (
+                <option key={p.id} value={p.id}>{p.firstName} {p.lastName} ({p.dni})</option>
+              ))}
+            </select>
+            
+            <button 
+              onClick={() => {
+                setIsMultiBookingMode(false);
+                setMultiBookingPatientId('');
+              }}
+              className="px-4 py-2.5 bg-primary-600 text-white rounded-xl text-xs font-black shadow-lg shadow-primary-600/10 hover:bg-primary-700 transition-all"
+            >
+              Finalizar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Calendar Body */}
       <div className="flex-1 overflow-auto">
@@ -216,7 +295,10 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                       <div 
                         key={`${day}-${hour}`} 
                         onClick={() => handleSlotClick(day, hour)}
-                        className="border-b border-r border-slate-100/50 last:border-r-0 min-h-[48px] p-[3px] hover:bg-slate-50/80 transition-colors cursor-pointer group relative"
+                        className={cn(
+                          "border-b border-r border-slate-100/50 last:border-r-0 min-h-[48px] p-[3px] transition-colors cursor-pointer group relative",
+                          isMultiBookingMode && multiBookingPatientId ? "hover:bg-primary-50 cursor-crosshair" : "hover:bg-slate-50/80"
+                        )}
                       >
                         {slotAppointments.map(app => {
                           const status = getAppStatus(app);
