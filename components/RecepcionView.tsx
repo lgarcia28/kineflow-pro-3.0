@@ -305,7 +305,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-container relative z-10">
+      <div className={`flex-1 overflow-y-auto ${activeTab === 'CALENDAR' ? 'p-2 md:p-4' : 'p-4 md:p-8'} scroll-container relative z-10`}>
         {activeTab === 'PATIENTS' ? (
           <div className="max-w-5xl mx-auto space-y-8 animate-slide-up">
             {/* Search and Add */}

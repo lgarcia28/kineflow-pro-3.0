@@ -131,7 +131,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
   return (
     <div className="flex flex-col h-full bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
       {/* Calendar Header */}
-      <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="px-6 py-3 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center bg-slate-100 rounded-xl p-1">
             <button 
