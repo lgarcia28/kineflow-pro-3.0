@@ -101,13 +101,15 @@ export const generateEvaluationPDF = async (evaluation: ClinicalEvaluation, pati
       }
   }
 
-  const { mobility, flexibility, strength, balance, jumps_vertical, jumps_horizontal } = evaluation.measurements;
+  const { mobility, flexibility, strength, balance, jumps_vertical, jumps_horizontal, mcgill } = evaluation.measurements;
 
   if (mobility) {
       addRow('Movilidad (º)', 'RI Cadera', mobility.hip_ir_90_r, mobility.hip_ir_90_l);
       addRow('Movilidad (º)', 'RE Cadera', mobility.hip_er_90_r, mobility.hip_er_90_l);
-      addRow('Movilidad (º)', 'Flexión Act. Rodilla', mobility.knee_flex_act_r, mobility.knee_flex_act_l);
-      addRow('Movilidad (CM)', 'Dorsiflexión Tobillo', mobility.ankle_dorsiflex_r, mobility.ankle_dorsiflex_l, '>= 39');
+      addRow('Movilidad (º)', 'Ext. Pasiva Rodilla', mobility.knee_ext_pass_r, mobility.knee_ext_pass_l, '0º');
+      addRow('Movilidad (º)', 'Flex. Activa Rodilla', mobility.knee_flex_act_r, mobility.knee_flex_act_l);
+      addRow('Movilidad (º)', 'Flex. Pasiva Rodilla', mobility.knee_flex_pass_r, mobility.knee_flex_pass_l);
+      addRow('Movilidad (º)', 'Dorsiflexión Tobillo', mobility.ankle_dorsiflex_r, mobility.ankle_dorsiflex_l, '>= 39º');
       addRow('Movilidad (º)', 'RI Hombro', mobility.shoulder_ir_r, mobility.shoulder_ir_l);
       addRow('Movilidad (º)', 'RE Hombro', mobility.shoulder_er_r, mobility.shoulder_er_l);
   }
@@ -130,15 +132,27 @@ export const generateEvaluationPDF = async (evaluation: ClinicalEvaluation, pati
       addRow('Y-Balance (CM)', 'Post-Lateral', balance.y_balance_pl_r, balance.y_balance_pl_l);
   }
 
+  if (mcgill) {
+      addRow('McGill (Seg)', 'Puente Lateral D', mcgill.lateral_bridge_r, undefined, '>= 85');
+      addRow('McGill (Seg)', 'Puente Lateral I', undefined, mcgill.lateral_bridge_l, '>= 85');
+      addRow('McGill (Seg)', 'Flexores', mcgill.flexor_endurance, undefined, '>= 130');
+      addRow('McGill (Seg)', 'Extensores', mcgill.extensor_endurance, undefined, '>= 170');
+  }
+
   if (strength) {
-      addRow('Fuerza (KG)', 'Cuádriceps', strength.quads_r, strength.quads_l);
-      addRow('Fuerza (KG)', 'Isquiosurales', strength.hams_r, strength.hams_l);
-      addRow('Fuerza (KG)', 'Aductores', strength.adductor_r, strength.adductor_l);
-      addRow('Fuerza (KG)', 'Abductores', strength.abductor_r, strength.abductor_l);
+      addRow('Fuerza (N)', 'Cuádriceps', strength.quads_r, strength.quads_l);
+      addRow('Fuerza (N)', 'Isquiosurales', strength.hams_r, strength.hams_l);
+      addRow('Fuerza (N)', 'Aductores', strength.adductor_r, strength.adductor_l);
+      addRow('Fuerza (N)', 'Abductores', strength.abductor_r, strength.abductor_l);
   }
 
   if (jumps_vertical) {
-      addRow('Saltos Verticales', 'CMJ 1p (Altura)', jumps_vertical.cmj_1p_height_r, jumps_vertical.cmj_1p_height_l);
+      addRow('Saltos Vert.', 'CMJ 2p (Altura cm)', jumps_vertical.cmj_2p_height, undefined);
+      addRow('Saltos Vert.', 'CMJ 2p RSI', jumps_vertical.cmj_2p_rsi, undefined);
+      addRow('Saltos Vert. (N)', 'CMJ 2p Frenado', jumps_vertical.cmj_2p_brake_r, jumps_vertical.cmj_2p_brake_l);
+      addRow('Saltos Vert. (N)', 'CMJ 2p Propulsión', jumps_vertical.cmj_2p_prop_r, jumps_vertical.cmj_2p_prop_l);
+      addRow('Saltos Vert. (N)', 'CMJ 2p Aterrizaje', jumps_vertical.cmj_2p_land_r, jumps_vertical.cmj_2p_land_l);
+      addRow('Saltos Vert.', 'CMJ 1p (Altura cm)', jumps_vertical.cmj_1p_height_r, jumps_vertical.cmj_1p_height_l);
   }
   
   if (jumps_horizontal) {
@@ -233,6 +247,38 @@ export const generateEvaluationPDF = async (evaluation: ClinicalEvaluation, pati
   const totalPages = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.text('KineFlow Pro - Reporte generado automáticamente para uso clínico profesional.', pageWidth / 2, pageHeight - 7, { align: 'center' });
+  }
+
+  // --- 6. THOMAS TEST IMAGE (if available) ---
+  const thomasImageUrl = evaluation.measurements.flexibility?.thomas_image_url;
+  if (thomasImageUrl) {
+    doc.addPage();
+    // Left border accent
+    doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+    doc.rect(0, 0, 5, pageHeight, 'F');
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text('IMAGEN - THOMAS TEST:', 20, 20);
+    
+    try {
+      // Image is base64 data URL
+      const format = thomasImageUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+      const imgData = thomasImageUrl.split(',')[1] || thomasImageUrl;
+      doc.addImage(imgData, format, 20, 30, pageWidth - 40, 0);
+    } catch(e) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.text('(No se pudo procesar la imagen adjunta)', 20, 30);
+    }
+    
+    // Re-add footer on this page
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
     doc.setTextColor(255, 255, 255);

@@ -108,28 +108,39 @@ export const processEvaluation = (measurements: any): { conclusions: string[], m
       const recR = flexibility.thomas_test_rectus_r;
       const sarR = flexibility.thomas_test_sartorius_r;
       
-      if (psoR === 'X' && recR === 'OK' && sarR === 'OK') conclusions.push("En la pierna derecha, se presenta un acortamiento del Psoas Ilíaco.");
-      else if (psoR === 'X' && recR === 'X' && sarR === 'OK') conclusions.push("En la pierna derecha, se presenta un acortamiento del Psoas Ilíaco y del Recto Anterior.");
-      else if (psoR === 'X' && recR === 'X' && sarR === 'X') conclusions.push("En la pierna derecha, se presenta un acortamiento del Psoas Ilíaco, del Recto Anterior y del Sartorio.");
-      else if (psoR === 'X' && recR === 'OK' && sarR === 'X') conclusions.push("En la pierna derecha, se presenta un acortamiento del Psoas Ilíaco y del Sartorio.");
-      else if (psoR === 'OK' && recR === 'X' && sarR === 'OK') conclusions.push("En la pierna derecha, se presenta un acortamiento del Recto Anterior.");
-      else if (psoR === 'OK' && recR === 'X' && sarR === 'X') conclusions.push("En la pierna derecha, se presenta un acortamiento del Recto Anterior y del Sartorio.");
-      else if (psoR === 'OK' && recR === 'OK' && sarR === 'X') conclusions.push("En la pierna derecha, se presenta un acortamiento del Sartorio.");
-      else if (psoR === 'OK' && recR === 'OK' && sarR === 'OK') conclusions.push("En la pierna derecha, no se presenta un acortamiento de los flexores de cadera.");
+      // Only evaluate if at least one value is filled and none are 'No evaluado'
+      const thomasRFilled = psoR && recR && sarR;
+      const thomasRValid = thomasRFilled && psoR !== 'No evaluado' && recR !== 'No evaluado' && sarR !== 'No evaluado';
+      
+      if (thomasRValid) {
+        if (psoR === 'X' && recR === 'OK' && sarR === 'OK') conclusions.push("En la pierna derecha, se presenta un acortamiento del Psoas Ilíaco.");
+        else if (psoR === 'X' && recR === 'X' && sarR === 'OK') conclusions.push("En la pierna derecha, se presenta un acortamiento del Psoas Ilíaco y del Recto Anterior.");
+        else if (psoR === 'X' && recR === 'X' && sarR === 'X') conclusions.push("En la pierna derecha, se presenta un acortamiento del Psoas Ilíaco, del Recto Anterior y del Sartorio.");
+        else if (psoR === 'X' && recR === 'OK' && sarR === 'X') conclusions.push("En la pierna derecha, se presenta un acortamiento del Psoas Ilíaco y del Sartorio.");
+        else if (psoR === 'OK' && recR === 'X' && sarR === 'OK') conclusions.push("En la pierna derecha, se presenta un acortamiento del Recto Anterior.");
+        else if (psoR === 'OK' && recR === 'X' && sarR === 'X') conclusions.push("En la pierna derecha, se presenta un acortamiento del Recto Anterior y del Sartorio.");
+        else if (psoR === 'OK' && recR === 'OK' && sarR === 'X') conclusions.push("En la pierna derecha, se presenta un acortamiento del Sartorio.");
+        else if (psoR === 'OK' && recR === 'OK' && sarR === 'OK') conclusions.push("En la pierna derecha, no se presenta un acortamiento de los flexores de cadera.");
+      }
       
       // Thomas Test Left
       const psoL = flexibility.thomas_test_psoas_l;
       const recL = flexibility.thomas_test_rectus_l;
       const sarL = flexibility.thomas_test_sartorius_l;
       
-      if (psoL === 'X' && recL === 'OK' && sarL === 'OK') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Psoas Ilíaco.");
-      else if (psoL === 'X' && recL === 'X' && sarL === 'OK') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Psoas Ilíaco y del Recto Anterior.");
-      else if (psoL === 'X' && recL === 'X' && sarL === 'X') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Psoas Ilíaco, del Recto Anterior y del Sartorio.");
-      else if (psoL === 'X' && recL === 'OK' && sarL === 'X') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Psoas Ilíaco y del Sartorio.");
-      else if (psoL === 'OK' && recL === 'X' && sarL === 'OK') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Recto Anterior.");
-      else if (psoL === 'OK' && recL === 'X' && sarL === 'X') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Recto Anterior y del Sartorio.");
-      else if (psoL === 'OK' && recL === 'OK' && sarL === 'X') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Sartorio.");
-      else if (psoL === 'OK' && recL === 'OK' && sarL === 'OK') conclusions.push("En la pierna izquierda, no se presenta un acortamiento de los flexores de cadera.");
+      const thomasLFilled = psoL && recL && sarL;
+      const thomasLValid = thomasLFilled && psoL !== 'No evaluado' && recL !== 'No evaluado' && sarL !== 'No evaluado';
+
+      if (thomasLValid) {
+        if (psoL === 'X' && recL === 'OK' && sarL === 'OK') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Psoas Ilíaco.");
+        else if (psoL === 'X' && recL === 'X' && sarL === 'OK') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Psoas Ilíaco y del Recto Anterior.");
+        else if (psoL === 'X' && recL === 'X' && sarL === 'X') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Psoas Ilíaco, del Recto Anterior y del Sartorio.");
+        else if (psoL === 'X' && recL === 'OK' && sarL === 'X') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Psoas Ilíaco y del Sartorio.");
+        else if (psoL === 'OK' && recL === 'X' && sarL === 'OK') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Recto Anterior.");
+        else if (psoL === 'OK' && recL === 'X' && sarL === 'X') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Recto Anterior y del Sartorio.");
+        else if (psoL === 'OK' && recL === 'OK' && sarL === 'X') conclusions.push("En la pierna izquierda, se presenta un acortamiento del Sartorio.");
+        else if (psoL === 'OK' && recL === 'OK' && sarL === 'OK') conclusions.push("En la pierna izquierda, no se presenta un acortamiento de los flexores de cadera.");
+      }
 
       // AKE (Isquiotibiales)
       if (flexibility.hams_r !== undefined && flexibility.hams_l !== undefined) {
@@ -141,17 +152,25 @@ export const processEvaluation = (measurements: any): { conclusions: string[], m
           else if (hR < 70 && hL < 70) conclusions.push("Se presenta un acortamiento de los isquiotibiales en ambas piernas.");
       }
 
-      // Askling H
-      if (flexibility.askling_h_r === 'OK' && flexibility.askling_h_l === 'OK') conclusions.push("No se refiere dolor o inseguridad durante el Askling H-test en ninguna de las piernas.");
-      else if (flexibility.askling_h_r === 'X' && flexibility.askling_h_l === 'OK') conclusions.push("Refiere dolor o inseguridad en la pierna derecha durante el Askling H-test.");
-      else if (flexibility.askling_h_r === 'OK' && flexibility.askling_h_l === 'X') conclusions.push("Refiere dolor o inseguridad en la pierna izquierda durante el Askling H-test.");
-      else if (flexibility.askling_h_r === 'X' && flexibility.askling_h_l === 'X') conclusions.push("Refiere dolor o inseguridad en ambas piernas durante el Askling H-test.");
+      // Askling H (skip if 'No evaluado')
+      const askR = flexibility.askling_h_r;
+      const askL = flexibility.askling_h_l;
+      if (askR && askL && askR !== 'No evaluado' && askL !== 'No evaluado') {
+        if (askR === 'OK' && askL === 'OK') conclusions.push("No se refiere dolor o inseguridad durante el Askling H-test en ninguna de las piernas.");
+        else if (askR === 'X' && askL === 'OK') conclusions.push("Refiere dolor o inseguridad en la pierna derecha durante el Askling H-test.");
+        else if (askR === 'OK' && askL === 'X') conclusions.push("Refiere dolor o inseguridad en la pierna izquierda durante el Askling H-test.");
+        else if (askR === 'X' && askL === 'X') conclusions.push("Refiere dolor o inseguridad en ambas piernas durante el Askling H-test.");
+      }
 
-      // Slump
-      if (flexibility.slump_test_r === 'OK' && flexibility.slump_test_l === 'OK') conclusions.push("No se comprobó tensión neural mecánica del nervio ciático en ninguna de las piernas mediante la prueba de Slump test.");
-      else if (flexibility.slump_test_r === 'X' && flexibility.slump_test_l === 'OK') conclusions.push("Se comprobó tensión neural mecánica del nervio ciático en la pierna derecha mediante la prueba de Slump test.");
-      else if (flexibility.slump_test_r === 'OK' && flexibility.slump_test_l === 'X') conclusions.push("Se comprobó tensión neural mecánica del nervio ciático en la pierna izquierda mediante la prueba de Slump test.");
-      else if (flexibility.slump_test_r === 'X' && flexibility.slump_test_l === 'X') conclusions.push("Se comprobó tensión neural mecánica del nervio ciático en ambos miembros mediante la prueba de Slump test.");
+      // Slump (skip if 'No evaluado')
+      const slumpR = flexibility.slump_test_r;
+      const slumpL = flexibility.slump_test_l;
+      if (slumpR && slumpL && slumpR !== 'No evaluado' && slumpL !== 'No evaluado') {
+        if (slumpR === 'OK' && slumpL === 'OK') conclusions.push("No se comprobó tensión neural mecánica del nervio ciático en ninguna de las piernas mediante la prueba de Slump test.");
+        else if (slumpR === 'X' && slumpL === 'OK') conclusions.push("Se comprobó tensión neural mecánica del nervio ciático en la pierna derecha mediante la prueba de Slump test.");
+        else if (slumpR === 'OK' && slumpL === 'X') conclusions.push("Se comprobó tensión neural mecánica del nervio ciático en la pierna izquierda mediante la prueba de Slump test.");
+        else if (slumpR === 'X' && slumpL === 'X') conclusions.push("Se comprobó tensión neural mecánica del nervio ciático en ambos miembros mediante la prueba de Slump test.");
+      }
 
       // BKFO
       if (flexibility.bkfo_r !== undefined && flexibility.bkfo_l !== undefined) {
