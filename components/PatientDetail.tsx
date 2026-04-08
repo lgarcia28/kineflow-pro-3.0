@@ -3,12 +3,13 @@ import { Patient, RoutineExercise, Stage, UserRole, RoutineDay, ExerciseLog, Exe
 import { EvaluationDashboard } from './EvaluationDashboard';
 import { ExerciseCard } from './ExerciseCard';
 import { ProgressChart } from './ProgressChart';
+import { parseMediaUrl } from '../utils/mediaUrl';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { 
     FileText, Plus, Search, X, Calendar, Trash2, Edit2, Save,
-    Activity, Minus, Layers, TrendingUp, CheckSquare, Square, BarChart2, CheckCircle2, History, ChevronRightCircle, Timer, Dumbbell, Maximize2, Award
+    Activity, Minus, Layers, TrendingUp, CheckSquare, Square, BarChart2, CheckCircle2, History, ChevronRightCircle, Timer, Dumbbell, Maximize2, Award, Link2, Unlink
 } from 'lucide-react';
 
 interface PatientDetailProps {
@@ -39,6 +40,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
   const [isAddingExerciseModal, setIsAddingExerciseModal] = useState<{show: boolean, dayId: string}>({show: false, dayId: ''});
   const [notes, setNotes] = useState('');
   const [zoomedImage, setZoomedImage] = useState<{url: string, name: string} | null>(null);
+  
+  // --- Estados para Biserie/Triserie en el editor ---
+  const [editorSelectedExIds, setEditorSelectedExIds] = useState<string[]>([]);
 
   const isKine = role === UserRole.KINE;
   
@@ -190,6 +194,80 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
     setShowHistory(false);
   };
 
+  // --- LÓGICA DE BISERIE/TRISERIE ---
+  const handleGroupAsSuperset = (dayId: string, exIds: string[]) => {
+    if (exIds.length < 2) return;
+    const groupId = `superset_${Date.now()}`;
+    const routineKey = routineType === 'CLINIC' ? 'routine' : 'homeRoutine';
+    const currentRoutine = patient[routineKey] || { days: [] };
+    const newDays = currentRoutine.days.map(day => {
+      if (day.id !== dayId) return day;
+      return {
+        ...day,
+        exercises: day.exercises.map(ex =>
+          exIds.includes(ex.id) ? { ...ex, supersetGroup: groupId } : ex
+        )
+      };
+    });
+    onUpdatePatient({ ...patient, [routineKey]: { ...currentRoutine, days: newDays } });
+    setEditorSelectedExIds([]);
+  };
+
+  const handleRemoveFromSuperset = (dayId: string, exIds: string[]) => {
+    const routineKey = routineType === 'CLINIC' ? 'routine' : 'homeRoutine';
+    const currentRoutine = patient[routineKey] || { days: [] };
+    const newDays = currentRoutine.days.map(day => {
+      if (day.id !== dayId) return day;
+      return {
+        ...day,
+        exercises: day.exercises.map(ex =>
+          exIds.includes(ex.id) ? { ...ex, supersetGroup: undefined } : ex
+        )
+      };
+    });
+    onUpdatePatient({ ...patient, [routineKey]: { ...currentRoutine, days: newDays } });
+    setEditorSelectedExIds([]);
+  };
+
+  // Paleta de colores para grupos de superseries
+  const supersetPalette = [
+    { bg: 'bg-indigo-500', text: 'text-indigo-600', key: 'indigo' },
+    { bg: 'bg-emerald-500', text: 'text-emerald-600', key: 'emerald' },
+    { bg: 'bg-orange-500', text: 'text-orange-600', key: 'orange' },
+    { bg: 'bg-pink-500', text: 'text-pink-600', key: 'pink' },
+    { bg: 'bg-cyan-500', text: 'text-cyan-600', key: 'cyan' },
+  ];
+
+  // Calcula supersetLabel y color para cada ejercicio del día activo
+  const getSupersetInfo = (exercises: RoutineExercise[]) => {
+    const groupMap = new Map<string, { label: string; color: string }>();
+    let groupIndex = 0;
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    const result = new Map<string, { label: string; color: string }>();
+
+    exercises.forEach(ex => {
+      if (!ex.supersetGroup) return;
+      if (!groupMap.has(ex.supersetGroup)) {
+        const idx = groupIndex % supersetPalette.length;
+        groupMap.set(ex.supersetGroup, { label: letters[idx] || String.fromCharCode(65 + idx), color: supersetPalette[idx].bg });
+        groupIndex++;
+      }
+    });
+
+    // Asigna etiqueta numérica dentro del grupo (A1, A2, etc.)
+    const groupCounters = new Map<string, number>();
+    exercises.forEach(ex => {
+      if (!ex.supersetGroup) return;
+      const info = groupMap.get(ex.supersetGroup)!;
+      const count = (groupCounters.get(ex.supersetGroup) || 0) + 1;
+      groupCounters.set(ex.supersetGroup, count);
+      const seriesName = count === 1 ? (groupCounters.size > 1 ? `Biserie ${info.label}` : 'Biserie 1') : `Biserie ${count}`;
+      result.set(ex.id, { label: `${info.label}${count}`, color: info.color });
+    });
+
+    return result;
+  };
+
   // Helper para color RPE en historial
   const getRpeColor = (rpe: number) => {
       const hue = Math.max(0, 120 - (rpe - 1) * (120 / 9));
@@ -313,11 +391,25 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                         <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">Ciclo Semana {currentWeek}</span>
                       </div>
                   </div>
-                  {activeDay.exercises.map((ex, idx) => (
-                    <div className="animate-slide-up" style={{ animationDelay: `${idx * 40}ms` }} key={ex.id}>
-                        <ExerciseCard exercise={ex} role={role} onUpdate={(id, up) => handleExerciseUpdate(id, up)} onShowHistory={(e) => setChartExercise(e)} onDelete={(id) => handleRemoveExercise(activeDayId, id)} />
-                    </div>
-                  ))}
+                  {(() => {
+                      const supersetInfo = getSupersetInfo(activeDay.exercises);
+                      return activeDay.exercises.map((ex, idx) => {
+                        const ssInfo = supersetInfo.get(ex.id);
+                        return (
+                          <div className="animate-slide-up" style={{ animationDelay: `${idx * 40}ms` }} key={ex.id}>
+                            <ExerciseCard
+                              exercise={ex}
+                              role={role}
+                              onUpdate={(id, up) => handleExerciseUpdate(id, up)}
+                              onShowHistory={(e) => setChartExercise(e)}
+                              onDelete={(id) => handleRemoveExercise(activeDayId, id)}
+                              supersetLabel={ssInfo?.label}
+                              supersetColor={ssInfo?.color}
+                            />
+                          </div>
+                        );
+                      });
+                  })()}
                   {activeDay.exercises.length === 0 && (
                     <div className="py-24 text-center glass-panel rounded-[2rem] border-dashed">
                         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
@@ -327,6 +419,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                     </div>
                   )}
               </div>
+
           ) : viewMode === 'plan' ? (
               /* PLAN MENSUAL (PROYECCIÓN FUTURA) */
               <div className="space-y-12 pb-24 max-w-5xl mx-auto animate-slide-up">
@@ -527,24 +620,81 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                       <input className="font-black text-xl text-slate-900 bg-transparent border-none focus:ring-0 p-0 w-full placeholder:text-slate-300 focus:outline-none" value={day.name} onChange={(e) => handleRenameDay(day.id, e.target.value)} placeholder="Nombre del día" />
                                   </div>
                                   <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-container bg-white">
-                                      {day.exercises.map((ex) => (
-                                          <div key={ex.id} className="flex flex-col gap-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-primary-300 transition-all group relative">
-                                              <div className="flex items-start justify-between gap-3">
-                                                  {ex.definition.videoUrl ? (
-                                                    <button 
-                                                      onClick={() => setZoomedImage({ url: ex.definition.videoUrl || '', name: ex.definition.name })}
-                                                      className="w-12 h-12 rounded-[1rem] object-cover shadow-sm bg-slate-100 overflow-hidden relative group cursor-zoom-in"
-                                                    >
-                                                      <img src={ex.definition.videoUrl} className="w-full h-full object-cover" />
-                                                      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                        <Maximize2 size={14} className="text-white" />
+                                      {/* Toolbar de Biserie/Triserie */}
+                                      {editorSelectedExIds.length >= 1 && (
+                                        <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2 mb-2 gap-2 flex-wrap">
+                                          <span className="text-xs font-black text-indigo-700">{editorSelectedExIds.length} seleccionado{editorSelectedExIds.length > 1 ? 's' : ''}</span>
+                                          <div className="flex gap-2">
+                                            <button
+                                              disabled={editorSelectedExIds.length < 2}
+                                              onClick={() => handleGroupAsSuperset(day.id, editorSelectedExIds)}
+                                              className="flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-black disabled:opacity-40 hover:bg-indigo-700 transition-all"
+                                            >
+                                              <Link2 size={12} /> Biserie/Triserie
+                                            </button>
+                                            <button
+                                              onClick={() => handleRemoveFromSuperset(day.id, editorSelectedExIds)}
+                                              className="flex items-center gap-1 px-3 py-1 bg-white border border-slate-200 text-slate-500 rounded-lg text-[10px] font-black hover:bg-red-50 hover:text-red-500 transition-all"
+                                            >
+                                              <Unlink size={12} /> Desagrupar
+                                            </button>
+                                            <button
+                                              onClick={() => setEditorSelectedExIds([])}
+                                              className="p-1 text-slate-400 hover:text-slate-600"
+                                            >
+                                              <X size={14} />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      )}
+                                      {(() => {
+                                        const supersetInfo = getSupersetInfo(day.exercises);
+                                        return day.exercises.map((ex) => {
+                                          const isSelectedInEditor = editorSelectedExIds.includes(ex.id);
+                                          const hasSupersetGroup = !!ex.supersetGroup;
+                                          const ssInfo = supersetInfo.get(ex.id);
+                                          return (
+                                            <div key={ex.id} className={`flex flex-col gap-3 p-4 bg-white rounded-2xl border shadow-sm transition-all group relative ${isSelectedInEditor ? 'border-indigo-400 ring-2 ring-indigo-100' : hasSupersetGroup ? `border-l-4 ${ssInfo?.color || 'border-l-indigo-400'} border-slate-200` : 'border-slate-200 hover:border-primary-300'}`}>
+                                              {/* Checkbox de selección */}
+                                              <button
+                                                onClick={() => setEditorSelectedExIds(prev =>
+                                                  prev.includes(ex.id) ? prev.filter(id => id !== ex.id) : [...prev, ex.id]
+                                                )}
+                                                className={`absolute top-3 left-3 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all z-10 ${isSelectedInEditor ? 'bg-indigo-500 border-indigo-500' : 'bg-white border-slate-300 hover:border-indigo-400'}`}
+                                              >
+                                                {isSelectedInEditor && <CheckSquare size={12} className="text-white" />}
+                                              </button>
+                                              {hasSupersetGroup && !isSelectedInEditor && (
+                                                <span className={`absolute top-3 right-10 text-[9px] font-black text-white ${ssInfo?.color || 'bg-indigo-500'} px-2 py-0.5 rounded-full uppercase tracking-wider`}>
+                                                  Serie {ssInfo?.label}
+                                                </span>
+                                              )}
+                                              <div className="flex items-start justify-between gap-3 pl-7">
+                                                  {(() => {
+                                                    const media = ex.definition.videoUrl ? parseMediaUrl(ex.definition.videoUrl) : null;
+                                                    if (media && (media.thumbnailUrl || media.type === 'instagram')) {
+                                                      return (
+                                                        <button 
+                                                          onClick={() => setZoomedImage({ url: ex.definition.videoUrl || '', name: ex.definition.name })}
+                                                          className={`w-12 h-12 rounded-[1rem] object-cover shadow-sm overflow-hidden relative group cursor-zoom-in ${media.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600' : 'bg-slate-100'}`}
+                                                        >
+                                                          {media.thumbnailUrl ? (
+                                                            <img src={media.thumbnailUrl} className="w-full h-full object-cover" />
+                                                          ) : (
+                                                            <Activity size={14} className="text-white" />
+                                                          )}
+                                                          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                            <Maximize2 size={14} className="text-white" />
+                                                          </div>
+                                                        </button>
+                                                      );
+                                                    }
+                                                    return (
+                                                      <div className="w-12 h-12 rounded-[1rem] bg-slate-100 flex items-center justify-center shadow-inner">
+                                                          {ex.definition.metricType === 'time' ? <Timer size={20} className="text-slate-400"/> : <Dumbbell size={20} className="text-slate-400"/>}
                                                       </div>
-                                                    </button>
-                                                  ) : (
-                                                    <div className="w-12 h-12 rounded-[1rem] bg-slate-100 flex items-center justify-center shadow-inner">
-                                                        {ex.definition.metricType === 'time' ? <Timer size={20} className="text-slate-400"/> : <Dumbbell size={20} className="text-slate-400"/>}
-                                                    </div>
-                                                  )}
+                                                    );
+                                                  })()}
                                                   <div className="flex-1 min-w-0 pr-6 mt-1">
                                                     <p className="font-extrabold text-sm text-slate-900 leading-tight group-hover:text-primary-600 transition-colors">{ex.definition.name}</p>
                                                     <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">{ex.definition.category}</p>
@@ -566,13 +716,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                     )}
                                                   </div>
 
+
                                                   <div className="bg-slate-50 rounded-xl p-2 border border-slate-100 flex flex-col focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-500 transition-all items-center">
                                                     <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest mb-1">{ex.definition.metricType === 'time' ? 'Seg.' : 'Kg'}</span>
                                                     <input type="number" className="w-full bg-transparent text-center font-black text-base text-primary-600 focus:outline-none p-0 border-none" value={ex.targetLoad} onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} />
                                                   </div>
                                               </div>
                                           </div>
-                                      ))}
+                                        );
+                                      });
+                                    })()}
+
                                       <button onClick={() => setIsAddingExerciseModal({show: true, dayId: day.id})} className="w-full py-8 border-2 border-dashed border-slate-200 rounded-[1.5rem] bg-slate-50/50 text-sm font-bold text-slate-400 hover:bg-primary-50 hover:text-primary-600 hover:border-primary-200 transition-all flex flex-col items-center gap-3">
                                           <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center"><Plus size={24} /></div>
                                           Agregar Ejercicio
@@ -613,24 +767,34 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                     </div>
                                   </div>
                                   <div className="relative shrink-0 mr-5">
-                                    {ex.videoUrl ? (
-                                        <button 
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setZoomedImage({ url: ex.videoUrl || '', name: ex.name });
-                                          }}
-                                          className="w-16 h-16 rounded-[1.25rem] object-cover shadow-sm bg-slate-100 overflow-hidden relative group cursor-zoom-in"
-                                        >
-                                          <img src={ex.videoUrl} className="w-full h-full object-cover" />
-                                          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                            <Maximize2 size={16} className="text-white" />
-                                          </div>
-                                        </button>
-                                    ) : (
+                                    {(() => {
+                                      const media = ex.videoUrl ? parseMediaUrl(ex.videoUrl) : null;
+                                      if (media && (media.thumbnailUrl || media.type === 'instagram')) {
+                                        return (
+                                          <button 
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setZoomedImage({ url: ex.videoUrl || '', name: ex.name });
+                                            }}
+                                            className={`w-16 h-16 rounded-[1.25rem] object-cover shadow-sm overflow-hidden relative group cursor-zoom-in flex items-center justify-center ${media.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600' : 'bg-slate-100'}`}
+                                          >
+                                            {media.thumbnailUrl ? (
+                                              <img src={media.thumbnailUrl} className="w-full h-full object-cover" />
+                                            ) : (
+                                              <Activity size={24} className="text-white" />
+                                            )}
+                                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                              <Maximize2 size={16} className="text-white" />
+                                            </div>
+                                          </button>
+                                        );
+                                      }
+                                      return (
                                         <div className="w-16 h-16 rounded-[1.25rem] bg-slate-100 flex items-center justify-center shadow-inner">
                                             {ex.metricType === 'time' ? <Timer size={24} className="text-slate-400"/> : <Dumbbell size={24} className="text-slate-400"/>}
                                         </div>
-                                    )}
+                                      );
+                                    })()}
                                   </div>
                                   <div className="flex-1 min-w-0">
                                       <p className="font-black text-slate-800 text-base truncate mb-1">{ex.name}</p>

@@ -51,6 +51,7 @@ export interface RoutineExercise {
   notes?: string;
   isDone: boolean;
   history: ExerciseLog[];
+  supersetGroup?: string; // ID de grupo para biserie/triserie
 }
 
 export interface RoutineDay {
