@@ -12,6 +12,9 @@ interface ExerciseCardProps {
   onDelete: (id: string) => void;
   supersetLabel?: string;       // Ej: "A", "B", "C" para etiquetar dentro del grupo
   supersetColor?: string;       // Clase de color para el indicador lateral
+  isFirstInGroup?: boolean;
+  isLastInGroup?: boolean;
+  isMiddleInGroup?: boolean;
 }
 
 export const ExerciseCard: React.FC<ExerciseCardProps> = ({
@@ -22,6 +25,9 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   onDelete,
   supersetLabel,
   supersetColor = 'bg-indigo-500',
+  isFirstInGroup,
+  isLastInGroup,
+  isMiddleInGroup,
 }) => {
   const { definition, targetSets, targetReps, targetLoad, currentRpe, isDone } = exercise;
   const [isZoomed, setIsZoomed] = useState(false);
@@ -183,12 +189,17 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
   return (
     <>
-      <div className={`bg-white rounded-2xl shadow-sm border transition-all duration-300 relative overflow-hidden ${
+      <div className={`bg-white shadow-sm border transition-all duration-300 relative overflow-hidden ${
+          isFirstInGroup ? 'rounded-t-2xl rounded-b-none border-b-0' :
+          isMiddleInGroup ? 'rounded-none border-b-0' :
+          isLastInGroup ? 'rounded-b-2xl rounded-t-none' :
+          'rounded-2xl'
+      } ${
           isDone ? 'border-slate-100 opacity-60 bg-slate-50' : 'border-slate-200 hover:shadow-md'
       }`}>
         {/* Indicador de Biserie/Triserie */}
         {supersetLabel && (
-          <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${supersetColor} rounded-l-2xl`} />
+          <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${supersetColor}`} />
         )}
         
         <div className={`p-4 ${supersetLabel ? 'pl-5' : ''}`}>

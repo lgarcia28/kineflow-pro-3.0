@@ -19,6 +19,7 @@ import {
   Award
 } from 'lucide-react';
 import { EvaluationDashboard } from './EvaluationDashboard';
+import { parseMediaUrl } from '../utils/mediaUrl';
 
 interface PatientViewProps {
   patient: Patient;
@@ -38,6 +39,41 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
     patient.routine.days[0] || null
   );
   const [zoomedImage, setZoomedImage] = useState<{url: string, name: string} | null>(null);
+
+  const supersetPalette = [
+    { bg: 'bg-indigo-500', text: 'text-indigo-600', key: 'indigo' },
+    { bg: 'bg-emerald-500', text: 'text-emerald-600', key: 'emerald' },
+    { bg: 'bg-orange-500', text: 'text-orange-600', key: 'orange' },
+    { bg: 'bg-pink-500', text: 'text-pink-600', key: 'pink' },
+    { bg: 'bg-cyan-500', text: 'text-cyan-600', key: 'cyan' },
+  ];
+
+  const getSupersetInfo = (exercises: RoutineExercise[]) => {
+    const groupMap = new Map<string, { label: string; color: string }>();
+    let groupIndex = 0;
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    const result = new Map<string, { label: string; color: string }>();
+
+    exercises.forEach(ex => {
+      if (!ex.supersetGroup) return;
+      if (!groupMap.has(ex.supersetGroup)) {
+        const idx = groupIndex % supersetPalette.length;
+        groupMap.set(ex.supersetGroup, { label: letters[idx] || String.fromCharCode(65 + idx), color: supersetPalette[idx].bg });
+        groupIndex++;
+      }
+    });
+
+    const groupCounters = new Map<string, number>();
+    exercises.forEach(ex => {
+      if (!ex.supersetGroup) return;
+      const info = groupMap.get(ex.supersetGroup)!;
+      const count = (groupCounters.get(ex.supersetGroup) || 0) + 1;
+      groupCounters.set(ex.supersetGroup, count);
+      result.set(ex.id, { label: `${info.label}${count}`, color: info.color });
+    });
+
+    return result;
+  };
 
   const getPlanStatus = () => {
     const today = new Date();
@@ -240,48 +276,85 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
 
             {selectedDay ? (
               <div className="space-y-4">
-                {selectedDay.exercises.map(ex => (
-                  <div key={ex.id} className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-4 mb-4">
-                      <button 
-                        onClick={() => {
-                          const url = resolveExerciseImage(ex);
-                          if (url) setZoomedImage({ url, name: ex.definition.name });
-                        }}
-                        className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative group cursor-zoom-in"
-                      >
-                        {resolveExerciseImage(ex) ? (
-                          <>
-                            <img src={resolveExerciseImage(ex)} alt="" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                              <Maximize2 size={14} className="text-white" />
+                {(() => {
+                  const supersetInfo = getSupersetInfo(selectedDay.exercises);
+                  const blocks: { isGroup: boolean; groupId?: string; exercises: RoutineExercise[] }[] = [];
+                  selectedDay.exercises.forEach(ex => {
+                    if (ex.supersetGroup) {
+                      if (blocks.length > 0 && blocks[blocks.length - 1].groupId === ex.supersetGroup) {
+                        blocks[blocks.length - 1].exercises.push(ex);
+                      } else {
+                        blocks.push({ isGroup: true, groupId: ex.supersetGroup, exercises: [ex] });
+                      }
+                    } else {
+                      blocks.push({ isGroup: false, exercises: [ex] });
+                    }
+                  });
+
+                  return blocks.map((block) => (
+                    <div key={block.isGroup ? block.groupId : block.exercises[0].id} className={`flex flex-col ${block.isGroup ? 'shadow-sm rounded-[2rem]' : ''}`}>
+                      {block.exercises.map((ex, exIdx) => {
+                        const ssInfo = supersetInfo.get(ex.id);
+                        const isFirstInGroup = block.isGroup && block.exercises.length > 1 && exIdx === 0;
+                        const isLastInGroup = block.isGroup && block.exercises.length > 1 && exIdx === block.exercises.length - 1;
+                        const isMiddleInGroup = block.isGroup && block.exercises.length > 1 && !isFirstInGroup && !isLastInGroup;
+                        
+                        const groupClasses = isFirstInGroup ? 'rounded-t-[2rem] rounded-b-none border-b-0' :
+                                             isMiddleInGroup ? 'rounded-none border-b-0' :
+                                             isLastInGroup ? 'rounded-b-[2rem] rounded-t-none' : 'rounded-[2rem] shadow-sm';
+
+                        const url = resolveExerciseImage(ex);
+                        const media = url ? parseMediaUrl(url) : null;
+                        
+                        return (
+                          <div key={ex.id} className={`bg-white p-5 border relative overflow-hidden transition-all ${groupClasses} ${block.isGroup ? 'border-slate-200' : 'border-slate-100'}`}>
+                            {ssInfo && (
+                              <div className={`absolute left-0 top-0 bottom-0 w-2 ${ssInfo.color}`} />
+                            )}
+                            <div className={`flex items-center gap-4 mb-4 ${ssInfo ? 'pl-3' : ''}`}>
+                              <button 
+                                onClick={() => { if (url) setZoomedImage({ url, name: ex.definition.name }); }}
+                                className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative group ${media ? 'cursor-zoom-in' : ''} ${media?.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600' : 'bg-slate-50'}`}
+                              >
+                                {media ? (
+                                  <>
+                                    {media.thumbnailUrl ? <img src={media.thumbnailUrl} alt="" className="w-full h-full object-cover" /> : <Activity className="text-white" size={16}/>}
+                                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                      <Maximize2 size={14} className="text-white" />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <Activity className="text-slate-300" />
+                                )}
+                              </button>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-black text-slate-900 truncate">{ex.definition.name}</h4>
+                                  {ssInfo && <span className={`${ssInfo.color} text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase`}>{ssInfo.label}</span>}
+                                </div>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{ex.definition.category}</p>
+                              </div>
                             </div>
-                          </>
-                        ) : (
-                          <Activity className="text-slate-300" />
-                        )}
-                      </button>
-                      <div>
-                        <h4 className="font-black text-slate-900">{ex.definition.name}</h4>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{ex.definition.category}</p>
-                      </div>
+                            <div className={`grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl ${ssInfo ? 'ml-3' : ''}`}>
+                              <div className="text-center">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Series</p>
+                                <p className="text-sm font-black text-slate-700">{ex.targetSets}</p>
+                              </div>
+                              <div className="text-center border-x border-slate-200">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Reps</p>
+                                <p className="text-sm font-black text-slate-700">{ex.targetReps}</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
+                                <p className="text-sm font-black text-slate-700">{ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl">
-                      <div className="text-center">
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Series</p>
-                        <p className="text-sm font-black text-slate-700">{ex.targetSets}</p>
-                      </div>
-                      <div className="text-center border-x border-slate-200">
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Reps</p>
-                        <p className="text-sm font-black text-slate-700">{ex.targetReps}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
-                        <p className="text-sm font-black text-slate-700">{ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             ) : (
               <div className="text-center py-12 bg-white rounded-[2.5rem] border border-dashed border-slate-200">
@@ -301,60 +374,99 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                   <p className="text-slate-400 text-sm font-medium">Ejercicios para realizar en casa y complementar tu tratamiento.</p>
                 </div>
                 <div className="space-y-4">
-                  {patient.homeRoutine.days[0]?.exercises.map(ex => (
-                    <div key={ex.id} className={`bg-white rounded-[2rem] p-5 shadow-sm border transition-all ${ex.isDone ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100'}`}>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          <button 
-                            onClick={() => {
-                              const url = resolveExerciseImage(ex);
-                              if (url) setZoomedImage({ url, name: ex.definition.name });
-                            }}
-                            className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative group ${resolveExerciseImage(ex) ? 'cursor-zoom-in' : ''} ${ex.isDone ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-primary-600'}`}
-                          >
-                            {resolveExerciseImage(ex) ? (
-                              <>
-                                <img src={resolveExerciseImage(ex)} alt="" className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                  <Maximize2 size={14} className="text-white" />
+                  {(() => {
+                    const days = patient.homeRoutine?.days[0];
+                    if (!days) return null;
+                    const supersetInfo = getSupersetInfo(days.exercises);
+                    const blocks: { isGroup: boolean; groupId?: string; exercises: RoutineExercise[] }[] = [];
+                    days.exercises.forEach(ex => {
+                      if (ex.supersetGroup) {
+                        if (blocks.length > 0 && blocks[blocks.length - 1].groupId === ex.supersetGroup) {
+                          blocks[blocks.length - 1].exercises.push(ex);
+                        } else {
+                          blocks.push({ isGroup: true, groupId: ex.supersetGroup, exercises: [ex] });
+                        }
+                      } else {
+                        blocks.push({ isGroup: false, exercises: [ex] });
+                      }
+                    });
+
+                    return blocks.map((block) => (
+                      <div key={block.isGroup ? block.groupId : block.exercises[0].id} className={`flex flex-col ${block.isGroup ? 'shadow-sm rounded-[2rem]' : ''}`}>
+                        {block.exercises.map((ex, exIdx) => {
+                          const ssInfo = supersetInfo.get(ex.id);
+                          const isFirstInGroup = block.isGroup && block.exercises.length > 1 && exIdx === 0;
+                          const isLastInGroup = block.isGroup && block.exercises.length > 1 && exIdx === block.exercises.length - 1;
+                          const isMiddleInGroup = block.isGroup && block.exercises.length > 1 && !isFirstInGroup && !isLastInGroup;
+                          
+                          const groupClasses = isFirstInGroup ? 'rounded-t-[2rem] rounded-b-none border-b-0' :
+                                               isMiddleInGroup ? 'rounded-none border-b-0' :
+                                               isLastInGroup ? 'rounded-b-[2rem] rounded-t-none' : 'rounded-[2rem] shadow-sm';
+
+                          const url = resolveExerciseImage(ex);
+                          const media = url ? parseMediaUrl(url) : null;
+                          
+                          return (
+                            <div key={ex.id} className={`bg-white p-5 border transition-all relative overflow-hidden ${groupClasses} ${ex.isDone ? 'border-emerald-500 bg-emerald-50/30' : block.isGroup ? 'border-slate-200' : 'border-slate-100'}`}>
+                              {ssInfo && !ex.isDone && (
+                                <div className={`absolute left-0 top-0 bottom-0 w-2 ${ssInfo.color}`} />
+                              )}
+                              <div className={`flex items-center justify-between mb-4 ${ssInfo && !ex.isDone ? 'pl-3' : ''}`}>
+                                <div className="flex items-center gap-4">
+                                  <button 
+                                    onClick={() => { if (url) setZoomedImage({ url, name: ex.definition.name }); }}
+                                    className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative group ${media ? 'cursor-zoom-in' : ''} ${ex.isDone ? 'bg-emerald-500 text-white' : media?.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600 outline-none' : 'bg-slate-50 text-primary-600'}`}
+                                  >
+                                    {!ex.isDone && media ? (
+                                      <>
+                                        {media.thumbnailUrl ? <img src={media.thumbnailUrl} alt="" className="w-full h-full object-cover" /> : <Activity className="text-white" size={16}/>}
+                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                          <Maximize2 size={14} className="text-white" />
+                                        </div>
+                                      </>
+                                    ) : (
+                                      ex.isDone ? <CheckCircle2 size={24} /> : <Home size={24} />
+                                    )}
+                                  </button>
+                                  <div className="min-w-0 pr-4">
+                                    <div className="flex items-center gap-2">
+                                      <h4 className={`font-black truncate ${ex.isDone ? 'text-emerald-900' : 'text-slate-900'}`}>{ex.definition.name}</h4>
+                                      {ssInfo && !ex.isDone && <span className={`${ssInfo.color} text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase shrink-0`}>{ssInfo.label}</span>}
+                                    </div>
+                                    <p className="text-xs text-slate-400 font-bold mt-0.5">{ex.targetSets}x{ex.targetReps} • {ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
+                                  </div>
                                 </div>
-                              </>
-                            ) : (
-                              ex.isDone ? <CheckCircle2 size={24} /> : <Home size={24} />
-                            )}
-                          </button>
-                          <div>
-                            <h4 className={`font-black ${ex.isDone ? 'text-emerald-900' : 'text-slate-900'}`}>{ex.definition.name}</h4>
-                            <p className="text-xs text-slate-400 font-bold">{ex.targetSets}x{ex.targetReps} • {ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
-                          </div>
-                        </div>
-                        {!ex.isDone && (
-                          <button 
-                            onClick={() => handleMarkHomeDone(ex.id)}
-                            className="w-10 h-10 rounded-full border-2 border-slate-100 flex items-center justify-center text-slate-300 hover:border-emerald-500 hover:text-emerald-500 transition-all"
-                          >
-                            <CheckCircle2 size={20} />
-                          </button>
-                        )}
+                                {!ex.isDone && (
+                                  <button 
+                                    onClick={() => handleMarkHomeDone(ex.id)}
+                                    className="w-10 h-10 shrink-0 rounded-full border-2 border-slate-100 flex items-center justify-center text-slate-300 hover:border-emerald-500 hover:text-emerald-500 transition-all bg-white shadow-sm"
+                                  >
+                                    <CheckCircle2 size={20} />
+                                  </button>
+                                )}
+                              </div>
+                              {!ex.isDone && (
+                                <textarea 
+                                  placeholder="Observaciones (opcional)..."
+                                  className={`w-full bg-slate-50 border-none rounded-xl p-3 text-xs font-medium placeholder:text-slate-300 focus:ring-1 focus:ring-primary-500 ${ssInfo ? 'ml-3 w-[calc(100%-0.75rem)]' : ''}`}
+                                  onBlur={(e) => {
+                                    if (e.target.value.trim()) {
+                                      // We could save observations here if we wanted to
+                                    }
+                                  }}
+                                />
+                              )}
+                              {ex.isDone && (
+                                <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                                  <CheckCircle2 size={14} /> Completado hoy
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                      {!ex.isDone && (
-                        <textarea 
-                          placeholder="Observaciones (opcional)..."
-                          className="w-full bg-slate-50 border-none rounded-xl p-3 text-xs font-medium placeholder:text-slate-300 focus:ring-1 focus:ring-primary-500"
-                          onBlur={(e) => {
-                            if (e.target.value.trim()) {
-                              // We could save observations here if we wanted to
-                            }
-                          }}
-                        />
-                      )}
-                      {ex.isDone && (
-                        <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
-                          <CheckCircle2 size={14} /> Completado hoy
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               </div>
             ) : (
@@ -389,31 +501,40 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
       </div>
 
       {/* Image Zoom Modal */}
-      {zoomedImage && (
-        <div 
-          className="fixed inset-0 z-[300] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-in fade-in duration-200"
-          onClick={() => setZoomedImage(null)}
-        >
+      {zoomedImage && (() => {
+        const media = parseMediaUrl(zoomedImage.url);
+        return (
           <div 
-            className="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl max-w-2xl w-full animate-in zoom-in-95 duration-300 cursor-default"
-            onClick={e => e.stopPropagation()}
+            className="fixed inset-0 z-[300] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-in fade-in duration-200"
+            onClick={() => setZoomedImage(null)}
           >
-            <button 
-              onClick={() => setZoomedImage(null)}
-              className="absolute top-6 right-6 z-10 p-3 bg-white/80 backdrop-blur-md hover:bg-white rounded-full text-slate-900 transition-all shadow-lg active:scale-95"
+            <div 
+              className="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl max-w-2xl w-full animate-in zoom-in-95 duration-300 cursor-default"
+              onClick={e => e.stopPropagation()}
             >
-              <X size={24} />
-            </button>
-            <div className="aspect-video bg-slate-100 flex items-center justify-center">
-              <img src={zoomedImage.url} alt={zoomedImage.name} className="max-w-full max-h-full object-contain block" />
-            </div>
-            <div className="p-8">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">{zoomedImage.name}</h2>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Vista Detallada</p>
+              <button 
+                onClick={() => setZoomedImage(null)}
+                className="absolute top-6 right-6 z-10 p-3 bg-white/80 backdrop-blur-md hover:bg-white rounded-full text-slate-900 transition-all shadow-lg active:scale-95"
+              >
+                <X size={24} />
+              </button>
+              {media.isVideo ? (
+                <div className="aspect-video bg-slate-900">
+                  <iframe src={media.embedUrl} className="w-full h-full" allowFullScreen title={zoomedImage.name} />
+                </div>
+              ) : (
+                <div className="aspect-video bg-slate-100 flex items-center justify-center">
+                  <img src={media.embedUrl} alt={zoomedImage.name} className="max-w-full max-h-full object-contain block" />
+                </div>
+              )}
+              <div className="p-8">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">{zoomedImage.name}</h2>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Vista Detallada</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

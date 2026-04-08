@@ -393,22 +393,45 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                   </div>
                   {(() => {
                       const supersetInfo = getSupersetInfo(activeDay.exercises);
-                      return activeDay.exercises.map((ex, idx) => {
-                        const ssInfo = supersetInfo.get(ex.id);
-                        return (
-                          <div className="animate-slide-up" style={{ animationDelay: `${idx * 40}ms` }} key={ex.id}>
-                            <ExerciseCard
-                              exercise={ex}
-                              role={role}
-                              onUpdate={(id, up) => handleExerciseUpdate(id, up)}
-                              onShowHistory={(e) => setChartExercise(e)}
-                              onDelete={(id) => handleRemoveExercise(activeDayId, id)}
-                              supersetLabel={ssInfo?.label}
-                              supersetColor={ssInfo?.color}
-                            />
-                          </div>
-                        );
+                      const blocks: { isGroup: boolean; groupId?: string; exercises: RoutineExercise[] }[] = [];
+                      activeDay.exercises.forEach(ex => {
+                        if (ex.supersetGroup) {
+                          if (blocks.length > 0 && blocks[blocks.length - 1].groupId === ex.supersetGroup) {
+                            blocks[blocks.length - 1].exercises.push(ex);
+                          } else {
+                            blocks.push({ isGroup: true, groupId: ex.supersetGroup, exercises: [ex] });
+                          }
+                        } else {
+                          blocks.push({ isGroup: false, exercises: [ex] });
+                        }
                       });
+
+                      return blocks.map((block, bIdx) => (
+                        <div key={block.isGroup ? block.groupId : block.exercises[0].id} className={`flex flex-col animate-slide-up ${block.isGroup ? 'shadow-sm rounded-2xl' : ''}`} style={{ animationDelay: `${bIdx * 40}ms` }}>
+                          {block.exercises.map((ex, exIdx) => {
+                            const ssInfo = supersetInfo.get(ex.id);
+                            const isFirstInGroup = block.isGroup && block.exercises.length > 1 && exIdx === 0;
+                            const isLastInGroup = block.isGroup && block.exercises.length > 1 && exIdx === block.exercises.length - 1;
+                            const isMiddleInGroup = block.isGroup && block.exercises.length > 1 && !isFirstInGroup && !isLastInGroup;
+
+                            return (
+                              <ExerciseCard
+                                key={ex.id}
+                                exercise={ex}
+                                role={role}
+                                onUpdate={(id, up) => handleExerciseUpdate(id, up)}
+                                onShowHistory={(e) => setChartExercise(e)}
+                                onDelete={(id) => handleRemoveExercise(activeDayId, id)}
+                                supersetLabel={ssInfo?.label}
+                                supersetColor={ssInfo?.color}
+                                isFirstInGroup={isFirstInGroup}
+                                isLastInGroup={isLastInGroup}
+                                isMiddleInGroup={isMiddleInGroup}
+                              />
+                            );
+                          })}
+                        </div>
+                      ));
                   })()}
                   {activeDay.exercises.length === 0 && (
                     <div className="py-24 text-center glass-panel rounded-[2rem] border-dashed">
@@ -649,13 +672,37 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                       )}
                                       {(() => {
                                         const supersetInfo = getSupersetInfo(day.exercises);
-                                        return day.exercises.map((ex) => {
-                                          const isSelectedInEditor = editorSelectedExIds.includes(ex.id);
-                                          const hasSupersetGroup = !!ex.supersetGroup;
-                                          const ssInfo = supersetInfo.get(ex.id);
-                                          return (
-                                            <div key={ex.id} className={`flex flex-col gap-3 p-4 bg-white rounded-2xl border shadow-sm transition-all group relative ${isSelectedInEditor ? 'border-indigo-400 ring-2 ring-indigo-100' : hasSupersetGroup ? `border-l-4 ${ssInfo?.color || 'border-l-indigo-400'} border-slate-200` : 'border-slate-200 hover:border-primary-300'}`}>
-                                              {/* Checkbox de selección */}
+                                        const blocks: { isGroup: boolean; groupId?: string; exercises: RoutineExercise[] }[] = [];
+                                        day.exercises.forEach(ex => {
+                                          if (ex.supersetGroup) {
+                                            if (blocks.length > 0 && blocks[blocks.length - 1].groupId === ex.supersetGroup) {
+                                              blocks[blocks.length - 1].exercises.push(ex);
+                                            } else {
+                                              blocks.push({ isGroup: true, groupId: ex.supersetGroup, exercises: [ex] });
+                                            }
+                                          } else {
+                                            blocks.push({ isGroup: false, exercises: [ex] });
+                                          }
+                                        });
+
+                                        return blocks.map((block) => (
+                                          <div key={block.isGroup ? block.groupId : block.exercises[0].id} className={`flex flex-col ${block.isGroup ? 'shadow-sm rounded-2xl' : ''}`}>
+                                            {block.exercises.map((ex, exIdx) => {
+                                              const isSelectedInEditor = editorSelectedExIds.includes(ex.id);
+                                              const hasSupersetGroup = !!ex.supersetGroup;
+                                              const ssInfo = supersetInfo.get(ex.id);
+                                              
+                                              const isFirstInGroup = block.isGroup && block.exercises.length > 1 && exIdx === 0;
+                                              const isLastInGroup = block.isGroup && block.exercises.length > 1 && exIdx === block.exercises.length - 1;
+                                              const isMiddleInGroup = block.isGroup && block.exercises.length > 1 && !isFirstInGroup && !isLastInGroup;
+                                              
+                                              const groupClasses = isFirstInGroup ? 'rounded-t-2xl rounded-b-none border-b-0' :
+                                                                   isMiddleInGroup ? 'rounded-none border-b-0' :
+                                                                   isLastInGroup ? 'rounded-b-2xl rounded-t-none' : 'rounded-2xl';
+
+                                              return (
+                                                <div key={ex.id} className={`flex flex-col gap-3 p-4 bg-white border transition-all group relative ${groupClasses} ${isSelectedInEditor ? 'border-indigo-400 ring-2 ring-indigo-100 z-10' : hasSupersetGroup ? `border-l-4 ${ssInfo?.color || 'border-l-indigo-400'} border-slate-200` : 'border-slate-200 hover:border-primary-300 shadow-sm'}`}>
+                                                  {/* Checkbox de selección */}
                                               <button
                                                 onClick={() => setEditorSelectedExIds(prev =>
                                                   prev.includes(ex.id) ? prev.filter(id => id !== ex.id) : [...prev, ex.id]
@@ -722,10 +769,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                     <input type="number" className="w-full bg-transparent text-center font-black text-base text-primary-600 focus:outline-none p-0 border-none" value={ex.targetLoad} onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} />
                                                   </div>
                                               </div>
+                                            );
+                                            })}
                                           </div>
-                                        );
-                                      });
-                                    })()}
+                                        ));
+                                      })()}
 
                                       <button onClick={() => setIsAddingExerciseModal({show: true, dayId: day.id})} className="w-full py-8 border-2 border-dashed border-slate-200 rounded-[1.5rem] bg-slate-50/50 text-sm font-bold text-slate-400 hover:bg-primary-50 hover:text-primary-600 hover:border-primary-200 transition-all flex flex-col items-center gap-3">
                                           <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center"><Plus size={24} /></div>
