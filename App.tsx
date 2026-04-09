@@ -228,16 +228,11 @@ const App: React.FC = () => {
       
       console.log(`Firestore Snapshot: ${patientsData.length} patients found`);
       
-      if (!snapshot.empty) {
-        setPatients(patientsData);
-      } else {
-        console.log("Firestore is empty, using mock data");
-        setPatients(MOCK_PATIENTS);
-      }
+      setPatients(patientsData);
       setLoading(false);
     }, (error) => {
       console.error("Firestore Error:", error);
-      setPatients(MOCK_PATIENTS);
+      setPatients([]);
       setLoading(false);
     });
 
@@ -256,11 +251,7 @@ const App: React.FC = () => {
       snapshot.forEach((doc) => {
         productsData.push(doc.data() as Product);
       });
-      if (!snapshot.empty) {
-        setProducts(productsData);
-      } else {
-        setProducts(MOCK_PRODUCTS);
-      }
+      setProducts(productsData);
     });
 
     const appointmentsQ = query(collection(db, 'appointments'));
@@ -269,11 +260,7 @@ const App: React.FC = () => {
       snapshot.forEach((doc) => {
         appointmentsData.push(doc.data() as Appointment);
       });
-      if (!snapshot.empty) {
-        setAppointments(appointmentsData);
-      } else {
-        setAppointments(MOCK_APPOINTMENTS);
-      }
+      setAppointments(appointmentsData);
     });
 
     const exercisesQ = query(collection(db, 'exercises'));
@@ -285,6 +272,7 @@ const App: React.FC = () => {
       if (!snapshot.empty) {
         setExercises(exercisesData);
       } else {
+        // Para catálogo maestros de ejercicios dejamos el Inicial si la colección está 100% vacía (semilla)
         setExercises(INITIAL_EXERCISES);
       }
     });
