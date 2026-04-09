@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment } from '../types';
+import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole } from '../types';
+import { secondaryAuth, auth } from '../firebase';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { generatePatientEmail } from '../utils/authUtils';
+import { useAuthStore } from '../store/authStore';
 import { 
   UserPlus, 
   Search, 
@@ -159,7 +163,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     resetProductForm();
   };
 
-  const handlePatientSubmit = (e: React.FormEvent) => {
+  const handlePatientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Check for duplicate DNI
@@ -175,6 +179,13 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
         ...patientForm as Patient
       });
     } else {
+      // Validate tenantId
+      const tenantId = useAuthStore.getState().user?.tenantId;
+      if (!tenantId) {
+        setError("Error crítico: No se encontró el tenantId del usuario.");
+        return;
+      }
+
       // Initialize routine days based on sessionsPerWeek
       const days: RoutineDay[] = [];
       const numDays = patientForm.sessionsPerWeek || 3;
@@ -182,28 +193,67 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
         days.push({ id: `day-${Date.now()}-${i}`, name: `Día ${i}`, exercises: [] });
       }
 
-      const patient: Patient = {
-        ...patientForm as Patient,
-        id: `p_${Date.now()}`,
-        lastVisit: new Date().toISOString().split('T')[0],
-        routine: {
-          id: `r_${Date.now()}`,
-          stage: 0 as any,
-          currentWeek: 1,
-          days: days
-        },
-        homeRoutine: {
-          id: `hr_${Date.now()}`,
-          stage: 0 as any,
-          currentWeek: 1,
-          days: [{ id: `hday-${Date.now()}`, name: 'Rutina Casa', exercises: [] }]
+      try {
+        let authUid = `p_${Date.now()}`;
+
+        // Attempt to create Firebase Auth user
+        if (secondaryAuth) {
+          const email = generatePatientEmail(patientForm.dni!);
+          // The initial password is the DNI
+          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, patientForm.dni!);
+          authUid = userCredential.user.uid;
+        } else {
+          console.warn("Secondary auth not initialized, skipping Firebase Auth creation.");
         }
-      };
-      onAddPatient(patient);
+
+        const patient: Patient = {
+          ...patientForm as Patient,
+          id: authUid, // Use the auth UID as the document ID for consistency
+          uid: authUid,
+          tenantId: tenantId, 
+          lastVisit: new Date().toISOString().split('T')[0],
+          routine: {
+            id: `r_${Date.now()}`,
+            stage: 0 as any,
+            currentWeek: 1,
+            days: days
+          },
+          homeRoutine: {
+            id: `hr_${Date.now()}`,
+            stage: 0 as any,
+            currentWeek: 1,
+            days: [{ id: `hday-${Date.now()}`, name: 'Rutina Casa', exercises: [] }]
+          }
+        };
+        onAddPatient(patient);
+      } catch (err: any) {
+        console.error("Error creating auth user:", err);
+        setError("Error al crear la cuenta del paciente (¿DNI ya registrado como correo?).");
+        return;
+      }
     }
     
     setShowAddModal(false);
     resetForm();
+  };
+
+  const handleResetPassword = async (patient: Patient) => {
+    if (!patient.dni) {
+      setError("El paciente no tiene un DNI registrado.");
+      return;
+    }
+    try {
+      const email = generatePatientEmail(patient.dni);
+      if (auth) {
+        await sendPasswordResetEmail(auth, email);
+        alert(`Se ha enviado un correo a ${email} (si está configurado) para restablecer la contraseña. \n\nNota: Dado que usamos correos ficticios (dni@pacientes...), en producción deberás usar un servidor (Admin SDK) para setear la clave manualmente, o solicitar el correo real del paciente.`);
+      } else {
+        alert("Firebase Auth no está activo.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("No se pudo enviar la solicitud de reseteo.");
+    }
   };
 
   const handleCheckIn = (patient: Patient) => {
@@ -656,13 +706,22 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
             {/* Footer Modal */}
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 flex-shrink-0">
                {editingPatient ? (
-                  <button 
-                    type="button" 
-                    onClick={() => { if(window.confirm('¿ELIMINAR PACIENTE DEFINITIVAMENTE? Esta acción destruirá todo su historial clínico. No se puede deshacer.')) { onDeletePatient(editingPatient.id); setShowAddModal(false); setEditingPatient(null); } }} 
-                    className="w-full sm:w-auto text-red-500 font-bold py-3 px-5 hover:bg-red-100 rounded-xl transition-colors text-sm flex items-center justify-center gap-2 order-2 sm:order-1"
-                  >
-                    <Trash2 size={18} /> Borrar Perfil
-                  </button>
+                  <div className="flex gap-2 order-3 sm:order-1 flex-1 sm:flex-none">
+                    <button 
+                      type="button" 
+                      onClick={() => handleResetPassword(editingPatient)} 
+                      className="w-full sm:w-auto text-slate-500 font-bold py-3 px-5 hover:bg-slate-200 rounded-xl transition-colors text-sm flex items-center justify-center gap-2 border border-slate-300"
+                    >
+                       Restaurar Acceso
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => { if(window.confirm('¿ELIMINAR PACIENTE DEFINITIVAMENTE? Esta acción destruirá todo su historial clínico. No se puede deshacer.')) { onDeletePatient(editingPatient.id); setShowAddModal(false); setEditingPatient(null); } }} 
+                      className="w-full sm:w-auto text-red-500 font-bold py-3 px-5 hover:bg-red-100 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+                    >
+                      <Trash2 size={18} /> Borrar
+                    </button>
+                  </div>
                 ) : <div className="hidden sm:block"></div>}
                 
                 <button type="submit" form="patient-form" className="w-full sm:w-auto bg-slate-900 hover:bg-black text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-slate-900/20 active:scale-95 transition-all order-1 sm:order-2 flex items-center justify-center gap-2">

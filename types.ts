@@ -34,6 +34,7 @@ export type MetricType = 'kg' | 'time';
 
 export interface ExerciseDefinition {
   id: string;
+  tenantId?: string; // Para aislamiento multi-tenant
   name: string;
   category: string;
   videoUrl?: string;
@@ -74,6 +75,7 @@ export interface RecurringSlot {
 
 export interface Appointment {
   id: string;
+  tenantId?: string;
   patientId: string;
   patientName: string;
   date: string; // "YYYY-MM-DD"
@@ -86,6 +88,8 @@ export interface Appointment {
 
 export interface Patient {
   id: string;
+  uid?: string; // Firebase Auth UID
+  tenantId?: string;
   dni: string;
   firstName: string;
   lastName: string;
@@ -111,6 +115,7 @@ export interface Patient {
 
 export interface Product {
   id: string;
+  tenantId?: string;
   name: string;
   price: number;
   imageUrl: string;
@@ -121,8 +126,10 @@ export interface Product {
 
 export interface StaffMember {
   id: string;
+  uid?: string; // Firebase Auth UID
+  tenantId?: string;
   username: string;
-  password?: string; // Solo para login local, en prod usar auth
+  password?: string; // Por retrocompatibilidad (debe ser deprecado a futuro)
   firstName: string;
   lastName: string;
   role: UserRole;
@@ -140,6 +147,7 @@ export interface EvaluationResult {
 
 export interface ClinicalEvaluation {
   id: string;
+  tenantId?: string;
   patientId: string;
   date: string;
   kineId: string;

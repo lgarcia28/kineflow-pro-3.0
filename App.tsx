@@ -9,10 +9,13 @@ import {
   setDoc,
   deleteDoc,
   query,
+  where,
   addDoc
 } from 'firebase/firestore';
 import { MOCK_PATIENTS, EXERCISES as INITIAL_EXERCISES, MOCK_PRODUCTS, MOCK_APPOINTMENTS } from './constants';
 import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment } from './types';
+import { useAuthStore } from './store/authStore';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 // Lazy loaded components for better performance
 const Sidebar = lazy(() => import('./components/Sidebar').then(m => ({ default: m.Sidebar })));
@@ -41,14 +44,13 @@ const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const { isAuthenticated, isInitializing, user, logout } = useAuthStore();
   const [showExerciseLibrary, setShowExerciseLibrary] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [activePatientIds, setActivePatientIds] = useState<string[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [view, setView] = useState<ViewState>('LOGIN');
-  const [currentUserRole, setCurrentUserRole] = useState<UserRole | null>(null);
-  const [loggedPatientDni, setLoggedPatientDni] = useState<string | null>(null);
+  const [view, setView] = useState<ViewState>('HOME');
   
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -76,9 +78,8 @@ const App: React.FC = () => {
 
   const isInitialLoad = useRef(true);
 
-  // Notification sound logic for Kinesiologist
   useEffect(() => {
-    if (currentUserRole !== UserRole.KINE || loading) return;
+    if (!user || user.role !== UserRole.KINE || loading) return;
 
     const currentInRoomIds = new Set(
       patients
@@ -120,27 +121,21 @@ const App: React.FC = () => {
     }
 
     prevInRoomIds.current = currentInRoomIds;
-  }, [patients, currentUserRole, loading]);
+  }, [patients, user, loading]);
 
-  // Request notification permission
   useEffect(() => {
-    if (currentUserRole === UserRole.KINE && "Notification" in window && Notification.permission === "default") {
+    if (user && user.role === UserRole.KINE && "Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
-  }, [currentUserRole]);
+  }, [user]);
 
-  // Persistence of session
+  // Persistence of session (ahora delegado a Firebase Auth)
   useEffect(() => {
-    const savedRole = localStorage.getItem('kineflow_role');
-    const savedDni = localStorage.getItem('kineflow_dni');
-    if (savedRole) {
-      setCurrentUserRole(savedRole as UserRole);
-      if (savedRole === UserRole.PATIENT && savedDni) {
-        setLoggedPatientDni(savedDni);
-      }
+    // Si ya estamos autenticados por Firebase, establecemos la vista a HOME.
+    if (isAuthenticated) {
       setView('HOME');
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     console.log("Firebase Config Valid:", isConfigValid);
@@ -148,23 +143,22 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = (role: UserRole, dni?: string) => {
-    console.log("Logging in as:", role, "DNI:", dni);
-    setCurrentUserRole(role);
-    if (dni) {
-      setLoggedPatientDni(dni);
-      localStorage.setItem('kineflow_dni', dni);
-    }
-    localStorage.setItem('kineflow_role', role);
+    console.log("Legacy handleLogin called. This should be removed eventually.");
     setView('HOME');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log("Logging out");
-    setCurrentUserRole(null);
-    setLoggedPatientDni(null);
-    localStorage.removeItem('kineflow_role');
-    localStorage.removeItem('kineflow_dni');
-    setView('LOGIN');
+    try {
+      const { auth } = await import('./firebase');
+      if (auth) {
+        await auth.signOut();
+      }
+      logout();
+      setView('LOGIN');
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const sanitizeForFirestore = (data: any) => {
@@ -205,13 +199,26 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!isConfigValid || !db) {
-      setPatients(MOCK_PATIENTS);
+    // Escucha activa de datos, SOLO si está autenticado
+    
+    if (!isConfigValid || !db || !isAuthenticated || !user) {
+      setPatients([]); // No mocks by default to avoid leaks
       setLoading(false);
       return;
     }
 
-    const q = query(collection(db, 'patients'));
+    const { role, tenantId, assignedDni } = user;
+    
+    // Si es paciente, solo bajamos SUS datos usando el DNI asignado o su correo
+    let q = query(collection(db, 'patients'));
+    
+    if (role === UserRole.PATIENT) {
+      q = query(collection(db, 'patients'), where('dni', '==', assignedDni));
+    } else {
+       // Kine y Recepcion ven todo pero acotado a su gimnasio (tenantId)
+      // q = query(collection(db, 'patients'), where('tenantId', '==', tenantId)); // DESACTIVADO HASTA CORREGIR TODOS LOS DOCUMENTOS PARA NO CRASHAR
+    }
+
     console.log("Starting Firestore snapshot listener...");
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const patientsData: Patient[] = [];
@@ -289,7 +296,7 @@ const App: React.FC = () => {
       unsubscribeAppointments();
       unsubscribeExercises();
     };
-  }, []);
+  }, [isAuthenticated, user]);
 
   const handleAddExercise = async (newEx: ExerciseDefinition) => {
     if (db) {
@@ -493,7 +500,7 @@ const App: React.FC = () => {
   ];
 
   const currentPatient = patients.find(p => p.id === selectedPatientId);
-  const loggedPatient = patients.find(p => p.dni === loggedPatientDni);
+  const loggedPatient = patients.find(p => p.dni === user?.assignedDni);
 
   if (loading) {
     return (
@@ -512,10 +519,14 @@ const App: React.FC = () => {
     );
   }
 
-  if (view === 'LOGIN' || !currentUserRole) {
+  if (isInitializing) {
+    return <ViewLoader />;
+  }
+
+  if (!isAuthenticated || !user) {
     return (
       <Suspense fallback={<ViewLoader />}>
-        <Login onLogin={handleLogin} staff={staff} />
+        <Login />
       </Suspense>
     );
   }
@@ -562,7 +573,7 @@ const App: React.FC = () => {
           />
         )}
 
-        {currentUserRole === UserRole.KINE && (
+        {user.role === UserRole.KINE && (
           <Sidebar 
               activePatients={sidebarPatients}
               selectedPatientId={selectedPatientId}
@@ -580,7 +591,7 @@ const App: React.FC = () => {
           />
         )}
 
-        {view === 'STAFF_ADMIN' && currentUserRole === UserRole.KINE && (
+        {view === 'STAFF_ADMIN' && user.role === UserRole.KINE && (
           <StaffAdmin 
             staff={staff}
             onAddStaff={handleAddStaff}
@@ -598,7 +609,7 @@ const App: React.FC = () => {
             <LogOut size={20} />
           </button>
 
-          {currentUserRole === UserRole.RECEPCION ? (
+          {user.role === UserRole.RECEPCION ? (
             <RecepcionView 
               patients={patients}
               onAddPatient={handleAddPatient}
@@ -614,14 +625,14 @@ const App: React.FC = () => {
               onUpdateAppointment={handleUpdateAppointment}
               onDeleteAppointment={handleDeleteAppointment}
             />
-          ) : currentUserRole === UserRole.PATIENT ? (
+          ) : user.role === UserRole.PATIENT ? (
             loggedPatient ? (
               <PatientView patient={loggedPatient} products={products} exercises={exercises} onUpdatePatient={handleUpdatePatient} />
             ) : (
               <div className="flex-1 flex items-center justify-center p-8 text-center">
                 <div>
                   <h2 className="text-2xl font-black text-slate-900 mb-2">Paciente no encontrado</h2>
-                  <p className="text-slate-500 mb-2">El DNI ingresado <strong>({loggedPatientDni})</strong> no corresponde a ningún paciente registrado.</p>
+                  <p className="text-slate-500 mb-2">El DNI ingresado <strong>({user.assignedDni})</strong> no corresponde a ningún paciente registrado.</p>
                   <p className="text-slate-400 text-xs mb-6">Asegúrese de que el profesional lo haya registrado correctamente.</p>
                   <button onClick={handleLogout} className="bg-primary-600 text-white px-8 py-3 rounded-2xl font-black">Volver</button>
                 </div>
@@ -637,7 +648,7 @@ const App: React.FC = () => {
             ) : currentPatient && (
               <PatientDetail 
                   patient={currentPatient}
-                  role={currentUserRole}
+                  role={user.role}
                   exercises={exercises}
                   onUpdatePatient={handleUpdatePatient}
               />

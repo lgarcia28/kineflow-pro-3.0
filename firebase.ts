@@ -1,5 +1,6 @@
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
 import { 
   getFirestore, 
   initializeFirestore, 
@@ -24,9 +25,12 @@ const isPlaceholder = (val: string | undefined) => !val || val.includes('...') |
 const isConfigValid = !isPlaceholder(firebaseConfig.apiKey) && !isPlaceholder(firebaseConfig.projectId);
 
 let app: FirebaseApp | undefined;
+let secondaryApp: FirebaseApp | undefined;
 let db: Firestore | null = null;
 let analytics: Analytics | null = null;
 let storage: FirebaseStorage | null = null;
+let auth: Auth | null = null;
+let secondaryAuth: Auth | null = null;
 
 if (isConfigValid) {
   try {
@@ -41,8 +45,13 @@ if (isConfigValid) {
 
     console.log("Firebase initialized successfully with project:", firebaseConfig.projectId);
 
-    // Inicializar Storage
+    // Inicializar Storage y Auth
     storage = getStorage(app!);
+    auth = getAuth(app!);
+
+    // App secundaria para crear usuarios sin desloguear a Recepción
+    secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+    secondaryAuth = getAuth(secondaryApp);
 
     isSupported().then((yes: boolean) => {
         if (yes && app) analytics = getAnalytics(app);
@@ -54,4 +63,4 @@ if (isConfigValid) {
   console.warn("Firebase config is invalid or using placeholders. Firestore will be disabled.");
 }
 
-export { db, analytics, storage, isConfigValid };
+export { db, analytics, storage, auth, secondaryAuth, isConfigValid };

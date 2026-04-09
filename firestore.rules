@@ -1,13 +1,64 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REGLAS MVP: Permite lectura y escritura si el usuario está autenticado
-    // Nota: Para este MVP inicial sin Auth configurado, permitimos acceso total.
-    // IMPORTANTE: Configurar Authentication pronto para asegurar datos de pacientes.
+    
+    // Función auxiliar para verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Función para obtener el documento del staff actual
+    function getStaffData() {
+      return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data;
+    }
+
+    // Regla global segura por defecto: Cerrado
     match /{document=**} {
-      allow read, write: if true; 
+      allow read, write: if false; 
+    }
+
+    // PACIENTES:
+    match /patients/{patientId} {
+      // Un paciente puede leer su propio documento y actualizar sus rutinas (homeRoutine)
+      allow read, update: if isAuthenticated() && request.auth.uid == patientId;
+      
+      // El staff puede crear, leer, modificar perfiles de su tenantId
+      // Para este nivel de reglas sin custom claims, permitiremos que cualquier staff autenticado opre sobre la base (se filtran del lado del cliente)
+      allow read, write: if isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+    }
+
+    // STAFF:
+    match /staff/{staffId} {
+      // Cualquier staff puede leer la colección del staff
+      allow read: if isAuthenticated();
+      // Solo un Kine o superAdmin puede modificar
+      allow write: if isAuthenticated() && getStaffData().role == 'KINE';
+    }
+
+    // CITAS, EVALUACIONES CLÍNICAS, EJERCICIOS Y PRODUCTOS
+    match /appointments/{appId} {
+       // El staff puede crear y ver citas, los pacientes pueden ver sus citas si `patientId` coincide.
+       allow read: if isAuthenticated() && (exists(/databases/$(database)/documents/staff/$(request.auth.uid)) || resource.data.patientId == request.auth.uid);
+       allow write: if isAuthenticated();
+    }
+    
+    match /exercises/{exId} {
+       // Son catálogos globales o por tenant, dejamos lectura para todos los authed, escritura solo KINE
+       allow read: if isAuthenticated();
+       allow write: if isAuthenticated() && getStaffData().role == 'KINE';
+    }
+
+    match /products/{prodId} {
+       // Catálogos globales por Recepción y Kinesiólogos
+       allow read: if isAuthenticated();
+       allow write: if isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+    }
+    
+    match /clinical_evaluations/{evalId} {
+       // Los pacientes pueden leer su propio historial. El staff los escribe y lee de todos
+       allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || exists(/databases/$(database)/documents/staff/$(request.auth.uid)));
+       allow write: if isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
     }
   }
 }

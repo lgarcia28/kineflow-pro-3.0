@@ -1,44 +1,59 @@
 import React, { useState } from 'react';
-import { UserRole, StaffMember } from '../types';
 import { User, Lock, ArrowRight, Activity, ShieldCheck, HeartPulse } from 'lucide-react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
+import { generatePatientEmail, generateStaffEmail } from '../utils/authUtils';
 
-interface LoginProps {
-  onLogin: (role: UserRole, dni?: string) => void;
-  staff: StaffMember[];
-}
-
-export const Login: React.FC<LoginProps> = ({ onLogin, staff }) => {
+export const Login: React.FC = () => {
   const [mode, setMode] = useState<'PATIENT' | 'STAFF'>('PATIENT');
   const [dni, setDni] = useState('');
+  const [patientPass, setPatientPass] = useState('');
+  
   const [staffUser, setStaffUser] = useState('');
   const [staffPass, setStaffPass] = useState('');
+  
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handlePatientLogin = (e: React.FormEvent) => {
+  const handlePatientLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (dni.trim()) {
-      onLogin(UserRole.PATIENT, dni);
+    if (!dni.trim() || !patientPass.trim()) return;
+    setLoading(true);
+    setError('');
+    try {
+      const email = generatePatientEmail(dni.trim());
+      if (auth) {
+        await signInWithEmailAndPassword(auth, email, patientPass);
+      } else {
+        throw new Error("Firebase Auth no inicializado");
+      }
+    } catch (err: any) {
+      setError('DNI o contraseña incorrectos.');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleStaffLogin = (e: React.FormEvent) => {
+  const handleStaffLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!staffUser.trim() || !staffPass.trim()) return;
     setError('');
+    setLoading(true);
     
-    // Check against staff list
-    const member = staff.find(s => s.username.toLowerCase() === staffUser.toLowerCase() && s.password === staffPass);
-    
-    if (member) {
-      onLogin(member.role, member.username);
-    } else {
-      // Fallback for initial setup if no staff exists
-      if (staffUser.toLowerCase() === 'recepcion' && staffPass === '1234') {
-        onLogin(UserRole.RECEPCION);
-      } else if (staffUser.toLowerCase() === 'kine' && staffPass === '1234') {
-        onLogin(UserRole.KINE);
+    try {
+      // Intentamos con email generado (o directo si insertaron a mano)
+      const email = staffUser.includes('@') ? staffUser.trim() : generateStaffEmail(staffUser.trim().toLowerCase());
+      if (auth) {
+        await signInWithEmailAndPassword(auth, email, staffPass);
       } else {
-        setError('Usuario o contraseña incorrectos');
+         throw new Error("Firebase Auth no inicializado");
       }
+    } catch (err: any) {
+      setError('Usuario o contraseña incorrectos');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,7 +63,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, staff }) => {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-pulse"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-teal-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-pulse" style={{animationDelay: '1s'}}></div>
       
-      {/* Left Panel - Branding (Hidden on very small mobile) */}
+      {/* Left Panel - Branding */}
       <div className="hidden lg:flex flex-1 flex-col justify-center px-24 relative z-10 2xl:px-40 xl:border-r border-slate-200/50 bg-white/40 backdrop-blur-3xl">
         <div className="flex items-center gap-4 mb-12">
           <div className="w-16 h-16 bg-primary-600 rounded-[1.25rem] shadow-2xl shadow-primary-500/30 flex items-center justify-center transform hover:scale-105 transition-transform">
@@ -56,7 +71,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, staff }) => {
           </div>
           <div>
             <h1 className="text-5xl font-black text-slate-900 tracking-tight">KineFlow<span className="text-primary-600">Pro</span></h1>
-            <p className="text-lg text-slate-500 font-medium mt-1">Plataforma Clínica de Alto Rendimiento</p>
+            <p className="text-lg text-slate-500 font-medium mt-1">Plataforma Clínica Asegurada</p>
           </div>
         </div>
 
@@ -75,8 +90,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, staff }) => {
                 <ShieldCheck className="text-indigo-600 w-6 h-6" />
              </div>
              <div>
-               <h3 className="text-xl font-bold text-slate-900">Historial Seguro</h3>
-               <p className="text-slate-500 mt-1 leading-relaxed">Toda la historia clínica, notas y ejercicios almacenados con máxima seguridad.</p>
+               <h3 className="text-xl font-bold text-slate-900">Historial Cifrado</h3>
+               <p className="text-slate-500 mt-1 leading-relaxed">Protección de acceso multi-nivel y encriptación de datos de salud en la nube.</p>
              </div>
           </div>
         </div>
@@ -95,8 +110,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, staff }) => {
           </div>
 
           <div className="glass-card p-10 lg:p-12">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Bienvenido de nuevo</h2>
-            <p className="text-slate-500 mb-8 font-medium">Ingresa tus credenciales para continuar</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Ingreso Seguro</h2>
+            <p className="text-slate-500 mb-8 font-medium">Validación cifrada de credenciales</p>
 
             <div className="flex p-1.5 bg-slate-100 rounded-2xl mb-8 border border-slate-200/50">
               <button
@@ -134,18 +149,42 @@ export const Login: React.FC<LoginProps> = ({ onLogin, staff }) => {
                     />
                   </div>
                 </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">
+                    Contraseña
+                  </label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
+                    <input
+                      type="password"
+                      value={patientPass}
+                      onChange={(e) => setPatientPass(e.target.value)}
+                      placeholder="Ingresa tu contraseña"
+                      className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-bold placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-sans tracking-widest"
+                    />
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-semibold p-4 rounded-2xl text-center animate-fade-in flex items-center justify-center gap-2">
+                    <ShieldCheck className="w-5 h-5" />
+                    {error}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-primary-600/20 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                  disabled={loading}
+                  className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-primary-600/20 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-70"
                 >
-                  Continuar <ArrowRight size={20} />
+                  {loading ? 'Validando...' : 'Iniciar Sesión'} <ArrowRight size={20} />
                 </button>
               </form>
             ) : (
               <form onSubmit={handleStaffLogin} className="space-y-6">
                 <div>
                   <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">
-                    Usuario
+                    Usuario o Email
                   </label>
                   <div className="relative group">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
@@ -183,18 +222,19 @@ export const Login: React.FC<LoginProps> = ({ onLogin, staff }) => {
 
                 <button
                   type="submit"
-                  className="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-[0.98] mt-2"
+                  disabled={loading}
+                  className="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-[0.98] mt-2 disabled:opacity-70"
                 >
-                  Iniciar Sesión Segura <ArrowRight size={20} />
+                  {loading ? 'Conectando...' : 'Acceso Autorizado'} <ArrowRight size={20} />
                 </button>
               </form>
             )}
 
             <div className="mt-10 flex justify-center pt-8 border-t border-slate-100">
                <p className="text-center text-[11px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
-                  RTP Centro de Rehabilitación y Entrenamiento
+                  Sistema Multi-Sede
                   <br/>
-                  <span className="opacity-70 mt-1 block">Sistema Seguro KineFlow Pro</span>
+                  <span className="opacity-70 mt-1 block">Entorno Seguro KineFlow Pro</span>
                </p>
             </div>
           </div>
