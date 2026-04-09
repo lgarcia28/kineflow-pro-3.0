@@ -47,7 +47,7 @@ export const Login: React.FC = () => {
       if (!auth) throw new Error("Firebase Auth no inicializado");
 
       // ====== INICIALIZACIÓN SECRETA PARA EL PRIMER USO ======
-      if (staffUser === 'RECEPCION_INIT' && staffPass === '123456') {
+      if (staffUser.trim().toUpperCase() === 'RECEPCION_INIT' && (staffPass === '123456' || staffPass === '1234')) {
         const email = 'recepcion@staff.kineflow.com';
         try {
           const cred = await createUserWithEmailAndPassword(auth, email, '123456');

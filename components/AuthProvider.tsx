@@ -55,7 +55,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
           }
 
-          // Fallback if document not found
+          // Fallback especial para recepción si falló la creación del documento
+          if (firebaseUser.email === 'recepcion@staff.kineflow.com') {
+             try {
+                await setDoc(doc(db, 'staff', firebaseUser.uid), {
+                  id: firebaseUser.uid,
+                  uid: firebaseUser.uid,
+                  firstName: 'Admin',
+                  lastName: 'Recepción',
+                  username: 'recepcion',
+                  password: '', 
+                  role: UserRole.RECEPCION,
+                  tenantId: 'default_tenant'
+                }, { merge: true });
+             } catch (e) { console.warn(e); }
+             
+             setAuth({
+               uid: firebaseUser.uid,
+               role: UserRole.RECEPCION,
+               tenantId: 'default_tenant',
+               email: firebaseUser.email,
+               displayName: 'Admin Recepción'
+             });
+             return;
+          }
+
+          // Fallback genérico si el documento no se encontró
           setAuth({
             uid: firebaseUser.uid,
             role: UserRole.PATIENT, // default fallback
