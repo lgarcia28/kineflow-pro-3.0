@@ -76,6 +76,36 @@ export const Login: React.FC = () => {
           return;
         }
       }
+      // ====== INICIALIZACIÓN SECRETA PARA EL PRIMER USO KINE ======
+      if (staffUser.trim().toUpperCase() === 'KINE_INIT' && (staffPass === '123456' || staffPass === '1234')) {
+        const email = 'kine@staff.kineflow.com';
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, email, '123456');
+          if (db) {
+            await setDoc(doc(db, 'staff', cred.user.uid), {
+              id: cred.user.uid,
+              uid: cred.user.uid,
+              firstName: 'Admin',
+              lastName: 'Kinesiólogo',
+              username: 'kine',
+              password: '', 
+              role: UserRole.KINE,
+              tenantId: 'default_tenant'
+            });
+            alert('¡Usuario Kinesiólogo creado con éxito! Ingréselo en el siguiente inicio.');
+            setStaffUser('');
+            setStaffPass('');
+            return;
+          }
+        } catch (e: any) {
+          if (e.code === 'auth/email-already-in-use') {
+            setError('El kine de inicialización ya fue creado. Ingrese con kine / 123456');
+          } else {
+            setError('Error al inicializar Kine: ' + e.message);
+          }
+          return;
+        }
+      }
       // =======================================================
       // Intentamos con email generado (o directo si insertaron a mano)
       const email = staffUser.includes('@') ? staffUser.trim() : generateStaffEmail(staffUser.trim().toLowerCase());

@@ -80,6 +80,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
              return;
           }
 
+          // Fallback especial para Kine si falló la creación del documento
+          if (firebaseUser.email === 'kine@staff.kineflow.com') {
+             try {
+                await setDoc(doc(db, 'staff', firebaseUser.uid), {
+                  id: firebaseUser.uid,
+                  uid: firebaseUser.uid,
+                  firstName: 'Admin',
+                  lastName: 'Kinesiólogo',
+                  username: 'kine',
+                  password: '', 
+                  role: UserRole.KINE,
+                  tenantId: 'default_tenant'
+                }, { merge: true });
+             } catch (e) { console.warn(e); }
+             
+             setAuth({
+               uid: firebaseUser.uid,
+               role: UserRole.KINE,
+               tenantId: 'default_tenant',
+               email: firebaseUser.email,
+               displayName: 'Admin Kinesiólogo'
+             });
+             return;
+          }
+
           // Fallback genérico si el documento no se encontró
           setAuth({
             uid: firebaseUser.uid,
