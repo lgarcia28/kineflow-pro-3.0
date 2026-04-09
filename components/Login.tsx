@@ -30,7 +30,7 @@ export const Login: React.FC = () => {
         throw new Error("Firebase Auth no inicializado");
       }
     } catch (err: any) {
-      setError('DNI o contraseña incorrectos.');
+      setError(`Error: ${err.message}`);
       console.error(err);
     } finally {
       setLoading(false);
@@ -85,7 +85,7 @@ export const Login: React.FC = () => {
          throw new Error("Firebase Auth no inicializado");
       }
     } catch (err: any) {
-      setError('Usuario o contraseña incorrectos');
+      setError(`Error: ${err.message || err.code || 'Desconocido'}`);
       console.error(err);
     } finally {
       setLoading(false);
