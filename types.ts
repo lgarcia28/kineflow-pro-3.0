@@ -5,6 +5,7 @@ export enum Stage {
 }
 
 export enum UserRole {
+  TENANT_ADMIN = 'TENANT_ADMIN',
   RECEPCION = 'RECEPCION',
   KINE = 'KINE',
   PATIENT = 'PATIENT',
@@ -135,7 +136,7 @@ export interface StaffMember {
   role: UserRole;
 }
 
-export type ViewState = 'LOGIN' | 'HOME' | 'PATIENT_DETAIL' | 'SHOP_ADMIN' | 'PATIENT_LIST' | 'STAFF_ADMIN';
+export type ViewState = 'LOGIN' | 'HOME' | 'PATIENT_DETAIL' | 'SHOP_ADMIN' | 'PATIENT_LIST' | 'STAFF_ADMIN' | 'ADMIN_DASHBOARD';
 
 export interface EvaluationResult {
   label: string;

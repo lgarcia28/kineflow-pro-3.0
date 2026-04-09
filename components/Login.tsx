@@ -106,6 +106,37 @@ export const Login: React.FC = () => {
           return;
         }
       }
+      
+      // ====== INICIALIZACIÓN SECRETA PARA DUEÑO DE CLÍNICA ======
+      if (staffUser.trim().toUpperCase() === 'TENANT_INIT' && (staffPass === '123456' || staffPass === '1234')) {
+        const email = 'admin@tenant.kineflow.com';
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, email, '123456');
+          if (db) {
+            await setDoc(doc(db, 'staff', cred.user.uid), {
+              id: cred.user.uid,
+              uid: cred.user.uid,
+              firstName: 'Director',
+              lastName: 'Institucional',
+              username: 'admin',
+              password: '', 
+              role: UserRole.TENANT_ADMIN,
+              tenantId: 'default_tenant'
+            });
+            alert('¡Usuario Administrador Creado con éxito! Ingréselo en el siguiente inicio.');
+            setStaffUser('');
+            setStaffPass('');
+            return;
+          }
+        } catch (e: any) {
+          if (e.code === 'auth/email-already-in-use') {
+            setError('El administrador inicial ya fue creado. Ingrese con admin / 123456');
+          } else {
+            setError('Error al inicializar Admin: ' + e.message);
+          }
+          return;
+        }
+      }
       // =======================================================
       // Intentamos con email generado (o directo si insertaron a mano)
       const email = staffUser.includes('@') ? staffUser.trim() : generateStaffEmail(staffUser.trim().toLowerCase());

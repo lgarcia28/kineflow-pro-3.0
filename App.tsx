@@ -27,6 +27,7 @@ const RecepcionView = lazy(() => import('./components/RecepcionView').then(m => 
 const PatientView = lazy(() => import('./components/PatientView').then(m => ({ default: m.PatientView })));
 const ShopAdmin = lazy(() => import('./components/ShopAdmin').then(m => ({ default: m.ShopAdmin })));
 const StaffAdmin = lazy(() => import('./components/StaffAdmin').then(m => ({ default: m.StaffAdmin })));
+const AdminDashboardView = lazy(() => import('./components/AdminDashboardView').then(m => ({ default: m.AdminDashboardView })));
 const SoundSettings = lazy(() => import('./components/SoundSettings').then(m => ({ default: m.SoundSettings })));
 
 // Componente Loading reutilizable para Suspense
@@ -131,11 +132,15 @@ const App: React.FC = () => {
 
   // Persistence of session (ahora delegado a Firebase Auth)
   useEffect(() => {
-    // Si ya estamos autenticados por Firebase, establecemos la vista a HOME.
-    if (isAuthenticated) {
-      setView('HOME');
+    // Si ya estamos autenticados por Firebase, establecemos la vista a HOME o ADMIN.
+    if (isAuthenticated && user) {
+      if (user.role === UserRole.TENANT_ADMIN) {
+        setView('ADMIN_DASHBOARD');
+      } else {
+        setView('HOME');
+      }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     console.log("Firebase Config Valid:", isConfigValid);
@@ -613,6 +618,8 @@ const App: React.FC = () => {
               onUpdateAppointment={handleUpdateAppointment}
               onDeleteAppointment={handleDeleteAppointment}
             />
+          ) : user.role === UserRole.TENANT_ADMIN ? (
+            <AdminDashboardView />
           ) : user.role === UserRole.PATIENT ? (
             loggedPatient ? (
               <PatientView patient={loggedPatient} products={products} exercises={exercises} onUpdatePatient={handleUpdatePatient} />

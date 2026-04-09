@@ -32,9 +32,9 @@ service cloud.firestore {
     match /staff/{staffId} {
       // Cualquier staff puede leer la colección del staff
       allow read: if isAuthenticated();
-      // Solo un Kine o superAdmin puede modificar, O el propio usuario puede AUTO-CREAR su cuenta en la inicialización si no existe.
+      // Solo un Dueño de Institución, Kine o superAdmin puede modificar, O el propio usuario puede AUTO-CREAR su cuenta en la inicialización si no existe.
       allow write: if isAuthenticated() && (
-        (exists(/databases/$(database)/documents/staff/$(request.auth.uid)) && getStaffData().role == 'KINE') 
+        (exists(/databases/$(database)/documents/staff/$(request.auth.uid)) && (getStaffData().role == 'KINE' || getStaffData().role == 'TENANT_ADMIN')) 
         || 
         (!exists(/databases/$(database)/documents/staff/$(request.auth.uid)) && request.auth.uid == staffId)
       );

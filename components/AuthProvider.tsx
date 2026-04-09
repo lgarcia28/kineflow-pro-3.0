@@ -105,6 +105,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
              return;
           }
 
+          // Fallback especial para Dueño de Clínica si falló la creación del documento
+          if (firebaseUser.email === 'admin@tenant.kineflow.com') {
+             try {
+                await setDoc(doc(db, 'staff', firebaseUser.uid), {
+                  id: firebaseUser.uid,
+                  uid: firebaseUser.uid,
+                  firstName: 'Director',
+                  lastName: 'Institucional',
+                  username: 'admin',
+                  password: '', 
+                  role: UserRole.TENANT_ADMIN,
+                  tenantId: 'default_tenant'
+                }, { merge: true });
+             } catch (e) { console.warn(e); }
+             
+             setAuth({
+               uid: firebaseUser.uid,
+               role: UserRole.TENANT_ADMIN,
+               tenantId: 'default_tenant',
+               email: firebaseUser.email,
+               displayName: 'Director Institucional'
+             });
+             return;
+          }
+
           // Fallback genérico si el documento no se encontró
           setAuth({
             uid: firebaseUser.uid,
