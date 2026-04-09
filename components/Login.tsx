@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { User, Lock, ArrowRight, Activity, ShieldCheck, HeartPulse } from 'lucide-react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../firebase';
 import { generatePatientEmail, generateStaffEmail } from '../utils/authUtils';
+import { doc, setDoc } from 'firebase/firestore';
+import { UserRole } from '../types';
 
 export const Login: React.FC = () => {
   const [mode, setMode] = useState<'PATIENT' | 'STAFF'>('PATIENT');
@@ -42,6 +44,39 @@ export const Login: React.FC = () => {
     setLoading(true);
     
     try {
+      if (!auth) throw new Error("Firebase Auth no inicializado");
+
+      // ====== INICIALIZACIÓN SECRETA PARA EL PRIMER USO ======
+      if (staffUser === 'RECEPCION_INIT' && staffPass === '123456') {
+        const email = 'recepcion@staff.kineflow.com';
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, email, '123456');
+          if (db) {
+            await setDoc(doc(db, 'staff', cred.user.uid), {
+              id: cred.user.uid,
+              uid: cred.user.uid,
+              firstName: 'Admin',
+              lastName: 'Recepción',
+              username: 'recepcion',
+              password: '', 
+              role: UserRole.RECEPCION,
+              tenantId: 'default_tenant'
+            });
+            alert('¡Usuario Recepción creado con éxito! Ingréselo en el siguiente inicio.');
+            setStaffUser('');
+            setStaffPass('');
+            return;
+          }
+        } catch (e: any) {
+          if (e.code === 'auth/email-already-in-use') {
+            setError('El usuario de inicialización ya fue creado. Ingrese con recepcion / 123456');
+          } else {
+            setError('Error al inicializar: ' + e.message);
+          }
+          return;
+        }
+      }
+      // =======================================================
       // Intentamos con email generado (o directo si insertaron a mano)
       const email = staffUser.includes('@') ? staffUser.trim() : generateStaffEmail(staffUser.trim().toLowerCase());
       if (auth) {
