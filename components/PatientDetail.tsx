@@ -769,6 +769,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                     <input type="number" className="w-full bg-transparent text-center font-black text-base text-primary-600 focus:outline-none p-0 border-none" value={ex.targetLoad} onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} />
                                                   </div>
                                               </div>
+                                            </div>
                                             );
                                             })}
                                           </div>
