@@ -643,33 +643,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                       <input className="font-black text-xl text-slate-900 bg-transparent border-none focus:ring-0 p-0 w-full placeholder:text-slate-300 focus:outline-none" value={day.name} onChange={(e) => handleRenameDay(day.id, e.target.value)} placeholder="Nombre del día" />
                                   </div>
                                   <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-container bg-white">
-                                      {/* Toolbar de Biserie/Triserie */}
-                                      {editorSelectedExIds.length >= 1 && (
-                                        <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2 mb-2 gap-2 flex-wrap">
-                                          <span className="text-xs font-black text-indigo-700">{editorSelectedExIds.length} seleccionado{editorSelectedExIds.length > 1 ? 's' : ''}</span>
-                                          <div className="flex gap-2">
-                                            <button
-                                              disabled={editorSelectedExIds.length < 2}
-                                              onClick={() => handleGroupAsSuperset(day.id, editorSelectedExIds)}
-                                              className="flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-black disabled:opacity-40 hover:bg-indigo-700 transition-all"
-                                            >
-                                              <Link2 size={12} /> Biserie/Triserie
-                                            </button>
-                                            <button
-                                              onClick={() => handleRemoveFromSuperset(day.id, editorSelectedExIds)}
-                                              className="flex items-center gap-1 px-3 py-1 bg-white border border-slate-200 text-slate-500 rounded-lg text-[10px] font-black hover:bg-red-50 hover:text-red-500 transition-all"
-                                            >
-                                              <Unlink size={12} /> Desagrupar
-                                            </button>
-                                            <button
-                                              onClick={() => setEditorSelectedExIds([])}
-                                              className="p-1 text-slate-400 hover:text-slate-600"
-                                            >
-                                              <X size={14} />
-                                            </button>
-                                          </div>
-                                        </div>
-                                      )}
+                                      {/* Toolbar de Biserie/Triserie flotante se movió al final del contenedor para ser sticky */}
                                       {(() => {
                                         const supersetInfo = getSupersetInfo(day.exercises);
                                         const blocks: { isGroup: boolean; groupId?: string; exercises: RoutineExercise[] }[] = [];
@@ -700,20 +674,26 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                                    isMiddleInGroup ? 'rounded-none border-b-0' :
                                                                    isLastInGroup ? 'rounded-b-2xl rounded-t-none' : 'rounded-2xl';
 
+                                              const bgSelection = isSelectedInEditor ? 'border-indigo-400 ring-2 ring-indigo-100 z-10' : 'border-slate-200 hover:shadow-md';
+
                                               return (
-                                                <div key={ex.id} className={`flex flex-col gap-3 p-4 bg-white border transition-all group relative ${groupClasses} ${isSelectedInEditor ? 'border-indigo-400 ring-2 ring-indigo-100 z-10' : hasSupersetGroup ? `border-l-4 ${ssInfo?.color || 'border-l-indigo-400'} border-slate-200` : 'border-slate-200 hover:border-primary-300 shadow-sm'}`}>
+                                                <div key={ex.id} className={`flex flex-col gap-3 p-4 bg-white border transition-all overflow-hidden relative group ${groupClasses} ${bgSelection} ${hasSupersetGroup ? 'pl-6' : ''}`}>
+                                                  {hasSupersetGroup && (
+                                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${ssInfo?.color || 'bg-indigo-500'}`} />
+                                                  )}
+
                                                   {/* Checkbox de selección */}
                                               <button
                                                 onClick={() => setEditorSelectedExIds(prev =>
                                                   prev.includes(ex.id) ? prev.filter(id => id !== ex.id) : [...prev, ex.id]
                                                 )}
-                                                className={`absolute top-3 left-3 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all z-10 ${isSelectedInEditor ? 'bg-indigo-500 border-indigo-500' : 'bg-white border-slate-300 hover:border-indigo-400'}`}
+                                                className={`absolute top-3 right-3 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all z-20 shadow-sm ${isSelectedInEditor ? 'bg-indigo-500 border-indigo-500' : 'bg-slate-50 border-slate-300 hover:border-indigo-400'}`}
                                               >
-                                                {isSelectedInEditor && <CheckSquare size={12} className="text-white" />}
+                                                {isSelectedInEditor && <CheckSquare size={14} className="text-white" />}
                                               </button>
-                                              {hasSupersetGroup && !isSelectedInEditor && (
-                                                <span className={`absolute top-3 right-10 text-[9px] font-black text-white ${ssInfo?.color || 'bg-indigo-500'} px-2 py-0.5 rounded-full uppercase tracking-wider`}>
-                                                  Serie {ssInfo?.label}
+                                              {hasSupersetGroup && (
+                                                <span className={`absolute top-3 left-4 text-[9px] font-black text-white ${ssInfo?.color || 'bg-indigo-500'} px-2 py-0.5 rounded-full uppercase tracking-wider z-10 shadow-sm`}>
+                                                  {ssInfo?.label}
                                                 </span>
                                               )}
                                               <div className="flex items-start justify-between gap-3 pl-7">
@@ -746,7 +726,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                     <p className="font-extrabold text-sm text-slate-900 leading-tight group-hover:text-primary-600 transition-colors">{ex.definition.name}</p>
                                                     <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">{ex.definition.category}</p>
                                                   </div>
-                                                  <button onClick={() => handleRemoveExercise(day.id, ex.id)} className="absolute top-4 right-4 p-2 bg-slate-50 text-slate-400 hover:text-white hover:bg-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100 shadow-sm"><Trash2 size={16}/></button>
+                                                  <button onClick={() => handleRemoveExercise(day.id, ex.id)} className="absolute bottom-3 right-3 p-2 bg-slate-50 text-slate-400 hover:text-white hover:bg-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100 shadow-sm"><Trash2 size={16}/></button>
                                               </div>
                                               <div className="grid grid-cols-3 gap-2 mt-2">
                                                   <div className="bg-slate-50 rounded-xl p-2 border border-slate-100 flex flex-col focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-500 transition-all items-center">
@@ -776,10 +756,46 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                         ));
                                       })()}
 
-                                      <button onClick={() => setIsAddingExerciseModal({show: true, dayId: day.id})} className="w-full py-8 border-2 border-dashed border-slate-200 rounded-[1.5rem] bg-slate-50/50 text-sm font-bold text-slate-400 hover:bg-primary-50 hover:text-primary-600 hover:border-primary-200 transition-all flex flex-col items-center gap-3">
-                                          <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center"><Plus size={24} /></div>
+                                      <button onClick={() => setIsAddingExerciseModal({show: true, dayId: day.id})} className="w-full py-6 border-2 border-dashed border-slate-200 rounded-[1.5rem] bg-slate-50/50 text-sm font-bold text-slate-400 hover:bg-primary-50 hover:text-primary-600 hover:border-primary-200 transition-all flex flex-col items-center gap-2 mb-4">
+                                          <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center"><Plus size={20} /></div>
                                           Agregar Ejercicio
                                       </button>
+                                      
+                                      {/* Toolbar Sticky de Biserie/Triserie */}
+                                      {(() => {
+                                        const hasSelectionInThisDay = editorSelectedExIds.some(id => day.exercises.some(ex => ex.id === id));
+                                        if (hasSelectionInThisDay) {
+                                          return (
+                                            <div className="sticky bottom-2 z-50 animate-slide-up">
+                                              <div className="flex flex-col items-center shadow-2xl bg-indigo-900 border border-indigo-800 rounded-2xl p-3 gap-2 flex-wrap text-white">
+                                                <span className="text-xs font-bold text-indigo-200">{editorSelectedExIds.length} seleccionado{editorSelectedExIds.length > 1 ? 's' : ''}</span>
+                                                <div className="flex gap-2 w-full justify-center">
+                                                  <button
+                                                    disabled={editorSelectedExIds.length < 2}
+                                                    onClick={() => handleGroupAsSuperset(day.id, editorSelectedExIds)}
+                                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-indigo-500 text-white rounded-xl text-xs font-black disabled:opacity-40 hover:bg-indigo-400 transition-all shadow-sm"
+                                                  >
+                                                    <Link2 size={14} /> Agrupar
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleRemoveFromSuperset(day.id, editorSelectedExIds)}
+                                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-black hover:bg-red-500 hover:border-red-500 transition-all"
+                                                  >
+                                                    <Unlink size={14} /> Separar
+                                                  </button>
+                                                  <button
+                                                    onClick={() => setEditorSelectedExIds([])}
+                                                    className="p-2.5 bg-white/5 border border-white/10 rounded-xl text-indigo-300 hover:text-white hover:bg-white/20 transition-colors"
+                                                  >
+                                                    <X size={16} />
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
                                   </div>
                               </div>
                           ))}
