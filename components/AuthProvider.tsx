@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { useAuthStore } from '../store/authStore';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { UserRole } from '../types';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
