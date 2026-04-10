@@ -107,6 +107,41 @@ export const Login: React.FC = () => {
         }
       }
       
+      // ====== INICIALIZACIÓN SECRETA PARA DUEÑO DE PLATAFORMA (SUPER ADMIN) ======
+      if (staffUser.trim().toUpperCase() === 'MASTER_INIT') {
+        const initPass = staffPass.length >= 6 ? staffPass : '123456';
+        const email = 'super_admin@kineflow.com';
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, email, initPass);
+          if (db) {
+            await setDoc(doc(db, 'staff', cred.user.uid), {
+              id: cred.user.uid,
+              uid: cred.user.uid,
+              firstName: 'Dueño',
+              lastName: 'Plataforma',
+              username: 'superadmin',
+              password: '', 
+              role: UserRole.SUPER_ADMIN,
+              tenantId: 'global'
+            });
+            await signInWithEmailAndPassword(auth, email, initPass);
+            return;
+          }
+        } catch (e: any) {
+          if (e.code === 'auth/email-already-in-use') {
+            try {
+               await signInWithEmailAndPassword(auth, email, initPass);
+               return;
+            } catch (err: any) {
+               setError('El Súper Administrador ya existe. Intente conectarse como "superadmin" con su clave real.');
+            }
+          } else {
+            setError('Error al inicializar Super Admin: ' + e.message);
+          }
+          return;
+        }
+      }
+
       // ====== INICIALIZACIÓN SECRETA PARA DUEÑO DE CLÍNICA ======
       if (staffUser.trim().toUpperCase() === 'TENANT_INIT' || staffUser.trim().toUpperCase() === 'TENANT_ADMIN') {
         const initPass = staffPass.length >= 6 ? staffPass : '123456';
@@ -150,6 +185,8 @@ export const Login: React.FC = () => {
       // Mapeo especial para el administrador institucional para que no choque con el sufijo @staff
       if (staffUser.trim().toLowerCase() === 'admin') {
         email = 'admin_master@kineflow.com';
+      } else if (staffUser.trim().toLowerCase() === 'superadmin') {
+        email = 'super_admin@kineflow.com';
       }
 
       if (auth) {

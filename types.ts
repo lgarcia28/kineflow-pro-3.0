@@ -5,6 +5,7 @@ export enum Stage {
 }
 
 export enum UserRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
   TENANT_ADMIN = 'TENANT_ADMIN',
   RECEPCION = 'RECEPCION',
   KINE = 'KINE',
@@ -136,7 +137,14 @@ export interface StaffMember {
   role: UserRole;
 }
 
-export type ViewState = 'LOGIN' | 'HOME' | 'PATIENT_DETAIL' | 'SHOP_ADMIN' | 'PATIENT_LIST' | 'STAFF_ADMIN' | 'ADMIN_DASHBOARD';
+export interface Tenant {
+  id: string;
+  name: string;
+  createdAt: string;
+  isActive: boolean;
+}
+
+export type ViewState = 'LOGIN' | 'HOME' | 'PATIENT_DETAIL' | 'SHOP_ADMIN' | 'PATIENT_LIST' | 'STAFF_ADMIN' | 'ADMIN_DASHBOARD' | 'SUPER_ADMIN_DASHBOARD';
 
 export interface EvaluationResult {
   label: string;

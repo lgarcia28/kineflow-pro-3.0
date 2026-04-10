@@ -28,6 +28,7 @@ const PatientView = lazy(() => import('./components/PatientView').then(m => ({ d
 const ShopAdmin = lazy(() => import('./components/ShopAdmin').then(m => ({ default: m.ShopAdmin })));
 const StaffAdmin = lazy(() => import('./components/StaffAdmin').then(m => ({ default: m.StaffAdmin })));
 const AdminDashboardView = lazy(() => import('./components/AdminDashboardView').then(m => ({ default: m.AdminDashboardView })));
+const SuperAdminDashboardView = lazy(() => import('./components/SuperAdminDashboardView').then(m => ({ default: m.SuperAdminDashboardView })));
 const SoundSettings = lazy(() => import('./components/SoundSettings').then(m => ({ default: m.SoundSettings })));
 
 // Componente Loading reutilizable para Suspense
@@ -134,7 +135,9 @@ const App: React.FC = () => {
   useEffect(() => {
     // Si ya estamos autenticados por Firebase, establecemos la vista a HOME o ADMIN.
     if (isAuthenticated && user) {
-      if (user.role === UserRole.TENANT_ADMIN) {
+      if (user.role === UserRole.SUPER_ADMIN) {
+        setView('SUPER_ADMIN_DASHBOARD');
+      } else if (user.role === UserRole.TENANT_ADMIN) {
         setView('ADMIN_DASHBOARD');
       } else {
         setView('HOME');
@@ -602,7 +605,9 @@ const App: React.FC = () => {
             <LogOut size={20} />
           </button>
 
-          {user.role === UserRole.RECEPCION ? (
+          {user.role === UserRole.SUPER_ADMIN ? (
+            <SuperAdminDashboardView />
+          ) : user.role === UserRole.RECEPCION ? (
             <RecepcionView 
               patients={patients}
               onAddPatient={handleAddPatient}

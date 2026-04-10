@@ -105,6 +105,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
              return;
           }
 
+          // Fallback especial para Dueño General SaaS (Súper Administrador)
+          if (firebaseUser.email === 'super_admin@kineflow.com') {
+             try {
+                await setDoc(doc(db, 'staff', firebaseUser.uid), {
+                  id: firebaseUser.uid,
+                  uid: firebaseUser.uid,
+                  firstName: 'Dueño',
+                  lastName: 'Plataforma',
+                  username: 'super_admin',
+                  password: '', 
+                  role: UserRole.SUPER_ADMIN,
+                  tenantId: 'global'
+                }, { merge: true });
+             } catch (e) { console.warn(e); }
+             
+             setAuth({
+               uid: firebaseUser.uid,
+               role: UserRole.SUPER_ADMIN,
+               tenantId: 'global',
+               email: firebaseUser.email,
+               displayName: 'Dueño Plataforma'
+             });
+             return;
+          }
+
           // Fallback especial para Dueño de Clínica si falló la creación del documento
           if (firebaseUser.email === 'admin_master@kineflow.com') {
              try {
