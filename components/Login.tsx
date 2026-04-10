@@ -108,10 +108,11 @@ export const Login: React.FC = () => {
       }
       
       // ====== INICIALIZACIÓN SECRETA PARA DUEÑO DE CLÍNICA ======
-      if (staffUser.trim().toUpperCase() === 'TENANT_INIT' && (staffPass === '123456' || staffPass === '1234')) {
-        const email = 'admin@tenant.kineflow.com';
+      if (staffUser.trim().toUpperCase() === 'TENANT_INIT' || staffUser.trim().toUpperCase() === 'TENANT_ADMIN') {
+        const initPass = staffPass.length >= 6 ? staffPass : '123456';
+        const email = 'admin_master@kineflow.com'; // Usamos un nuevo correo para evitar choque con cuentas corruptas/olvidadas
         try {
-          const cred = await createUserWithEmailAndPassword(auth, email, '123456');
+          const cred = await createUserWithEmailAndPassword(auth, email, initPass);
           if (db) {
             await setDoc(doc(db, 'staff', cred.user.uid), {
               id: cred.user.uid,
@@ -123,14 +124,19 @@ export const Login: React.FC = () => {
               role: UserRole.TENANT_ADMIN,
               tenantId: 'default_tenant'
             });
-            alert('¡Usuario Administrador Creado con éxito! Ingréselo en el siguiente inicio.');
-            setStaffUser('');
-            setStaffPass('');
+            // Autologin directo post-registro
+            await signInWithEmailAndPassword(auth, email, initPass);
             return;
           }
         } catch (e: any) {
           if (e.code === 'auth/email-already-in-use') {
-            setError('El administrador inicial ya fue creado. Ingrese con admin / 123456');
+            try {
+               // Si ya estaba creado, forzamos el logueo para mayor comodidad
+               await signInWithEmailAndPassword(auth, email, initPass);
+               return;
+            } catch (err: any) {
+               setError('El administrador inicial ya fue creado, pero la contraseña no coincide. Intente conectarse como "admin" con su clave real.');
+            }
           } else {
             setError('Error al inicializar Admin: ' + e.message);
           }
@@ -139,7 +145,13 @@ export const Login: React.FC = () => {
       }
       // =======================================================
       // Intentamos con email generado (o directo si insertaron a mano)
-      const email = staffUser.includes('@') ? staffUser.trim() : generateStaffEmail(staffUser.trim().toLowerCase());
+      let email = staffUser.includes('@') ? staffUser.trim() : generateStaffEmail(staffUser.trim().toLowerCase());
+      
+      // Mapeo especial para el administrador institucional para que no choque con el sufijo @staff
+      if (staffUser.trim().toLowerCase() === 'admin') {
+        email = 'admin_master@kineflow.com';
+      }
+
       if (auth) {
         await signInWithEmailAndPassword(auth, email, staffPass);
       } else {

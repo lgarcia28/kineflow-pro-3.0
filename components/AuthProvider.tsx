@@ -106,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           // Fallback especial para Dueño de Clínica si falló la creación del documento
-          if (firebaseUser.email === 'admin@tenant.kineflow.com') {
+          if (firebaseUser.email === 'admin_master@kineflow.com') {
              try {
                 await setDoc(doc(db, 'staff', firebaseUser.uid), {
                   id: firebaseUser.uid,
