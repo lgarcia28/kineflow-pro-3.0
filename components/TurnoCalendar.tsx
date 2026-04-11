@@ -33,7 +33,7 @@ import {
   XCircle,
   Repeat
 } from 'lucide-react';
-import { Patient, Appointment, RecurringSlot } from '../types';
+import { Patient, Appointment, RecurringSlot, StaffMember, UserRole, STAFF_COLORS, CLINICAL_ACTIVITIES } from '../types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -44,6 +44,7 @@ function cn(...inputs: ClassValue[]) {
 interface TurnoCalendarProps {
   patients: Patient[];
   appointments: Appointment[];
+  staff: StaffMember[];
   onAddAppointment: (appointment: Appointment) => void;
   onUpdateAppointment: (appointment: Appointment) => void;
   onDeleteAppointment: (id: string) => void;
@@ -53,6 +54,7 @@ interface TurnoCalendarProps {
 export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
   patients,
   appointments,
+  staff,
   onAddAppointment,
   onUpdateAppointment,
   onDeleteAppointment,
@@ -302,15 +304,19 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                       >
                         {slotAppointments.map(app => {
                           const status = getAppStatus(app);
+                          const kine = staff.find(s => s.id === app.kineId);
+                          const kineColor = STAFF_COLORS.find(c => c.id === kine?.themeColor) || { class: 'bg-primary-50 border-primary-200 text-primary-800' };
+                          const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId);
+
                           return (
                             <div 
                               key={app.id}
                               onClick={(e) => { e.stopPropagation(); handleEditAppointment(app); }}
                               className={cn(
-                                "px-1.5 py-1 rounded-[6px] text-[10px] font-bold mb-[3px] shadow-sm border truncate leading-tight transition-all hover:scale-[1.02]",
-                                status === 'SCHEDULED' ? "bg-primary-50 border-primary-100/50 text-primary-700 border-l-[3px] border-l-primary-500" :
-                                status === 'COMPLETED' ? "bg-emerald-50 border-emerald-100/50 text-emerald-700 border-l-[3px] border-l-emerald-500" :
-                                status === 'CANCELLED' ? "bg-red-50 border-red-100/50 text-red-700 border-l-[3px] border-l-red-500" :
+                                "flex flex-col px-1.5 py-1.5 rounded-[8px] text-[10px] font-bold mb-[3px] shadow-sm border truncate leading-tight transition-all hover:scale-[1.02]",
+                                status === 'SCHEDULED' ? cn(kineColor.class, "border-l-[3px]") :
+                                status === 'COMPLETED' ? "bg-emerald-50 border-emerald-100/50 text-emerald-700 border-l-[3px] border-l-emerald-500 opacity-80" :
+                                status === 'CANCELLED' ? "bg-red-50 border-red-100/50 text-red-700 border-l-[3px] border-l-red-500 opacity-60" :
                                 status === 'NOSHOW' ? "bg-slate-100 border-slate-200/50 text-slate-400 border-l-[3px] border-l-slate-400" :
                                 "bg-slate-50 border-slate-100/50 text-slate-700 border-l-[3px] border-l-slate-500"
                               )}
@@ -319,6 +325,12 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                                 <span className="truncate">{app.patientName}</span>
                                 {app.isRecurring && <Repeat size={8} className="shrink-0 ml-1 opacity-50" />}
                               </div>
+                              {activity && status === 'SCHEDULED' && (
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <span className={cn("inline-block w-1.5 h-1.5 flex-shrink-0 rounded-full", activity.color.split(' ')[0])}></span>
+                                  <span className="text-[8px] uppercase tracking-wider opacity-80 truncate">{activity.name}</span>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -364,20 +376,27 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                   <div className="space-y-1">
                     {dayApps.slice(0, 3).map(app => {
                       const status = getAppStatus(app);
+                      const kine = staff.find(s => s.id === app.kineId);
+                      const kineColor = STAFF_COLORS.find(c => c.id === kine?.themeColor) || { class: 'bg-primary-50 text-primary-700 border-primary-200' };
+                      const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId);
+
                       return (
                         <div 
                           key={app.id} 
                           onClick={(e) => { e.stopPropagation(); handleEditAppointment(app); }}
                           className={cn(
                             "px-1.5 py-1 rounded-[6px] text-[9px] font-bold truncate leading-tight transition-all hover:scale-[1.02]",
-                            status === 'SCHEDULED' ? "bg-primary-50 text-primary-700 border-l-[3px] border-l-primary-500" :
-                            status === 'COMPLETED' ? "bg-emerald-50 text-emerald-700 border-l-[3px] border-l-emerald-500" :
-                            status === 'CANCELLED' ? "bg-red-50 text-red-700 border-l-[3px] border-l-red-500" :
+                            status === 'SCHEDULED' ? cn(kineColor.class, "border-l-[3px]") :
+                            status === 'COMPLETED' ? "bg-emerald-50 text-emerald-700 border-l-[3px] border-l-emerald-500 opacity-80" :
+                            status === 'CANCELLED' ? "bg-red-50 text-red-700 border-l-[3px] border-l-red-500 opacity-60" :
                             status === 'NOSHOW' ? "bg-slate-100 text-slate-400 border-l-[3px] border-l-slate-400" :
                             "bg-slate-50 text-slate-700 border-l-[3px] border-l-slate-500"
                           )}
                         >
-                          {app.time} {app.patientName}
+                          <div className="flex items-center gap-1">
+                            {activity && status === 'SCHEDULED' && <span className={cn("w-1.5 h-1.5 flex-shrink-0 rounded-full", activity.color.split(' ')[0])}></span>}
+                            <span className="truncate">{app.time} {app.patientName}</span>
+                          </div>
                         </div>
                       );
                     })}
@@ -398,6 +417,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
       {showAddModal && (
         <AppointmentModal 
           patients={patients}
+          staff={staff}
           selectedSlot={selectedSlot}
           initialAppointment={editingAppointment}
           onClose={() => { setShowAddModal(false); setEditingAppointment(null); }}
@@ -424,6 +444,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
 
 interface AppointmentModalProps {
   patients: Patient[];
+  staff: StaffMember[];
   selectedSlot: { date: string; time: string } | null;
   initialAppointment: Appointment | null;
   onClose: () => void;
@@ -435,6 +456,7 @@ interface AppointmentModalProps {
 
 const AppointmentModal: React.FC<AppointmentModalProps> = ({
   patients,
+  staff,
   selectedSlot,
   initialAppointment,
   onClose,
@@ -446,6 +468,8 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
   const [patientId, setPatientId] = useState(initialAppointment?.patientId || '');
   const [date, setDate] = useState(initialAppointment?.date || selectedSlot?.date || format(new Date(), 'yyyy-MM-dd'));
   const [time, setTime] = useState(initialAppointment?.time || selectedSlot?.time || '08:00');
+  const [kineId, setKineId] = useState(initialAppointment?.kineId || '');
+  const [activityId, setActivityId] = useState(initialAppointment?.activityId || '');
   const [isRecurring, setIsRecurring] = useState(initialAppointment?.isRecurring || false);
   const [recurringSlots, setRecurringSlots] = useState<RecurringSlot[]>([]);
   const [notes, setNotes] = useState(initialAppointment?.notes || '');
@@ -509,6 +533,8 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 duration: 60,
                 status: 'SCHEDULED',
                 isRecurring: true,
+                kineId,
+                activityId,
                 notes
               });
             }
@@ -526,6 +552,8 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
         duration: 60,
         status: initialAppointment?.status || 'SCHEDULED',
         isRecurring,
+        kineId,
+        activityId,
         notes
       };
       onSave(newApp);
@@ -560,6 +588,47 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   <option key={p.id} value={p.id}>{p.firstName} {p.lastName} ({p.dni})</option>
                 ))}
               </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Profesional (Kine)</label>
+                <select 
+                  className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold"
+                  value={kineId}
+                  onChange={e => {
+                    setKineId(e.target.value);
+                    setActivityId(''); // Reset activity when kine changes
+                  }}
+                  required
+                >
+                  <option value="">Seleccionar Profesional...</option>
+                  {staff.filter(s => s.role === UserRole.KINE).map(k => (
+                    <option key={k.id} value={k.id}>{k.firstName} {k.lastName}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Actividad</label>
+                <select 
+                  className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold disabled:opacity-50"
+                  value={activityId}
+                  onChange={e => setActivityId(e.target.value)}
+                  required
+                  disabled={!kineId}
+                >
+                  <option value="">Elegir actividad...</option>
+                  {kineId && (() => {
+                    const selectedKine = staff.find(s => s.id === kineId);
+                    if (!selectedKine || !selectedKine.activities) return null;
+                    return selectedKine.activities.map(actId => {
+                      const act = CLINICAL_ACTIVITIES.find(a => a.id === actId);
+                      return act ? <option key={act.id} value={act.id}>{act.name}</option> : null;
+                    });
+                  })()}
+                </select>
+              </div>
             </div>
 
             {!isRecurring ? (

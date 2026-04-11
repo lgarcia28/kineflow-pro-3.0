@@ -619,6 +619,7 @@ const App: React.FC = () => {
               onUpdateProduct={handleUpdateProduct}
               onDeleteProduct={handleDeleteProduct}
               appointments={appointments}
+              staff={staff}
               onAddAppointment={handleAddAppointment}
               onUpdateAppointment={handleUpdateAppointment}
               onDeleteAppointment={handleDeleteAppointment}

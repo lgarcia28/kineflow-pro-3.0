@@ -23,6 +23,25 @@ export enum CheckInStatus {
   ATTENDED = 'ATTENDED',
 }
 
+export const CLINICAL_ACTIVITIES = [
+  { id: 'FKT', name: 'FKT', color: 'bg-yellow-500' },
+  { id: 'POST', name: 'Posturología', color: 'bg-emerald-500' },
+  { id: 'DREN', name: 'Drenaje Linfático', color: 'bg-purple-500' },
+  { id: 'TER', name: 'Terapia Manual', color: 'bg-rose-500' },
+  { id: 'MEP', name: 'MEP', color: 'bg-orange-500' },
+  { id: 'OND', name: 'Ondas de Choque', color: 'bg-cyan-500' },
+  { id: 'EVAL', name: 'Evaluaciones Funcionales', color: 'bg-indigo-500' },
+];
+
+export const STAFF_COLORS = [
+  { id: 'blue', class: 'bg-blue-100 border-blue-200 text-blue-900 border-l-blue-500', name: 'Azul' },
+  { id: 'emerald', class: 'bg-emerald-100 border-emerald-200 text-emerald-900 border-l-emerald-500', name: 'Esmeralda' },
+  { id: 'rose', class: 'bg-rose-100 border-rose-200 text-rose-900 border-l-rose-500', name: 'Rosa' },
+  { id: 'purple', class: 'bg-purple-100 border-purple-200 text-purple-900 border-l-purple-500', name: 'Púrpura' },
+  { id: 'amber', class: 'bg-amber-100 border-amber-200 text-amber-900 border-l-amber-500', name: 'Ámbar' },
+  { id: 'cyan', class: 'bg-cyan-100 border-cyan-200 text-cyan-900 border-l-cyan-500', name: 'Cian' },
+];
+
 export interface ExerciseLog {
   date: string;
   week: number;
@@ -80,6 +99,8 @@ export interface Appointment {
   tenantId?: string;
   patientId: string;
   patientName: string;
+  kineId?: string;
+  activityId?: string;
   date: string; // "YYYY-MM-DD"
   time: string; // "HH:mm"
   duration: number; // minutes, default 60
@@ -135,6 +156,8 @@ export interface StaffMember {
   firstName: string;
   lastName: string;
   role: UserRole;
+  activities?: string[];
+  themeColor?: string;
 }
 
 export interface Tenant {

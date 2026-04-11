@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole } from '../types';
+import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember } from '../types';
 import { secondaryAuth, auth } from '../firebase';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { generatePatientEmail } from '../utils/authUtils';
@@ -35,6 +35,7 @@ interface RecepcionViewProps {
   onUpdateProduct: (product: Product) => void;
   onDeleteProduct: (id: string) => void;
   appointments: Appointment[];
+  staff: StaffMember[];
   onAddAppointment: (app: Appointment) => void;
   onUpdateAppointment: (app: Appointment) => void;
   onDeleteAppointment: (id: string) => void;
@@ -51,6 +52,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   onUpdateProduct,
   onDeleteProduct,
   appointments,
+  staff,
   onAddAppointment,
   onUpdateAppointment,
   onDeleteAppointment
@@ -474,6 +476,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
             <TurnoCalendar 
               patients={patients}
               appointments={appointments}
+              staff={staff}
               onAddAppointment={onAddAppointment}
               onUpdateAppointment={onUpdateAppointment}
               onDeleteAppointment={onDeleteAppointment}

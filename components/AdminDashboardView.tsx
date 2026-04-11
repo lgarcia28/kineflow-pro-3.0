@@ -3,7 +3,7 @@ import { collection, query, where, getDocs, doc, setDoc, deleteDoc } from 'fireb
 import { db, secondaryAuth } from '../firebase';
 import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { useAuthStore } from '../store/authStore';
-import { UserRole, StaffMember, Patient } from '../types';
+import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS } from '../types';
 import { Users, Activity, Target, Settings, Building2, UserPlus, Shield, X, MoreVertical, Trash2 } from 'lucide-react';
 
 export const AdminDashboardView: React.FC = () => {
@@ -21,7 +21,9 @@ export const AdminDashboardView: React.FC = () => {
     lastName: '',
     username: '',
     password: '',
-    role: UserRole.KINE as UserRole
+    role: UserRole.KINE as UserRole,
+    activities: [] as string[],
+    themeColor: 'blue'
   });
 
   const tenantId = user?.tenantId || 'default_tenant';
@@ -90,7 +92,9 @@ export const AdminDashboardView: React.FC = () => {
         lastName: newStaff.lastName,
         username: newStaff.username,
         role: newStaff.role,
-        password: newStaff.password // Guardado solo de referencia inicial, Authentication lo maneja seguro.
+        password: newStaff.password, // Guardado solo de referencia inicial, Authentication lo maneja seguro.
+        activities: newStaff.role === UserRole.KINE ? newStaff.activities : undefined,
+        themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : undefined
       };
 
       await setDoc(doc(db, 'staff', newUid), userDoc);
@@ -100,7 +104,9 @@ export const AdminDashboardView: React.FC = () => {
         lastName: '',
         username: '',
         password: '',
-        role: UserRole.KINE
+        role: UserRole.KINE,
+        activities: [],
+        themeColor: 'blue'
       });
       setShowAddModal(false);
       fetchData(); // Refresh list
@@ -277,6 +283,49 @@ export const AdminDashboardView: React.FC = () => {
                   <button type="button" onClick={() => setNewStaff({...newStaff, role: UserRole.RECEPCION})} className={`py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${newStaff.role === UserRole.RECEPCION ? 'bg-white text-teal-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Recepcionista</button>
                 </div>
               </div>
+
+              {newStaff.role === UserRole.KINE && (
+                <div className="space-y-4 pt-2 pb-2 animate-in fade-in slide-in-from-top-2">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Color del Perfil en Calendario</label>
+                    <div className="flex gap-3">
+                      {STAFF_COLORS.map(color => (
+                        <button 
+                          key={color.id} 
+                          type="button" 
+                          onClick={() => setNewStaff({...newStaff, themeColor: color.id})}
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${color.class.split(' ')[0]} ${newStaff.themeColor === color.id ? 'border-indigo-500 scale-110 shadow-md ring-2 ring-indigo-200 ring-offset-1' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                          title={color.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-3 ml-1">Actividades que realiza</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {CLINICAL_ACTIVITIES.map(act => (
+                        <label key={act.id} className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-colors ${newStaff.activities.includes(act.id) ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                          <input 
+                            type="checkbox" 
+                            className="hidden"
+                            checked={newStaff.activities.includes(act.id)}
+                            onChange={(e) => {
+                              const newActs = e.target.checked 
+                                ? [...newStaff.activities, act.id]
+                                : newStaff.activities.filter(a => a !== act.id);
+                              setNewStaff({...newStaff, activities: newActs});
+                            }}
+                          />
+                          <div className={`w-4 h-4 rounded shadow-sm border flex items-center justify-center flex-shrink-0 ${newStaff.activities.includes(act.id) ? 'bg-indigo-500 border-indigo-600' : 'bg-white border-slate-300'}`}>
+                            {newStaff.activities.includes(act.id) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                          </div>
+                          <span className={`text-[10px] sm:text-xs font-bold leading-tight ${newStaff.activities.includes(act.id) ? 'text-indigo-900' : 'text-slate-600'}`}>{act.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Usuario de Login</label>
