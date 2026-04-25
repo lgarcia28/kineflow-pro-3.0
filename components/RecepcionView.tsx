@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember, Stage } from '../types';
-import { secondaryAuth, auth } from '../firebase';
+import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember, Stage, TenantSettings } from '../types';
+import { secondaryAuth, auth, db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { generatePatientEmail } from '../utils/authUtils';
 import { useAuthStore } from '../store/authStore';
@@ -18,10 +19,12 @@ import {
   Clock,
   ChevronRight,
   Settings2,
-  Trash2,
-  X,
+  LogOut,
   Moon,
-  CalendarDays
+  Trash2,
+  CalendarDays,
+  CreditCard,
+  X
 } from 'lucide-react';
 import { TurnoCalendar } from './TurnoCalendar';
 
@@ -58,6 +61,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   onUpdateAppointment,
   onDeleteAppointment
 }) => {
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR'>('PATIENTS');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -68,6 +72,31 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const [schedulePromptPatient, setSchedulePromptPatient] = useState<Patient | null>(null);
   const [autoSchedulePatientId, setAutoSchedulePatientId] = useState<string | null>(null);
   const [formStage, setFormStage] = useState<Stage>(Stage.KINESIOLOGY);
+
+  // Payment states
+  const [paymentPatient, setPaymentPatient] = useState<Patient | null>(null);
+  const [paymentTypeState, setPaymentTypeState] = useState<'SINGLE' | 'PACK' | 'MONTH'>('PACK');
+  const [paymentValue, setPaymentValue] = useState<number>(10);
+  const [tenantSettings, setTenantSettings] = useState<TenantSettings>({
+    priceSingleSession: 10000,
+    pricePack10: 80000,
+    priceMonthly: 50000
+  });
+
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      if (!db || !user?.tenantId) return;
+      try {
+        const snap = await getDoc(doc(db, 'tenantSettings', user.tenantId));
+        if (snap.exists()) {
+          setTenantSettings(snap.data() as TenantSettings);
+        }
+      } catch (e) {
+        console.error("Error fetching tenant settings:", e);
+      }
+    };
+    fetchSettings();
+  }, [user?.tenantId]);
 
   // Form states for patient
   const [patientForm, setPatientForm] = useState<Partial<Patient>>({
@@ -272,8 +301,8 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const handleCheckIn = (patient: Patient) => {
     let updatedPatient = { ...patient };
     
-    // Si es por sesiones, descontamos una
-    if (patient.planType === PlanType.SESSIONS && (patient.remainingSessions ?? 0) > 0) {
+    // Si es por sesiones, descontamos una (incluso si queda en negativo para registrar deuda)
+    if (patient.planType === PlanType.SESSIONS) {
       updatedPatient.remainingSessions = (patient.remainingSessions ?? 0) - 1;
     }
     
@@ -293,8 +322,43 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
 
   const handleCheckOut = (patient: Patient) => {
     if (window.confirm(`¿Finalizar sesión de ${patient.firstName} ${patient.lastName}?`)) {
-      onUpdatePatient({ ...patient, checkInStatus: CheckInStatus.ATTENDED });
+      const today = new Date().toISOString().split('T')[0];
+      const newHistory = [`Sesión finalizada el ${today}`, ...(patient.history || [])];
+      onUpdatePatient({ ...patient, checkInStatus: CheckInStatus.IN_ROOM, lastVisit: today, history: newHistory });
     }
+  };
+
+  const handleRegisterPayment = () => {
+    if (!paymentPatient) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    let updatedPatient = { ...paymentPatient, paymentDate: today };
+    let historyMsg = `Pago registrado (${today}): `;
+
+    if (paymentTypeState === 'SINGLE') {
+      updatedPatient.planType = PlanType.SESSIONS;
+      updatedPatient.totalSessionsPaid = (updatedPatient.totalSessionsPaid || 0) + 1;
+      updatedPatient.remainingSessions = (updatedPatient.remainingSessions || 0) + 1;
+      historyMsg += `1 sesión suelta.`;
+    } else if (paymentTypeState === 'PACK') {
+      updatedPatient.planType = PlanType.SESSIONS;
+      updatedPatient.totalSessionsPaid = (updatedPatient.totalSessionsPaid || 0) + paymentValue;
+      updatedPatient.remainingSessions = (updatedPatient.remainingSessions || 0) + paymentValue;
+      historyMsg += `Paquete de ${paymentValue} sesiones.`;
+    } else if (paymentTypeState === 'MONTH') {
+      updatedPatient.planType = PlanType.TIME;
+      const currentExp = new Date(updatedPatient.expirationDate || today);
+      const now = new Date();
+      let baseDate = currentExp > now ? currentExp : now;
+      baseDate.setMonth(baseDate.getMonth() + paymentValue);
+      updatedPatient.expirationDate = baseDate.toISOString().split('T')[0];
+      historyMsg += `Abono por tiempo (${paymentValue} mes/es). Nuevo vto: ${updatedPatient.expirationDate}`;
+    }
+
+    updatedPatient.history = [historyMsg, ...(updatedPatient.history || [])];
+
+    onUpdatePatient(updatedPatient);
+    setPaymentPatient(null);
   };
 
   const getPlanStatus = (patient: Patient) => {
@@ -305,7 +369,8 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
 
     if (patient.planType === PlanType.SESSIONS) {
       const remaining = patient.remainingSessions || 0;
-      if (remaining <= 0) return { label: 'Vencido (0 ses.)', color: 'bg-red-500', text: 'text-red-500' };
+      if (remaining < 0) return { label: `Debe ${Math.abs(remaining)} ses.`, color: 'bg-red-600', text: 'text-red-600' };
+      if (remaining === 0) return { label: 'Vencido (0 ses.)', color: 'bg-red-500', text: 'text-red-500' };
       if (remaining <= 3) return { label: `${remaining} ses. restantes`, color: 'bg-orange-500', text: 'text-orange-500' };
       return { label: `${remaining} ses. restantes`, color: 'bg-emerald-500', text: 'text-emerald-500' };
     } else {
@@ -444,17 +509,24 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                         {patient.checkInStatus === CheckInStatus.IDLE ? (
                           <div className="flex items-center gap-2 w-full md:w-auto">
                             <button 
-                              onClick={() => handleCheckIn(patient)}
+                              onClick={(e) => { e.stopPropagation(); handleCheckIn(patient); }}
                               className="w-full md:w-auto px-6 py-3.5 rounded-[1.25rem] font-bold text-sm flex items-center justify-center gap-2 transition-all bg-emerald-500 text-white hover:bg-emerald-600 shadow-xl shadow-emerald-500/20 hover:-translate-y-0.5 active:scale-95"
                             >
                               <CheckCircle2 size={20} strokeWidth={2.5} /> Dar Presente
                             </button>
                             <button 
-                              onClick={() => { setActiveTab('CALENDAR'); setAutoSchedulePatientId(patient.id); }}
+                              onClick={(e) => { e.stopPropagation(); setActiveTab('CALENDAR'); setAutoSchedulePatientId(patient.id); }}
                               className="w-full md:w-auto px-4 py-3.5 rounded-[1.25rem] font-bold text-sm flex items-center justify-center transition-all bg-white text-primary-600 border border-primary-200 hover:bg-primary-50 shadow-sm hover:-translate-y-0.5 active:scale-95"
                               title="Agendar Turno Rápido"
                             >
                               <CalendarDays size={20} />
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setPaymentPatient(patient); setPaymentTypeState('PACK'); setPaymentValue(10); }}
+                              className={`w-full md:w-auto px-4 py-3.5 rounded-[1.25rem] font-bold text-sm flex items-center justify-center transition-all shadow-sm hover:-translate-y-0.5 active:scale-95 ${status.label === 'Vencido' || status.label === 'Próximo a vencer' ? 'bg-orange-500 text-white border-transparent hover:bg-orange-600 shadow-orange-500/20' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
+                              title="Registrar Pago"
+                            >
+                              <CreditCard size={20} />
                             </button>
                           </div>
                         ) : patient.checkInStatus === CheckInStatus.IN_ROOM ? (
@@ -907,6 +979,76 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Payment Modal */}
+      {paymentPatient && (() => {
+        let paymentTotal = 0;
+        if (paymentTypeState === 'SINGLE') {
+          paymentTotal = tenantSettings.priceSingleSession;
+        } else if (paymentTypeState === 'PACK') {
+          paymentTotal = (tenantSettings.pricePack10 / 10) * paymentValue;
+        } else if (paymentTypeState === 'MONTH') {
+          paymentTotal = tenantSettings.priceMonthly * paymentValue;
+        }
+
+        return (
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+                  <CreditCard size={20} />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-lg">Registrar Pago</h3>
+                  <p className="text-xs font-bold text-slate-500">{paymentPatient.firstName} {paymentPatient.lastName}</p>
+                </div>
+              </div>
+              <button onClick={() => setPaymentPatient(null)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Tipo de Abono</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button onClick={() => setPaymentTypeState('SINGLE')} className={`py-3 rounded-xl font-bold text-xs transition-all border ${paymentTypeState === 'SINGLE' ? 'bg-primary-50 border-primary-200 text-primary-700 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>1 Sesión</button>
+                  <button onClick={() => setPaymentTypeState('PACK')} className={`py-3 rounded-xl font-bold text-xs transition-all border ${paymentTypeState === 'PACK' ? 'bg-primary-50 border-primary-200 text-primary-700 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>Paquete</button>
+                  <button onClick={() => setPaymentTypeState('MONTH')} className={`py-3 rounded-xl font-bold text-xs transition-all border ${paymentTypeState === 'MONTH' ? 'bg-primary-50 border-primary-200 text-primary-700 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>Mensual</button>
+                </div>
+              </div>
+
+              {paymentTypeState === 'PACK' && (
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Cantidad de Sesiones</label>
+                  <input type="number" min="1" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 text-lg" value={paymentValue} onChange={e => setPaymentValue(Number(e.target.value))} />
+                </div>
+              )}
+
+              {paymentTypeState === 'MONTH' && (
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Cantidad de Meses</label>
+                  <input type="number" min="1" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 text-lg" value={paymentValue} onChange={e => setPaymentValue(Number(e.target.value))} />
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col gap-4">
+              <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <span className="text-sm font-black text-slate-500 uppercase tracking-widest">Total a Abonar</span>
+                <span className="text-2xl font-black text-emerald-600">${paymentTotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button onClick={() => setPaymentPatient(null)} className="px-6 py-3 rounded-[1.25rem] font-bold text-slate-600 hover:bg-slate-200 transition-colors">Cancelar</button>
+                <button onClick={handleRegisterPayment} className="px-6 py-3 rounded-[1.25rem] font-bold bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 hover:-translate-y-0.5 transition-all">Confirmar Pago</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        );
+      })()}
+
     </div>
   );
 };

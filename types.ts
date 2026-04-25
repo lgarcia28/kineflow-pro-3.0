@@ -12,6 +12,13 @@ export enum UserRole {
   PATIENT = 'PATIENT',
 }
 
+export interface TenantSettings {
+  id?: string;
+  priceSingleSession: number;
+  pricePack10: number;
+  priceMonthly: number;
+}
+
 export enum PlanType {
   SESSIONS = 'SESSIONS',
   TIME = 'TIME',

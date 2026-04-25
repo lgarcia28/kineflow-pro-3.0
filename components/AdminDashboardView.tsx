@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db, secondaryAuth } from '../firebase';
 import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { useAuthStore } from '../store/authStore';
-import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS } from '../types';
+import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS, TenantSettings } from '../types';
 import { Users, Activity, Target, Settings, Building2, UserPlus, Shield, X, MoreVertical, Trash2 } from 'lucide-react';
 
 export const AdminDashboardView: React.FC = () => {
@@ -14,6 +14,13 @@ export const AdminDashboardView: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const [tenantSettings, setTenantSettings] = useState<TenantSettings>({
+    priceSingleSession: 10000,
+    pricePack10: 80000,
+    priceMonthly: 50000
+  });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   // Form State
   const [newStaff, setNewStaff] = useState({
@@ -43,6 +50,13 @@ export const AdminDashboardView: React.FC = () => {
       const patientsQ = query(collection(db, 'patients'), where('tenantId', '==', tenantId));
       const patientsSnap = await getDocs(patientsQ);
       setTotalPatients(patientsSnap.size);
+
+      // 3. Fetch Tenant Settings
+      const settingsRef = doc(db, 'tenantSettings', tenantId);
+      const settingsSnap = await getDoc(settingsRef);
+      if (settingsSnap.exists()) {
+        setTenantSettings(settingsSnap.data() as TenantSettings);
+      }
 
     } catch (e: any) {
       console.error("Error fetching admin data:", e);
@@ -138,6 +152,20 @@ export const AdminDashboardView: React.FC = () => {
     }
   };
 
+  const handleSaveSettings = async () => {
+    if (!db) return;
+    setIsSavingSettings(true);
+    try {
+      await setDoc(doc(db, 'tenantSettings', tenantId), { ...tenantSettings, id: tenantId }, { merge: true });
+      alert('Precios guardados exitosamente.');
+    } catch(e) {
+      console.error(e);
+      alert('Error al guardar configuración.');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex justify-center items-center h-full">
@@ -181,6 +209,47 @@ export const AdminDashboardView: React.FC = () => {
               <div className="text-3xl font-black text-slate-900">{staffList.length - 1}</div>
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Empleados Activos</div>
             </div>
+          </div>
+        </div>
+
+        {/* Settings Card */}
+        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 mb-8">
+          <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><Settings size={24} /></div>
+            <div>
+              <h2 className="text-2xl font-black text-slate-900">Configuración de Precios</h2>
+              <p className="text-sm font-medium text-slate-500">Valores base de referencia para cobros en Recepción.</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">1 Sesión Suelta</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.priceSingleSession} onChange={e => setTenantSettings({...tenantSettings, priceSingleSession: Number(e.target.value)})} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Paquete de 10 Sesiones</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.pricePack10} onChange={e => setTenantSettings({...tenantSettings, pricePack10: Number(e.target.value)})} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Abono Mensual</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.priceMonthly} onChange={e => setTenantSettings({...tenantSettings, priceMonthly: Number(e.target.value)})} />
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end">
+            <button onClick={handleSaveSettings} disabled={isSavingSettings} className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3.5 rounded-[1.25rem] font-bold flex items-center gap-2 shadow-xl shadow-emerald-500/20 transition-all disabled:opacity-50">
+              <Settings size={20} /> Guardar Precios
+            </button>
           </div>
         </div>
 
