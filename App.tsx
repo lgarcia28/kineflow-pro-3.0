@@ -582,19 +582,11 @@ const App: React.FC = () => {
               }}
               onGoHome={() => { setView('HOME'); setSelectedPatientId(null); }}
               onOpenLibrary={() => setShowExerciseLibrary(true)}
-              onOpenStaffAdmin={() => setView('STAFF_ADMIN')}
               isOnline={isOnline}
           />
         )}
 
-        {view === 'STAFF_ADMIN' && user.role === UserRole.KINE && (
-          <StaffAdmin 
-            staff={staff}
-            onAddStaff={handleAddStaff}
-            onDeleteStaff={handleDeleteStaff}
-            onClose={() => setView('HOME')}
-          />
-        )}
+
 
         <main className="flex-1 flex flex-col h-full overflow-hidden relative">
           {/* Logout button for all roles */}
@@ -623,8 +615,6 @@ const App: React.FC = () => {
               onAddAppointment={handleAddAppointment}
               onUpdateAppointment={handleUpdateAppointment}
               onDeleteAppointment={handleDeleteAppointment}
-              onAddStaff={handleAddStaff}
-              onDeleteStaff={handleDeleteStaff}
             />
           ) : user.role === UserRole.TENANT_ADMIN ? (
             <AdminDashboardView />

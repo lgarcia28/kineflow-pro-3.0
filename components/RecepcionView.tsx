@@ -24,7 +24,6 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { TurnoCalendar } from './TurnoCalendar';
-import { StaffAdmin } from './StaffAdmin';
 
 interface RecepcionViewProps {
   patients: Patient[];
@@ -41,8 +40,6 @@ interface RecepcionViewProps {
   onAddAppointment: (app: Appointment) => void;
   onUpdateAppointment: (app: Appointment) => void;
   onDeleteAppointment: (id: string) => void;
-  onAddStaff?: (member: StaffMember) => void;
-  onDeleteStaff?: (id: string) => void;
 }
 
 export const RecepcionView: React.FC<RecepcionViewProps> = ({ 
@@ -59,18 +56,17 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   staff,
   onAddAppointment,
   onUpdateAppointment,
-  onDeleteAppointment,
-  onAddStaff,
-  onDeleteStaff
+  onDeleteAppointment
 }) => {
   const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR'>('PATIENTS');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showStaffAdmin, setShowStaffAdmin] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [schedulePromptPatient, setSchedulePromptPatient] = useState<Patient | null>(null);
+  const [autoSchedulePatientId, setAutoSchedulePatientId] = useState<string | null>(null);
 
   // Form states for patient
   const [patientForm, setPatientForm] = useState<Partial<Patient>>({
@@ -235,6 +231,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
           }
         };
         onAddPatient(patient);
+        setSchedulePromptPatient(patient);
       } catch (err: any) {
         console.error("Error creating auth user:", err);
         setError("Error al crear la cuenta del paciente (¿DNI ya registrado como correo?).");
@@ -346,12 +343,6 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
             >
               <ShoppingBag size={14} /> Tienda
             </button>
-            <button 
-              onClick={() => setShowStaffAdmin(true)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 text-slate-500 hover:text-slate-700`}
-            >
-              <Users size={14} /> Staff
-            </button>
           </div>
         </div>
 
@@ -444,12 +435,21 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                         </div>
                         
                         {patient.checkInStatus === CheckInStatus.IDLE ? (
-                          <button 
-                            onClick={() => handleCheckIn(patient)}
-                            className="w-full md:w-auto px-6 py-3.5 rounded-[1.25rem] font-bold text-sm flex items-center justify-center gap-2 transition-all bg-emerald-500 text-white hover:bg-emerald-600 shadow-xl shadow-emerald-500/20 hover:-translate-y-0.5 active:scale-95"
-                          >
-                            <CheckCircle2 size={20} strokeWidth={2.5} /> Dar Presente
-                          </button>
+                          <div className="flex items-center gap-2 w-full md:w-auto">
+                            <button 
+                              onClick={() => handleCheckIn(patient)}
+                              className="w-full md:w-auto px-6 py-3.5 rounded-[1.25rem] font-bold text-sm flex items-center justify-center gap-2 transition-all bg-emerald-500 text-white hover:bg-emerald-600 shadow-xl shadow-emerald-500/20 hover:-translate-y-0.5 active:scale-95"
+                            >
+                              <CheckCircle2 size={20} strokeWidth={2.5} /> Dar Presente
+                            </button>
+                            <button 
+                              onClick={() => { setActiveTab('CALENDAR'); setAutoSchedulePatientId(patient.id); }}
+                              className="w-full md:w-auto px-4 py-3.5 rounded-[1.25rem] font-bold text-sm flex items-center justify-center transition-all bg-white text-primary-600 border border-primary-200 hover:bg-primary-50 shadow-sm hover:-translate-y-0.5 active:scale-95"
+                              title="Agendar Turno Rápido"
+                            >
+                              <CalendarDays size={20} />
+                            </button>
+                          </div>
                         ) : patient.checkInStatus === CheckInStatus.IN_ROOM ? (
                           <div className="flex items-center gap-2 w-full md:w-auto">
                             <div className="flex-1 md:flex-none px-4 py-3.5 rounded-[1.25rem] font-bold text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 shadow-inner border border-amber-200/50">
@@ -494,6 +494,8 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               onUpdateAppointment={onUpdateAppointment}
               onDeleteAppointment={onDeleteAppointment}
               onUpdatePatient={onUpdatePatient}
+              autoSchedulePatientId={autoSchedulePatientId}
+              onClearAutoSchedule={() => setAutoSchedulePatientId(null)}
             />
           </div>
         ) : (
@@ -846,14 +848,37 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
         </div>
       )}
 
-      {/* Staff Admin Modal */}
-      {showStaffAdmin && onAddStaff && onDeleteStaff && (
-        <StaffAdmin 
-          staff={staff} 
-          onAddStaff={onAddStaff} 
-          onDeleteStaff={onDeleteStaff} 
-          onClose={() => setShowStaffAdmin(false)} 
-        />
+      {/* Schedule Prompt Modal */}
+      {schedulePromptPatient && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden p-8 text-center animate-slide-up">
+            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 size={40} />
+            </div>
+            <h3 className="text-xl font-black text-slate-900 mb-2">¡Paciente Registrado!</h3>
+            <p className="text-sm font-medium text-slate-500 mb-8">
+              El perfil de {schedulePromptPatient.firstName} se guardó correctamente. ¿Deseas asignarle su primer turno ahora?
+            </p>
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={() => { 
+                  setSchedulePromptPatient(null); 
+                  setActiveTab('CALENDAR'); 
+                  setAutoSchedulePatientId(schedulePromptPatient.id); 
+                }}
+                className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-3.5 rounded-[1.25rem] font-black shadow-lg shadow-primary-500/30 flex items-center justify-center gap-2 transition-all active:scale-95"
+              >
+                <CalendarDays size={20} /> Sí, Agendar Turno
+              </button>
+              <button 
+                onClick={() => setSchedulePromptPatient(null)}
+                className="w-full bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-slate-200 px-6 py-3.5 rounded-[1.25rem] font-bold transition-all active:scale-95"
+              >
+                Más tarde
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

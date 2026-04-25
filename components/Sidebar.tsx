@@ -9,7 +9,6 @@ interface SidebarProps {
   onRemoveActive: (patientId: string, e: React.MouseEvent) => void;
   onGoHome: () => void;
   onOpenLibrary?: () => void;
-  onOpenStaffAdmin?: () => void;
   onOpenSettings?: () => void;
   isOnline: boolean;
 }
@@ -21,7 +20,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onRemoveActive,
   onGoHome,
   onOpenLibrary,
-  onOpenStaffAdmin,
   onOpenSettings,
   isOnline
 }) => {
@@ -73,16 +71,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   >
                     <Dumbbell size={20} className="group-hover/item:scale-110 transition-transform" />
                     <span className="text-sm font-black uppercase tracking-wide">Biblioteca</span>
-                  </button>
-                )}
-
-                {onOpenStaffAdmin && (
-                  <button 
-                    onClick={() => { onOpenStaffAdmin(); setIsMenuOpen(false); }}
-                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-primary-50 text-slate-600 hover:text-primary-600 transition-all group/item"
-                  >
-                    <Users size={20} className="group-hover/item:scale-110 transition-transform" />
-                    <span className="text-sm font-black uppercase tracking-wide">Profesionales</span>
                   </button>
                 )}
 

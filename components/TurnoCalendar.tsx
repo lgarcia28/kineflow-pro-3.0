@@ -49,6 +49,8 @@ interface TurnoCalendarProps {
   onUpdateAppointment: (appointment: Appointment) => void;
   onDeleteAppointment: (id: string) => void;
   onUpdatePatient: (patient: Patient) => void;
+  autoSchedulePatientId?: string | null;
+  onClearAutoSchedule?: () => void;
 }
 
 export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
@@ -58,7 +60,9 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
   onAddAppointment,
   onUpdateAppointment,
   onDeleteAppointment,
-  onUpdatePatient
+  onUpdatePatient,
+  autoSchedulePatientId,
+  onClearAutoSchedule
 }) => {
   const [view, setView] = useState<'WEEK' | 'MONTH'>('WEEK');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -69,7 +73,16 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
   // --- Estados para el Modo Ráfaga (Multi-Booking) ---
   const [isMultiBookingMode, setIsMultiBookingMode] = useState(false);
   const [multiBookingPatientId, setMultiBookingPatientId] = useState('');
-  
+
+  // Use effect to auto-open modal if autoSchedulePatientId is provided
+  useEffect(() => {
+    if (autoSchedulePatientId) {
+      setSelectedSlot(null);
+      setEditingAppointment(null);
+      setShowAddModal(true);
+    }
+  }, [autoSchedulePatientId]);
+
   // Hours to display in week view (e.g., 8:00 to 20:00)
   const hours = Array.from({ length: 13 }, (_, i) => i + 8);
 
@@ -420,7 +433,12 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
           staff={staff}
           selectedSlot={selectedSlot}
           initialAppointment={editingAppointment}
-          onClose={() => { setShowAddModal(false); setEditingAppointment(null); }}
+          autoPatientId={autoSchedulePatientId}
+          onClose={() => { 
+            setShowAddModal(false); 
+            setEditingAppointment(null); 
+            if(onClearAutoSchedule) onClearAutoSchedule();
+          }}
           onSave={(app) => {
             if (editingAppointment) onUpdateAppointment(app);
             else onAddAppointment(app);
@@ -452,6 +470,7 @@ interface AppointmentModalProps {
   onDelete: (id: string) => void;
   onUpdatePatient: (patient: Patient) => void;
   onBulkAddAppointments: (apps: Appointment[]) => void;
+  autoPatientId?: string | null;
 }
 
 const AppointmentModal: React.FC<AppointmentModalProps> = ({
@@ -463,9 +482,10 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
   onSave,
   onDelete,
   onUpdatePatient,
-  onBulkAddAppointments
+  onBulkAddAppointments,
+  autoPatientId
 }) => {
-  const [patientId, setPatientId] = useState(initialAppointment?.patientId || '');
+  const [patientId, setPatientId] = useState(initialAppointment?.patientId || autoPatientId || '');
   const [date, setDate] = useState(initialAppointment?.date || selectedSlot?.date || format(new Date(), 'yyyy-MM-dd'));
   const [time, setTime] = useState(initialAppointment?.time || selectedSlot?.time || '08:00');
   const [kineId, setKineId] = useState(initialAppointment?.kineId || '');
