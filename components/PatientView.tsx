@@ -113,6 +113,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
             load: ex.targetLoad,
             reps: ex.targetReps,
             rpe: 5, // Default RPE for home
+            pain: 0, // Default pain
             observation: observations
           });
           return { ...ex, isDone: true, history: newHistory };
@@ -305,7 +306,18 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
 
                         const url = resolveExerciseImage(ex);
                         const media = url ? parseMediaUrl(url) : null;
-                        
+                        const isGym = patient.routine.stage === Stage.GYM;
+
+                        const getBgColor = (val: number | undefined) => {
+                          if (!val) return { backgroundColor: '#ffffff', color: '#94a3b8', borderColor: '#e2e8f0' };
+                          const hue = Math.max(0, 120 - (val - 1) * (120 / 9));
+                          return {
+                            backgroundColor: `hsl(${hue}, 85%, 94%)`,
+                            color: `hsl(${hue}, 90%, 25%)`,
+                            borderColor: `hsl(${hue}, 70%, 80%)`,
+                          };
+                        };
+
                         return (
                           <div key={ex.id} className={`bg-white p-5 border relative overflow-hidden transition-all ${groupClasses} ${block.isGroup ? 'border-slate-200' : 'border-slate-100'}`}>
                             {ssInfo && (
@@ -335,22 +347,22 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{ex.definition.category}</p>
                               </div>
                             </div>
-                            <div className={`grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl ${ssInfo ? 'ml-3' : ''}`}>
-                              <div className="text-center">
+                            <div className={`grid ${isGym ? 'grid-cols-1 md:grid-cols-12' : 'grid-cols-3'} gap-2 bg-slate-50 p-3 rounded-2xl ${ssInfo ? 'ml-3' : ''}`}>
+                              <div className={`text-center ${isGym ? 'col-span-1 md:col-span-2' : ''}`}>
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Series</p>
                                 <p className="text-sm font-black text-slate-700">{ex.targetSets}</p>
                               </div>
-                              <div className="text-center border-x border-slate-200">
+                              <div className={`text-center ${isGym ? 'col-span-1 md:col-span-2 border-l border-slate-200' : 'border-x border-slate-200'}`}>
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Reps</p>
                                 <p className="text-sm font-black text-slate-700">{ex.targetReps}</p>
                               </div>
-                              <div className="text-center">
+                              <div className={`text-center ${isGym ? 'col-span-1 md:col-span-2 border-l border-slate-200' : ''}`}>
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
-                                {patient.routine.stage === Stage.GYM ? (
-                                  <div className="flex items-center justify-center gap-1">
+                                {isGym ? (
+                                  <div className="flex items-center justify-center gap-1 mt-1">
                                     <input 
                                       type="number"
-                                      className="w-12 bg-white border border-slate-200 rounded px-1 py-0.5 text-center text-sm font-black text-slate-700 focus:ring-2 focus:ring-primary-500 outline-none"
+                                      className="w-full max-w-[60px] bg-white border border-slate-200 rounded-lg px-1 py-1 text-center text-sm font-black text-slate-700 focus:ring-2 focus:ring-primary-500 outline-none"
                                       value={ex.targetLoad || ''}
                                       onChange={(e) => {
                                         const newLoad = Number(e.target.value);
@@ -384,7 +396,8 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                                       week: patient.routine.currentWeek || 1,
                                                       load: exItem.targetLoad,
                                                       reps: exItem.targetReps,
-                                                      rpe: 5,
+                                                      rpe: exItem.currentRpe || 5,
+                                                      pain: exItem.currentPain || 0,
                                                       observation: 'Auto-registrado (Gimnasio)'
                                                     });
                                                   }
@@ -400,12 +413,67 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                         setSelectedDay(newDays.find(d => d.id === selectedDay.id) || null);
                                       }}
                                     />
-                                    <span className="text-xs font-black text-slate-500">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                    <span className="text-[10px] font-black text-slate-400">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
                                   </div>
                                 ) : (
                                   <p className="text-sm font-black text-slate-700">{ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
                                 )}
                               </div>
+                              
+                              {isGym && (
+                                <>
+                                  <div className="col-span-1 md:col-span-3 text-center border-l border-slate-200 pl-2">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Esfuerzo (RPE)</p>
+                                    <select
+                                      style={getBgColor(ex.currentRpe)}
+                                      className="font-black text-sm rounded-lg w-full p-1.5 mt-1 outline-none transition-colors border shadow-sm cursor-pointer text-center"
+                                      value={ex.currentRpe || ""}
+                                      onChange={(e) => {
+                                        const newDays = patient.routine.days.map(d => {
+                                          if (d.id === selectedDay.id) {
+                                            return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, currentRpe: Number(e.target.value) } : exItem) };
+                                          }
+                                          return d;
+                                        });
+                                        onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                        setSelectedDay(newDays.find(d => d.id === selectedDay.id) || null);
+                                      }}
+                                    >
+                                      <option value="" className="bg-white text-slate-400 font-normal">RPE</option>
+                                      {[...Array(10)].map((_, i) => (
+                                        <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
+                                          {i+1} {i+1 === 1 ? '(Fácil)' : i+1 === 10 ? '(Máx)' : ''}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div className="col-span-1 md:col-span-3 text-center border-l border-slate-200 pl-2">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Dolor</p>
+                                    <select
+                                      style={getBgColor(ex.currentPain)}
+                                      className="font-black text-sm rounded-lg w-full p-1.5 mt-1 outline-none transition-colors border shadow-sm cursor-pointer text-center"
+                                      value={ex.currentPain || ""}
+                                      onChange={(e) => {
+                                        const newDays = patient.routine.days.map(d => {
+                                          if (d.id === selectedDay.id) {
+                                            return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, currentPain: Number(e.target.value) } : exItem) };
+                                          }
+                                          return d;
+                                        });
+                                        onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                        setSelectedDay(newDays.find(d => d.id === selectedDay.id) || null);
+                                      }}
+                                    >
+                                      <option value="" className="bg-white text-slate-400 font-normal">Dolor</option>
+                                      {[...Array(10)].map((_, i) => (
+                                        <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
+                                          {i+1} {i+1 === 1 ? '(Mín)' : i+1 === 10 ? '(Máx)' : ''}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </div>
                         );

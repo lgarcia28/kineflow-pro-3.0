@@ -94,7 +94,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
             week: currentWeek, // GUARDA EL NÚMERO DE SEMANA
             load: ex.targetLoad,
             reps: ex.targetReps,
-            rpe: ex.currentRpe || 5
+            rpe: ex.currentRpe || 5,
+            pain: ex.currentPain || 0
           });
         }
 
@@ -102,6 +103,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
           ...ex,
           isDone: false,        // DESTILDAR (RESET)
           currentRpe: 0,        // RESET A 0
+          currentPain: 0,       // RESET DOLOR A 0
           history: newHistory
         };
       })

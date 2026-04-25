@@ -55,6 +55,7 @@ export interface ExerciseLog {
   load: number;
   reps: number;
   rpe: number;
+  pain?: number;
   observation?: string; // Para rutina domiciliaria
 }
 
@@ -77,6 +78,7 @@ export interface RoutineExercise {
   targetReps: number;
   targetLoad: number;
   currentRpe?: number;
+  currentPain?: number;
   notes?: string;
   isDone: boolean;
   history: ExerciseLog[];

@@ -29,7 +29,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   isLastInGroup,
   isMiddleInGroup,
 }) => {
-  const { definition, targetSets, targetReps, targetLoad, currentRpe, isDone } = exercise;
+  const { definition, targetSets, targetReps, targetLoad, currentRpe, currentPain, isDone } = exercise;
   const [isZoomed, setIsZoomed] = useState(false);
   
   const isReadOnly = role === UserRole.PATIENT || role === UserRole.RECEPCION;
@@ -47,7 +47,19 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
     };
   };
 
+  const getPainStyle = (pain: number | undefined) => {
+    if (!pain) return { backgroundColor: '#f1f5f9', color: '#94a3b8', borderColor: '#e2e8f0' };
+    // Pain: 1 (Green) to 10 (Red)
+    const hue = Math.max(0, 120 - (pain - 1) * (120 / 9));
+    return {
+      backgroundColor: `hsl(${hue}, 85%, 94%)`,
+      color: `hsl(${hue}, 90%, 25%)`,
+      borderColor: `hsl(${hue}, 70%, 80%)`,
+    };
+  };
+
   const rpeStyle = getRpeStyle(currentRpe);
+  const painStyle = getPainStyle(currentPain);
 
   const adjustSets = (amount: number, e: React.MouseEvent) => {
     if (isReadOnly) return;
@@ -240,7 +252,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
               </div>
 
               <div className="grid grid-cols-12 gap-y-3 gap-x-2">
-                <div className="col-span-12 sm:col-span-6 flex flex-col justify-center">
+                <div className="col-span-12 sm:col-span-4 flex flex-col justify-center">
                   <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">{isTimeBased ? 'Series' : 'Series x Reps'}</p>
                   <div className="flex items-center gap-1">
                     <div className={`flex items-center rounded-lg p-0.5 ${isReadOnly ? 'bg-slate-50' : 'bg-slate-100'}`}>
@@ -262,7 +274,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                   </div>
                 </div>
 
-                <div className="col-span-6 sm:col-span-3 border-l border-slate-100 pl-2">
+                <div className="col-span-4 sm:col-span-3 border-l border-slate-100 pl-2">
                   <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">{isTimeBased ? 'Tiempo (s)' : 'Carga (kg)'}</p>
                   <div className={`flex items-center rounded-lg p-0.5 w-full max-w-[100px] ${isReadOnly ? 'bg-slate-50' : 'bg-slate-100'}`}>
                     {!isReadOnly && <button onClick={(e) => adjustLoad(-0.5, e)} className="p-1 bg-white rounded shadow-sm"><Minus size={12}/></button>}
@@ -272,22 +284,40 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 </div>
 
                 {role !== UserRole.RECEPCION && (
-                  <div className="col-span-6 sm:col-span-3 border-l border-slate-100 pl-2">
-                    <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Esfuerzo</p>
-                    <select
-                      style={rpeStyle}
-                      className="font-black text-sm rounded-lg w-full p-1.5 outline-none disabled:opacity-50 transition-colors border shadow-sm cursor-pointer"
-                      value={currentRpe || ""}
-                      onChange={e => onUpdate(exercise.id, { currentRpe: Number(e.target.value) })}
-                    >
-                      <option value="" className="bg-white text-slate-400 font-normal">RPE</option>
-                      {[...Array(10)].map((_, i) => (
-                        <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
-                          {i+1} {i+1 === 1 ? '(Fácil)' : i+1 === 10 ? '(Máximo)' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <>
+                    <div className="col-span-4 sm:col-span-2.5 border-l border-slate-100 pl-2">
+                      <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Esfuerzo</p>
+                      <select
+                        style={rpeStyle}
+                        className="font-black text-sm rounded-lg w-full p-1.5 outline-none disabled:opacity-50 transition-colors border shadow-sm cursor-pointer"
+                        value={currentRpe || ""}
+                        onChange={e => onUpdate(exercise.id, { currentRpe: Number(e.target.value) })}
+                      >
+                        <option value="" className="bg-white text-slate-400 font-normal">RPE</option>
+                        {[...Array(10)].map((_, i) => (
+                          <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
+                            {i+1} {i+1 === 1 ? '(Fácil)' : i+1 === 10 ? '(Máx)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-span-4 sm:col-span-2.5 border-l border-slate-100 pl-2">
+                      <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Dolor</p>
+                      <select
+                        style={painStyle}
+                        className="font-black text-sm rounded-lg w-full p-1.5 outline-none disabled:opacity-50 transition-colors border shadow-sm cursor-pointer"
+                        value={currentPain || ""}
+                        onChange={e => onUpdate(exercise.id, { currentPain: Number(e.target.value) })}
+                      >
+                        <option value="" className="bg-white text-slate-400 font-normal">Dolor</option>
+                        {[...Array(10)].map((_, i) => (
+                          <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
+                            {i+1} {i+1 === 1 ? '(Min)' : i+1 === 10 ? '(Máx)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
