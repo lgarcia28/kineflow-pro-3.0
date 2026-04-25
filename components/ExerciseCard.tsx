@@ -252,7 +252,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
               </div>
 
               <div className="grid grid-cols-12 gap-y-3 gap-x-2">
-                <div className="col-span-12 sm:col-span-4 flex flex-col justify-center">
+                <div className="col-span-12 sm:col-span-5 flex flex-col justify-center">
                   <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">{isTimeBased ? 'Series' : 'Series x Reps'}</p>
                   <div className="flex items-center gap-1">
                     <div className={`flex items-center rounded-lg p-0.5 ${isReadOnly ? 'bg-slate-50' : 'bg-slate-100'}`}>
@@ -285,34 +285,34 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
                 {role !== UserRole.RECEPCION && (
                   <>
-                    <div className="col-span-4 sm:col-span-2.5 border-l border-slate-100 pl-2">
-                      <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Esfuerzo</p>
+                    <div className="col-span-4 sm:col-span-2 border-l border-slate-100 pl-2">
+                      <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">RPE</p>
                       <select
                         style={rpeStyle}
-                        className="font-black text-sm rounded-lg w-full p-1.5 outline-none disabled:opacity-50 transition-colors border shadow-sm cursor-pointer"
+                        className="font-black text-xs rounded-lg w-full p-1.5 outline-none disabled:opacity-50 transition-colors border shadow-sm cursor-pointer text-center"
                         value={currentRpe || ""}
                         onChange={e => onUpdate(exercise.id, { currentRpe: Number(e.target.value) })}
                       >
                         <option value="" className="bg-white text-slate-400 font-normal">RPE</option>
                         {[...Array(10)].map((_, i) => (
                           <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
-                            {i+1} {i+1 === 1 ? '(Fácil)' : i+1 === 10 ? '(Máx)' : ''}
+                            {i+1}
                           </option>
                         ))}
                       </select>
                     </div>
-                    <div className="col-span-4 sm:col-span-2.5 border-l border-slate-100 pl-2">
+                    <div className="col-span-4 sm:col-span-2 border-l border-slate-100 pl-2">
                       <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Dolor</p>
                       <select
                         style={painStyle}
-                        className="font-black text-sm rounded-lg w-full p-1.5 outline-none disabled:opacity-50 transition-colors border shadow-sm cursor-pointer"
+                        className="font-black text-xs rounded-lg w-full p-1.5 outline-none disabled:opacity-50 transition-colors border shadow-sm cursor-pointer text-center"
                         value={currentPain || ""}
                         onChange={e => onUpdate(exercise.id, { currentPain: Number(e.target.value) })}
                       >
                         <option value="" className="bg-white text-slate-400 font-normal">Dolor</option>
                         {[...Array(10)].map((_, i) => (
                           <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
-                            {i+1} {i+1 === 1 ? '(Min)' : i+1 === 10 ? '(Máx)' : ''}
+                            {i+1}
                           </option>
                         ))}
                       </select>

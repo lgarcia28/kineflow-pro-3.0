@@ -347,22 +347,22 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{ex.definition.category}</p>
                               </div>
                             </div>
-                            <div className={`grid ${isGym ? 'grid-cols-1 md:grid-cols-12' : 'grid-cols-3'} gap-2 bg-slate-50 p-3 rounded-2xl ${ssInfo ? 'ml-3' : ''}`}>
-                              <div className={`text-center ${isGym ? 'col-span-1 md:col-span-2' : ''}`}>
+                            <div className={`grid ${isGym ? 'grid-cols-5' : 'grid-cols-3'} gap-1 md:gap-2 bg-slate-50 p-2 md:p-3 rounded-2xl ${ssInfo ? 'ml-3' : ''}`}>
+                              <div className="text-center">
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Series</p>
-                                <p className="text-sm font-black text-slate-700">{ex.targetSets}</p>
+                                <p className="text-sm font-black text-slate-700 mt-1">{ex.targetSets}</p>
                               </div>
-                              <div className={`text-center ${isGym ? 'col-span-1 md:col-span-2 border-l border-slate-200' : 'border-x border-slate-200'}`}>
+                              <div className="text-center border-l border-slate-200">
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Reps</p>
-                                <p className="text-sm font-black text-slate-700">{ex.targetReps}</p>
+                                <p className="text-sm font-black text-slate-700 mt-1">{ex.targetReps}</p>
                               </div>
-                              <div className={`text-center ${isGym ? 'col-span-1 md:col-span-2 border-l border-slate-200' : ''}`}>
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
+                              <div className="text-center border-l border-slate-200">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{ex.definition.metricType === 'kg' ? 'Carga' : 'T(s)'}</p>
                                 {isGym ? (
-                                  <div className="flex items-center justify-center gap-1 mt-1">
+                                  <div className="flex flex-col items-center justify-center mt-1">
                                     <input 
                                       type="number"
-                                      className="w-full max-w-[60px] bg-white border border-slate-200 rounded-lg px-1 py-1 text-center text-sm font-black text-slate-700 focus:ring-2 focus:ring-primary-500 outline-none"
+                                      className="w-full max-w-[50px] bg-white border border-slate-200 rounded-lg px-1 py-1 text-center text-xs font-black text-slate-700 focus:ring-2 focus:ring-primary-500 outline-none"
                                       value={ex.targetLoad || ''}
                                       onChange={(e) => {
                                         const newLoad = Number(e.target.value);
@@ -413,20 +413,19 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                         setSelectedDay(newDays.find(d => d.id === selectedDay.id) || null);
                                       }}
                                     />
-                                    <span className="text-[10px] font-black text-slate-400">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
                                   </div>
                                 ) : (
-                                  <p className="text-sm font-black text-slate-700">{ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
+                                  <p className="text-sm font-black text-slate-700 mt-1">{ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
                                 )}
                               </div>
                               
                               {isGym && (
                                 <>
-                                  <div className="col-span-1 md:col-span-3 text-center border-l border-slate-200 pl-2">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Esfuerzo (RPE)</p>
+                                  <div className="text-center border-l border-slate-200 pl-1">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">RPE</p>
                                     <select
                                       style={getBgColor(ex.currentRpe)}
-                                      className="font-black text-sm rounded-lg w-full p-1.5 mt-1 outline-none transition-colors border shadow-sm cursor-pointer text-center"
+                                      className="font-black text-xs rounded-lg w-full max-w-[50px] p-1.5 mt-1 outline-none transition-colors border shadow-sm cursor-pointer text-center mx-auto block"
                                       value={ex.currentRpe || ""}
                                       onChange={(e) => {
                                         const newDays = patient.routine.days.map(d => {
@@ -439,19 +438,19 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                         setSelectedDay(newDays.find(d => d.id === selectedDay.id) || null);
                                       }}
                                     >
-                                      <option value="" className="bg-white text-slate-400 font-normal">RPE</option>
+                                      <option value="" className="bg-white text-slate-400 font-normal">-</option>
                                       {[...Array(10)].map((_, i) => (
                                         <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
-                                          {i+1} {i+1 === 1 ? '(Fácil)' : i+1 === 10 ? '(Máx)' : ''}
+                                          {i+1}
                                         </option>
                                       ))}
                                     </select>
                                   </div>
-                                  <div className="col-span-1 md:col-span-3 text-center border-l border-slate-200 pl-2">
+                                  <div className="text-center border-l border-slate-200 pl-1">
                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Dolor</p>
                                     <select
                                       style={getBgColor(ex.currentPain)}
-                                      className="font-black text-sm rounded-lg w-full p-1.5 mt-1 outline-none transition-colors border shadow-sm cursor-pointer text-center"
+                                      className="font-black text-xs rounded-lg w-full max-w-[50px] p-1.5 mt-1 outline-none transition-colors border shadow-sm cursor-pointer text-center mx-auto block"
                                       value={ex.currentPain || ""}
                                       onChange={(e) => {
                                         const newDays = patient.routine.days.map(d => {
@@ -464,10 +463,10 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                         setSelectedDay(newDays.find(d => d.id === selectedDay.id) || null);
                                       }}
                                     >
-                                      <option value="" className="bg-white text-slate-400 font-normal">Dolor</option>
+                                      <option value="" className="bg-white text-slate-400 font-normal">-</option>
                                       {[...Array(10)].map((_, i) => (
                                         <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
-                                          {i+1} {i+1 === 1 ? '(Mín)' : i+1 === 10 ? '(Máx)' : ''}
+                                          {i+1}
                                         </option>
                                       ))}
                                     </select>
