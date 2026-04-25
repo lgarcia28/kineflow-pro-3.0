@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Patient, Product, PlanType, RoutineExercise, RoutineDay, ExerciseDefinition, UserRole } from '../types';
+import { Patient, Product, PlanType, RoutineExercise, RoutineDay, ExerciseDefinition, UserRole, Stage } from '../types';
 import { TabataTimer } from './TabataTimer';
 import { 
   Calendar, 
@@ -346,7 +346,65 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                               </div>
                               <div className="text-center">
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
-                                <p className="text-sm font-black text-slate-700">{ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
+                                {patient.routine.stage === Stage.GYM ? (
+                                  <div className="flex items-center justify-center gap-1">
+                                    <input 
+                                      type="number"
+                                      className="w-12 bg-white border border-slate-200 rounded px-1 py-0.5 text-center text-sm font-black text-slate-700 focus:ring-2 focus:ring-primary-500 outline-none"
+                                      value={ex.targetLoad || ''}
+                                      onChange={(e) => {
+                                        const newLoad = Number(e.target.value);
+                                        const newDays = patient.routine.days.map(d => {
+                                          if (d.id === selectedDay.id) {
+                                            return {
+                                              ...d,
+                                              exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem)
+                                            };
+                                          }
+                                          return d;
+                                        });
+                                        onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                        setSelectedDay(newDays.find(d => d.id === selectedDay.id) || null);
+                                      }}
+                                      onBlur={() => {
+                                        const today = new Date().toISOString().split('T')[0];
+                                        const newDays = patient.routine.days.map(d => {
+                                          if (d.id === selectedDay.id) {
+                                            return {
+                                              ...d,
+                                              exercises: d.exercises.map(exItem => {
+                                                if (exItem.id === ex.id) {
+                                                  const newHistory = [...(exItem.history || [])];
+                                                  const existingIdx = newHistory.findIndex(h => h.date === today);
+                                                  if (existingIdx !== -1) {
+                                                    newHistory[existingIdx] = { ...newHistory[existingIdx], load: exItem.targetLoad };
+                                                  } else {
+                                                    newHistory.push({
+                                                      date: today,
+                                                      week: patient.routine.currentWeek || 1,
+                                                      load: exItem.targetLoad,
+                                                      reps: exItem.targetReps,
+                                                      rpe: 5,
+                                                      observation: 'Auto-registrado (Gimnasio)'
+                                                    });
+                                                  }
+                                                  return { ...exItem, history: newHistory };
+                                                }
+                                                return exItem;
+                                              })
+                                            };
+                                          }
+                                          return d;
+                                        });
+                                        onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                        setSelectedDay(newDays.find(d => d.id === selectedDay.id) || null);
+                                      }}
+                                    />
+                                    <span className="text-xs font-black text-slate-500">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm font-black text-slate-700">{ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
+                                )}
                               </div>
                             </div>
                           </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember } from '../types';
+import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember, Stage } from '../types';
 import { secondaryAuth, auth } from '../firebase';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { generatePatientEmail } from '../utils/authUtils';
@@ -67,6 +67,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [schedulePromptPatient, setSchedulePromptPatient] = useState<Patient | null>(null);
   const [autoSchedulePatientId, setAutoSchedulePatientId] = useState<string | null>(null);
+  const [formStage, setFormStage] = useState<Stage>(Stage.KINESIOLOGY);
 
   // Form states for patient
   const [patientForm, setPatientForm] = useState<Partial<Patient>>({
@@ -123,12 +124,14 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
       routine: { id: Math.random().toString(), stage: 0 as any, currentWeek: 1, days: [] },
       homeRoutine: { id: Math.random().toString(), stage: 0 as any, currentWeek: 1, days: [] }
     });
+    setFormStage(Stage.KINESIOLOGY);
     setEditingPatient(null);
   };
 
   const handleEditPatient = (patient: Patient) => {
     setPatientForm(patient);
     setEditingPatient(patient);
+    setFormStage(patient.routine?.stage || Stage.KINESIOLOGY);
     setShowAddModal(true);
   };
 
@@ -181,7 +184,11 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     if (editingPatient) {
       onUpdatePatient({
         ...editingPatient,
-        ...patientForm as Patient
+        ...patientForm as Patient,
+        routine: {
+          ...editingPatient.routine,
+          stage: formStage
+        }
       });
     } else {
       // Validate tenantId
@@ -219,7 +226,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
           lastVisit: new Date().toISOString().split('T')[0],
           routine: {
             id: `r_${Date.now()}`,
-            stage: 0 as any,
+            stage: formStage,
             currentWeek: 1,
             days: days
           },
@@ -622,6 +629,26 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                       onChange={e => setPatientForm({...patientForm, condition: e.target.value})}
                       required
                     />
+                  </div>
+
+                  <div className="col-span-full">
+                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-3 block">Área / Etapa</label>
+                    <div className="flex bg-slate-100 p-1 rounded-2xl">
+                      <button 
+                        type="button"
+                        onClick={() => setFormStage(Stage.KINESIOLOGY)}
+                        className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${formStage === Stage.KINESIOLOGY ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                      >
+                        Kinesiología
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setFormStage(Stage.GYM)}
+                        className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${formStage === Stage.GYM ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                      >
+                        Gimnasio
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="col-span-full h-px bg-slate-100 my-2"></div>
