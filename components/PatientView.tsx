@@ -440,7 +440,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                     >
                                       <option value="" className="bg-white text-slate-400 font-normal">-</option>
                                       {[...Array(10)].map((_, i) => (
-                                        <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
+                                        <option key={i+1} value={i+1} style={getBgColor(i+1)} className="font-medium">
                                           {i+1}
                                         </option>
                                       ))}
@@ -465,7 +465,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                     >
                                       <option value="" className="bg-white text-slate-400 font-normal">-</option>
                                       {[...Array(10)].map((_, i) => (
-                                        <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
+                                        <option key={i+1} value={i+1} style={getBgColor(i+1)} className="font-medium">
                                           {i+1}
                                         </option>
                                       ))}

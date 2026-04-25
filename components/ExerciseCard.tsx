@@ -295,7 +295,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                       >
                         <option value="" className="bg-white text-slate-400 font-normal">RPE</option>
                         {[...Array(10)].map((_, i) => (
-                          <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
+                          <option key={i+1} value={i+1} style={getRpeStyle(i+1)} className="font-medium">
                             {i+1}
                           </option>
                         ))}
@@ -311,7 +311,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                       >
                         <option value="" className="bg-white text-slate-400 font-normal">Dolor</option>
                         {[...Array(10)].map((_, i) => (
-                          <option key={i+1} value={i+1} className="bg-white text-slate-900 font-medium">
+                          <option key={i+1} value={i+1} style={getPainStyle(i+1)} className="font-medium">
                             {i+1}
                           </option>
                         ))}
