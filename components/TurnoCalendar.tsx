@@ -603,6 +603,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   required
                 >
                   <option value="">Seleccionar Profesional...</option>
+                  <option value="ANY">Cualquiera (Sin preferencia)</option>
                   {staff.filter(s => s.role === UserRole.KINE).map(k => (
                     <option key={k.id} value={k.id}>{k.firstName} {k.lastName}</option>
                   ))}
@@ -620,6 +621,11 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 >
                   <option value="">Elegir actividad...</option>
                   {kineId && (() => {
+                    if (kineId === 'ANY') {
+                      return CLINICAL_ACTIVITIES.map(act => (
+                        <option key={act.id} value={act.id}>{act.name}</option>
+                      ));
+                    }
                     const selectedKine = staff.find(s => s.id === kineId);
                     if (!selectedKine || !selectedKine.activities) return null;
                     return selectedKine.activities.map(actId => {

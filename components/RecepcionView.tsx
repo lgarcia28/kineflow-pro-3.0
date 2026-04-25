@@ -14,6 +14,7 @@ import {
   Plus,
   ShoppingBag,
   User,
+  Users,
   Clock,
   ChevronRight,
   Settings2,
@@ -23,6 +24,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { TurnoCalendar } from './TurnoCalendar';
+import { StaffAdmin } from './StaffAdmin';
 
 interface RecepcionViewProps {
   patients: Patient[];
@@ -39,6 +41,8 @@ interface RecepcionViewProps {
   onAddAppointment: (app: Appointment) => void;
   onUpdateAppointment: (app: Appointment) => void;
   onDeleteAppointment: (id: string) => void;
+  onAddStaff?: (member: StaffMember) => void;
+  onDeleteStaff?: (id: string) => void;
 }
 
 export const RecepcionView: React.FC<RecepcionViewProps> = ({ 
@@ -55,11 +59,14 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   staff,
   onAddAppointment,
   onUpdateAppointment,
-  onDeleteAppointment
+  onDeleteAppointment,
+  onAddStaff,
+  onDeleteStaff
 }) => {
   const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR'>('PATIENTS');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showStaffAdmin, setShowStaffAdmin] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -338,6 +345,12 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 ${activeTab === 'SHOP' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <ShoppingBag size={14} /> Tienda
+            </button>
+            <button 
+              onClick={() => setShowStaffAdmin(true)}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 text-slate-500 hover:text-slate-700`}
+            >
+              <Users size={14} /> Staff
             </button>
           </div>
         </div>
@@ -831,6 +844,16 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {/* Staff Admin Modal */}
+      {showStaffAdmin && onAddStaff && onDeleteStaff && (
+        <StaffAdmin 
+          staff={staff} 
+          onAddStaff={onAddStaff} 
+          onDeleteStaff={onDeleteStaff} 
+          onClose={() => setShowStaffAdmin(false)} 
+        />
       )}
     </div>
   );

@@ -8,8 +8,14 @@ import {
   X, 
   Check,
   User,
-  Lock
+  Lock,
+  Activity,
+  Palette
 } from 'lucide-react';
+import { secondaryAuth } from '../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { CLINICAL_ACTIVITIES, STAFF_COLORS } from '../types';
+import { useAuthStore } from '../store/authStore';
 
 interface StaffAdminProps {
   staff: StaffMember[];
@@ -19,24 +25,56 @@ interface StaffAdminProps {
 }
 
 export const StaffAdmin: React.FC<StaffAdminProps> = ({ staff, onAddStaff, onDeleteStaff, onClose }) => {
+  const { user } = useAuthStore();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const [newMember, setNewMember] = useState<Partial<StaffMember>>({
-    role: UserRole.RECEPCION
+    role: UserRole.RECEPCION,
+    activities: [],
+    themeColor: 'blue'
   });
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMember.username && newMember.firstName && newMember.lastName && newMember.password) {
+    if (!newMember.username || !newMember.firstName || !newMember.lastName || !newMember.password) return;
+    if (!user || (!user.tenantId && user.role !== UserRole.SUPER_ADMIN)) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    const email = `${newMember.username}@${user.tenantId || 'kineflow'}.app`;
+
+    try {
+      let uid = Math.random().toString(36).substr(2, 9);
+
+      if (secondaryAuth) {
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, newMember.password);
+        uid = userCredential.user.uid;
+      } else {
+        console.warn("Secondary auth no configurado, creando id aleatorio...");
+      }
+
       onAddStaff({
-        id: Math.random().toString(36).substr(2, 9),
+        id: uid,
+        uid: uid,
+        tenantId: user.tenantId || 'default',
         username: newMember.username,
-        password: newMember.password,
         firstName: newMember.firstName,
         lastName: newMember.lastName,
-        role: newMember.role as UserRole
+        role: newMember.role as UserRole,
+        activities: newMember.role === UserRole.KINE ? newMember.activities : undefined,
+        themeColor: newMember.role === UserRole.KINE ? newMember.themeColor : undefined
       });
+
       setShowAddModal(false);
-      setNewMember({ role: UserRole.RECEPCION });
+      setNewMember({ role: UserRole.RECEPCION, activities: [], themeColor: 'blue' });
+    } catch (err: any) {
+      console.error(err);
+      setError('Error al crear el usuario. ' + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -127,7 +165,12 @@ export const StaffAdmin: React.FC<StaffAdminProps> = ({ staff, onAddStaff, onDel
                   <X size={24} />
                 </button>
               </div>
-              <form onSubmit={handleAdd} className="p-8 space-y-5">
+              <form onSubmit={handleCreateStaff} className="p-8 space-y-5">
+                {error && (
+                  <div className="bg-red-50 text-red-600 px-4 py-3 rounded-2xl text-sm font-bold border border-red-100">
+                    {error}
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nombre</label>
@@ -207,11 +250,59 @@ export const StaffAdmin: React.FC<StaffAdminProps> = ({ staff, onAddStaff, onDel
                   </div>
                 </div>
 
+                {newMember.role === UserRole.KINE && (
+                  <div className="space-y-4 pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-top-2">
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1 flex items-center gap-1">
+                        <Activity size={12} /> Actividades Clínicas Asignadas
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {CLINICAL_ACTIVITIES.map(activity => (
+                          <label key={activity.id} className="flex items-center gap-2 p-2 rounded-xl hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 transition-colors">
+                            <input 
+                              type="checkbox"
+                              checked={newMember.activities?.includes(activity.id)}
+                              onChange={(e) => {
+                                const acts = newMember.activities || [];
+                                if (e.target.checked) {
+                                  setNewMember({...newMember, activities: [...acts, activity.id]});
+                                } else {
+                                  setNewMember({...newMember, activities: acts.filter(id => id !== activity.id)});
+                                }
+                              }}
+                              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                            />
+                            <span className="text-[11px] font-bold text-slate-700">{activity.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1 flex items-center gap-1">
+                        <Palette size={12} /> Color en Calendario
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {STAFF_COLORS.map(color => (
+                          <button
+                            key={color.id}
+                            type="button"
+                            onClick={() => setNewMember({...newMember, themeColor: color.id})}
+                            className={`w-8 h-8 rounded-full border-2 transition-all ${color.class.split(' ')[0]} ${newMember.themeColor === color.id ? 'border-primary-600 scale-110 shadow-md ring-2 ring-primary-200' : 'border-transparent hover:scale-105'}`}
+                            title={color.name}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] mt-4"
+                  disabled={isLoading}
+                  className="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Check size={20} /> Crear Usuario
+                  <Check size={20} /> {isLoading ? 'Creando...' : 'Crear Usuario'}
                 </button>
               </form>
             </div>

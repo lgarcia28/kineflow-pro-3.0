@@ -623,6 +623,8 @@ const App: React.FC = () => {
               onAddAppointment={handleAddAppointment}
               onUpdateAppointment={handleUpdateAppointment}
               onDeleteAppointment={handleDeleteAppointment}
+              onAddStaff={handleAddStaff}
+              onDeleteStaff={handleDeleteStaff}
             />
           ) : user.role === UserRole.TENANT_ADMIN ? (
             <AdminDashboardView />
