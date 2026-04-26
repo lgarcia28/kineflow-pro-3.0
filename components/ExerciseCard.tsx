@@ -252,88 +252,93 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 )}
               </div>
 
-              <div className="grid grid-cols-12 gap-y-3 gap-x-2">
-                <div className="col-span-12 sm:col-span-5 flex flex-col justify-center">
-                  <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">{isTimeBased ? 'Series' : 'Series x Reps'}</p>
-                  <div className="flex items-center gap-1">
-                    <div className={`flex items-center rounded-lg p-0.5 ${isReadOnly ? 'bg-slate-50' : 'bg-slate-100'}`}>
-                      {!isReadOnly && <button onClick={(e) => adjustSets(-1, e)} className="p-1 bg-white rounded shadow-sm"><Minus size={12}/></button>}
-                      <span className="w-8 text-center font-bold text-sm">{targetSets}</span>
-                      {!isReadOnly && <button onClick={(e) => adjustSets(1, e)} className="p-1 bg-white rounded shadow-sm"><Plus size={12}/></button>}
-                    </div>
-                    
+              {/* Layout flex de métricas: siempre en una sola fila horizontal */}
+              <div className="flex items-stretch bg-slate-50 rounded-xl overflow-hidden border border-slate-100">
+                {/* Series x Reps */}
+                <div className="flex flex-col items-center justify-center px-2 py-1.5 flex-1 min-w-0">
+                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider whitespace-nowrap mb-1">
+                    {isTimeBased ? 'Series' : 'Ser × Rep'}
+                  </p>
+                  <div className="flex items-center gap-0.5">
+                    {!isReadOnly && <button onClick={(e) => adjustSets(-1, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Minus size={10}/></button>}
+                    <span className="text-sm font-black text-slate-800 w-5 text-center leading-none">{targetSets}</span>
+                    {!isReadOnly && <button onClick={(e) => adjustSets(1, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Plus size={10}/></button>}
                     {!isTimeBased && (
                       <>
-                        <span className="text-slate-300 text-xs">x</span>
-                        <div className={`flex items-center rounded-lg p-0.5 ${isReadOnly ? 'bg-slate-50' : 'bg-slate-100'}`}>
-                          {!isReadOnly && <button onClick={(e) => adjustReps(-1, e)} className="p-1 bg-white rounded shadow-sm"><Minus size={12}/></button>}
-                          <span className="w-9 text-center font-bold text-sm">{targetReps}</span>
-                          {!isReadOnly && <button onClick={(e) => adjustReps(1, e)} className="p-1 bg-white rounded shadow-sm"><Plus size={12}/></button>}
-                        </div>
+                        <span className="text-slate-300 text-xs mx-0.5">×</span>
+                        {!isReadOnly && <button onClick={(e) => adjustReps(-1, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Minus size={10}/></button>}
+                        <span className="text-sm font-black text-slate-800 w-6 text-center leading-none">{targetReps}</span>
+                        {!isReadOnly && <button onClick={(e) => adjustReps(1, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Plus size={10}/></button>}
                       </>
                     )}
                   </div>
                 </div>
 
-                <div className="col-span-4 sm:col-span-3 border-l border-slate-100 pl-2">
-                  <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">{isTimeBased ? 'Tiempo (s)' : 'Carga'}</p>
-                  <div className={`flex items-center rounded-lg p-0.5 w-full max-w-[120px] ${isLoadReadOnly ? 'bg-slate-50' : 'bg-slate-100'}`}>
-                    {!isLoadReadOnly && <button onClick={(e) => adjustLoad(-0.5, e)} className="p-1 bg-white rounded shadow-sm shrink-0"><Minus size={12}/></button>}
-                    {isLoadReadOnly ? (
-                      <span className="w-full text-center font-bold text-sm">
-                        {targetLoad} <span className="text-[10px] font-normal text-slate-400">{isTimeBased ? 's' : 'kg'}</span>
-                      </span>
-                    ) : (
-                      <div className="flex items-center flex-1 min-w-0">
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          min={0}
-                          step={0.5}
-                          value={targetLoad}
-                          onChange={e => onUpdate(exercise.id, { targetLoad: parseFloat(e.target.value) || 0 })}
-                          className="w-full text-center font-bold text-sm bg-transparent outline-none min-w-0"
-                          onClick={e => e.stopPropagation()}
-                        />
-                        <span className="text-[10px] font-bold text-slate-400 shrink-0 mr-0.5">{isTimeBased ? 's' : 'kg'}</span>
-                      </div>
-                    )}
-                    {!isLoadReadOnly && <button onClick={(e) => adjustLoad(0.5, e)} className="p-1 bg-white rounded shadow-sm shrink-0"><Plus size={12}/></button>}
-                  </div>
-                </div>
+                {/* Separador */}
+                <div className="w-px bg-slate-200 self-stretch" />
 
+                {/* Carga */}
+                <div className="flex flex-col items-center justify-center px-2 py-1.5 flex-1 min-w-0">
+                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider whitespace-nowrap mb-1">
+                    {isTimeBased ? 'Tiempo' : 'Carga'}
+                  </p>
+                  {isLoadReadOnly ? (
+                    <span className="text-sm font-black text-slate-800 leading-none">
+                      {targetLoad}<span className="text-[10px] font-normal text-slate-400 ml-0.5">{isTimeBased ? 's' : 'kg'}</span>
+                    </span>
+                  ) : (
+                    <div className="flex items-center gap-0.5">
+                      <button onClick={(e) => adjustLoad(-0.5, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Minus size={10}/></button>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step={0.5}
+                        value={targetLoad}
+                        onChange={e => onUpdate(exercise.id, { targetLoad: parseFloat(e.target.value) || 0 })}
+                        className="w-10 text-center font-black text-sm bg-white rounded border border-slate-200 outline-none py-0.5 leading-none"
+                        onClick={e => e.stopPropagation()}
+                      />
+                      <span className="text-[9px] font-bold text-slate-400 leading-none">{isTimeBased ? 's' : 'kg'}</span>
+                      <button onClick={(e) => adjustLoad(0.5, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Plus size={10}/></button>
+                    </div>
+                  )}
+                </div>
 
                 {role !== UserRole.RECEPCION && (
                   <>
-                    <div className="col-span-4 sm:col-span-2 border-l border-slate-100 pl-2">
-                      <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">RPE</p>
+                    {/* Separador */}
+                    <div className="w-px bg-slate-200 self-stretch" />
+                    {/* RPE */}
+                    <div className="flex flex-col items-center justify-center px-1.5 py-1.5 flex-1 min-w-0">
+                      <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider whitespace-nowrap mb-1">RPE</p>
                       <select
                         style={rpeStyle}
-                        className="font-black text-xs rounded-lg w-full p-1.5 outline-none disabled:opacity-50 transition-colors border shadow-sm cursor-pointer text-center"
+                        className="font-black text-xs rounded-lg w-full p-1 outline-none transition-colors border shadow-sm cursor-pointer text-center"
                         value={currentRpe || ""}
                         onChange={e => onUpdate(exercise.id, { currentRpe: Number(e.target.value) })}
                       >
-                        <option value="" className="bg-white text-slate-400 font-normal">RPE</option>
+                        <option value="" className="bg-white text-slate-400 font-normal">—</option>
                         {[...Array(10)].map((_, i) => (
-                          <option key={i+1} value={i+1} style={getRpeStyle(i+1)} className="font-medium">
-                            {i+1}
-                          </option>
+                          <option key={i+1} value={i+1} style={getRpeStyle(i+1)} className="font-medium">{i+1}</option>
                         ))}
                       </select>
                     </div>
-                    <div className="col-span-4 sm:col-span-2 border-l border-slate-100 pl-2">
-                      <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Dolor</p>
+
+                    {/* Separador */}
+                    <div className="w-px bg-slate-200 self-stretch" />
+                    {/* Dolor */}
+                    <div className="flex flex-col items-center justify-center px-1.5 py-1.5 flex-1 min-w-0">
+                      <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider whitespace-nowrap mb-1">Dolor</p>
                       <select
                         style={painStyle}
-                        className="font-black text-xs rounded-lg w-full p-1.5 outline-none disabled:opacity-50 transition-colors border shadow-sm cursor-pointer text-center"
+                        className="font-black text-xs rounded-lg w-full p-1 outline-none transition-colors border shadow-sm cursor-pointer text-center"
                         value={currentPain || ""}
                         onChange={e => onUpdate(exercise.id, { currentPain: Number(e.target.value) })}
                       >
-                        <option value="" className="bg-white text-slate-400 font-normal">Dolor</option>
+                        <option value="" className="bg-white text-slate-400 font-normal">—</option>
                         {[...Array(10)].map((_, i) => (
-                          <option key={i+1} value={i+1} style={getPainStyle(i+1)} className="font-medium">
-                            {i+1}
-                          </option>
+                          <option key={i+1} value={i+1} style={getPainStyle(i+1)} className="font-medium">{i+1}</option>
                         ))}
                       </select>
                     </div>
