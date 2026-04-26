@@ -73,6 +73,8 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
   // --- Estados para el Modo Ráfaga (Multi-Booking) ---
   const [isMultiBookingMode, setIsMultiBookingMode] = useState(false);
   const [multiBookingPatientId, setMultiBookingPatientId] = useState('');
+  const [multiBookingKineId, setMultiBookingKineId] = useState('');
+  const [multiBookingActivityId, setMultiBookingActivityId] = useState('');
 
   // Use effect to auto-open modal if autoSchedulePatientId is provided
   useEffect(() => {
@@ -128,6 +130,8 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
         duration: 60,
         status: 'SCHEDULED',
         isRecurring: false,
+        kineId: multiBookingKineId,
+        activityId: multiBookingActivityId,
         notes: ''
       };
       onAddAppointment(newApp);
@@ -216,7 +220,11 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
           <button 
             onClick={() => {
               setIsMultiBookingMode(!isMultiBookingMode);
-              if (!isMultiBookingMode) setMultiBookingPatientId('');
+              if (!isMultiBookingMode) {
+                setMultiBookingPatientId('');
+                setMultiBookingKineId('');
+                setMultiBookingActivityId('');
+              }
             }}
             className={cn(
               "ml-2 px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all border",
@@ -251,22 +259,61 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
             </div>
           </div>
           
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             <select 
-              className="flex-1 sm:w-64 bg-white border border-primary-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all pointer-events-auto"
+              className="w-full sm:w-48 bg-white border border-primary-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all pointer-events-auto"
               value={multiBookingPatientId}
               onChange={(e) => setMultiBookingPatientId(e.target.value)}
             >
-              <option value="">Elegir Paciente...</option>
+              <option value="">Paciente...</option>
               {patients.map(p => (
-                <option key={p.id} value={p.id}>{p.firstName} {p.lastName} ({p.dni})</option>
+                <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>
               ))}
+            </select>
+
+            <select 
+              className="w-full sm:w-40 bg-white border border-primary-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all pointer-events-auto"
+              value={multiBookingKineId}
+              onChange={e => {
+                setMultiBookingKineId(e.target.value);
+                setMultiBookingActivityId('');
+              }}
+            >
+              <option value="">Profesional...</option>
+              <option value="ANY">Cualquiera</option>
+              {staff.filter(s => s.role === UserRole.KINE).map(k => (
+                <option key={k.id} value={k.id}>{k.firstName} {k.lastName}</option>
+              ))}
+            </select>
+
+            <select 
+              className="w-full sm:w-40 bg-white border border-primary-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 disabled:opacity-50 focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all pointer-events-auto"
+              value={multiBookingActivityId}
+              onChange={e => setMultiBookingActivityId(e.target.value)}
+              disabled={!multiBookingKineId}
+            >
+              <option value="">Actividad...</option>
+              {multiBookingKineId && (() => {
+                if (multiBookingKineId === 'ANY') {
+                  return CLINICAL_ACTIVITIES.map(act => (
+                    <option key={act.id} value={act.id}>{act.name}</option>
+                  ));
+                }
+                const selectedKine = staff.find(s => s.id === multiBookingKineId);
+                if (!selectedKine || !selectedKine.activities) return null;
+                return selectedKine.activities.map(actId => {
+                  const act = CLINICAL_ACTIVITIES.find(a => a.id === actId);
+                  return <option key={actId} value={actId}>{act ? act.name : actId}</option>;
+                });
+              })()}
             </select>
             
             <button 
               onClick={() => {
                 setIsMultiBookingMode(false);
                 setMultiBookingPatientId('');
+                setMultiBookingKineId('');
+                setMultiBookingActivityId('');
               }}
               className="px-4 py-2.5 bg-primary-600 text-white rounded-xl text-xs font-black shadow-lg shadow-primary-600/10 hover:bg-primary-700 transition-all"
             >
