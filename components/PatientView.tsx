@@ -368,29 +368,32 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                               <div className="flex flex-col items-center justify-center py-2.5 flex-[1.2] min-w-[80px] border-r border-slate-200/60">
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
                                 {isGym ? (
-                                  <div className="relative flex items-center justify-center">
-                                    <input 
-                                      type="number"
-                                      inputMode="decimal"
-                                      pattern="[0-9]*"
-                                      className="w-14 bg-white border border-slate-200 rounded-lg px-1 py-1 text-center text-sm font-black text-slate-800 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
-                                      value={ex.targetLoad ?? ''}
-                                      onChange={(e) => {
-                                        const newLoad = Number(e.target.value);
-                                        const newDays = patient.routine.days.map(d => {
-                                          if (d.id === selectedDay!.id) {
-                                            return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
-                                          }
-                                          return d;
-                                        });
-                                        onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                      }}
-                                    />
-                                    <span className="absolute -right-5 text-[9px] font-black text-slate-400 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                  <div className="flex flex-col items-center">
+                                    <div className="flex items-baseline gap-0.5">
+                                      <input 
+                                        type="number"
+                                        inputMode="decimal"
+                                        pattern="[0-9]*"
+                                        className="w-12 bg-transparent text-center text-base font-black text-slate-800 outline-none focus:text-primary-600 transition-colors"
+                                        value={ex.targetLoad ?? ''}
+                                        onChange={(e) => {
+                                          const newLoad = Number(e.target.value);
+                                          const newDays = patient.routine.days.map(d => {
+                                            if (d.id === selectedDay!.id) {
+                                              return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
+                                            }
+                                            return d;
+                                          });
+                                          onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                        }}
+                                      />
+                                      <span className="text-[10px] font-black text-slate-400 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                    </div>
+                                    <div className="w-8 h-0.5 bg-slate-200 rounded-full mt-0.5"></div>
                                   </div>
                                 ) : (
                                   <p className="text-base font-black text-slate-800 leading-none">
-                                    {ex.targetLoad}<span className="text-[10px] font-bold text-slate-400 ml-1 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                    {ex.targetLoad}<span className="text-[10px] font-bold text-primary-500 ml-1 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
                                   </p>
                                 )}
                               </div>

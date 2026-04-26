@@ -281,36 +281,39 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
               </div>
             </div>
 
-            {/* Carga */}
-            <div className="flex flex-col items-center justify-center py-3 flex-1 min-w-0 border-r border-slate-200/60">
-              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1.5 opacity-80">
-                {isTimeBased ? 'Tiempo' : 'Intensidad'}
-              </p>
-              {isLoadReadOnly ? (
-                <span className="text-base font-black text-slate-900 leading-none">
-                  {targetLoad}<span className="text-[10px] font-bold text-slate-400 ml-1 uppercase">{isTimeBased ? 's' : 'kg'}</span>
-                </span>
-              ) : (
-                <div className="flex items-center gap-1.5">
-                  <button onClick={(e) => adjustLoad(-0.5, e)} className="w-7 h-7 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={14} className="text-slate-600"/></button>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      pattern="[0-9]*"
-                      min={0}
-                      step={0.5}
-                      value={targetLoad}
-                      onChange={e => onUpdate(exercise.id, { targetLoad: parseFloat(e.target.value) || 0 })}
-                      className="w-14 text-center font-black text-sm bg-white rounded-lg border border-slate-200 outline-none py-1.5 leading-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                      onClick={e => e.stopPropagation()}
-                    />
-                    <span className="absolute -right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase">{isTimeBased ? 's' : 'kg'}</span>
-                  </div>
-                  <button onClick={(e) => adjustLoad(0.5, e)} className="w-7 h-7 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={14} className="text-slate-600"/></button>
+                {/* Carga */}
+                <div className="flex flex-col items-center justify-center py-3 flex-1 min-w-0 border-r border-slate-200/60">
+                  <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1.5 opacity-80">
+                    {isTimeBased ? 'Tiempo' : 'Intensidad'}
+                  </p>
+                  {isLoadReadOnly ? (
+                    <span className="text-base font-black text-slate-900 leading-none">
+                      {targetLoad}<span className="text-[10px] font-bold text-primary-500 ml-1 uppercase">{isTimeBased ? 's' : 'kg'}</span>
+                    </span>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <button onClick={(e) => adjustLoad(-0.5, e)} className="w-6 h-6 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={12} className="text-slate-600"/></button>
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-baseline gap-0.5">
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            pattern="[0-9]*"
+                            min={0}
+                            step={0.5}
+                            value={targetLoad}
+                            onChange={e => onUpdate(exercise.id, { targetLoad: parseFloat(e.target.value) || 0 })}
+                            className="w-12 text-center font-black text-base bg-transparent outline-none leading-none focus:text-primary-600 transition-colors"
+                            onClick={e => e.stopPropagation()}
+                          />
+                          <span className="text-[10px] font-black text-slate-400 uppercase leading-none">{isTimeBased ? 's' : 'kg'}</span>
+                        </div>
+                        <div className="w-8 h-0.5 bg-slate-200 rounded-full mt-1"></div>
+                      </div>
+                      <button onClick={(e) => adjustLoad(0.5, e)} className="w-6 h-6 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={12} className="text-slate-600"/></button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
             {role !== UserRole.RECEPCION && (
               <>

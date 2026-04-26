@@ -741,24 +741,44 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                           <p className="font-bold text-xs text-slate-900 leading-tight group-hover:text-primary-600 transition-colors truncate">{ex.definition.name}</p>
                                                         </div>
                                                         
-                                                        <div className="flex items-center gap-3 mt-1.5">
-                                                            <div className="flex items-center gap-1">
-                                                              <span className="text-[9px] uppercase font-bold text-slate-400">Ser</span>
-                                                              <input type="number" className="w-8 bg-slate-50 rounded border border-slate-200 text-center text-xs font-black text-slate-900 focus:outline-none focus:border-primary-500 py-0.5" value={ex.targetSets} onChange={e => handleExerciseUpdate(ex.id, {targetSets: Number(e.target.value)})} />
+                                                        {/* Métricas del Editor - Rediseñadas para ser premium y claras */}
+                                                        <div className="flex items-center gap-2 mt-2.5 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                                                            <div className="flex flex-col items-center flex-1 min-w-0">
+                                                              <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">Series</span>
+                                                              <input 
+                                                                type="number" 
+                                                                inputMode="numeric"
+                                                                className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-slate-900 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
+                                                                value={ex.targetSets} 
+                                                                onChange={e => handleExerciseUpdate(ex.id, {targetSets: Number(e.target.value)})} 
+                                                              />
                                                             </div>
                                                             
-                                                            <div className="flex items-center gap-1">
-                                                              <span className="text-[9px] uppercase font-bold text-slate-400">{ex.definition.metricType === 'time' ? '' : 'Rep'}</span>
-                                                              {ex.definition.metricType === 'time' ? (
-                                                                  <div className="w-8 text-center text-slate-300 font-bold text-xs">-</div>
-                                                              ) : (
-                                                                  <input type="number" className="w-8 bg-slate-50 rounded border border-slate-200 text-center text-xs font-black text-slate-900 focus:outline-none focus:border-primary-500 py-0.5" value={ex.targetReps} onChange={e => handleExerciseUpdate(ex.id, {targetReps: Number(e.target.value)})} />
-                                                              )}
-                                                            </div>
+                                                            {!isTimeBased && (
+                                                              <div className="flex flex-col items-center flex-1 min-w-0">
+                                                                <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">Reps</span>
+                                                                <input 
+                                                                  type="number" 
+                                                                  inputMode="numeric"
+                                                                  className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-slate-900 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
+                                                                  value={ex.targetReps} 
+                                                                  onChange={e => handleExerciseUpdate(ex.id, {targetReps: Number(e.target.value)})} 
+                                                                />
+                                                              </div>
+                                                            )}
 
-                                                            <div className="flex items-center gap-1">
-                                                              <span className="text-[9px] uppercase font-bold text-slate-400">{ex.definition.metricType === 'time' ? 'Seg' : 'Kg'}</span>
-                                                              <input type="number" className="w-8 bg-slate-50 rounded border border-slate-200 text-center text-xs font-black text-primary-600 focus:outline-none focus:border-primary-500 py-0.5" value={ex.targetLoad} onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} />
+                                                            <div className="flex flex-col items-center flex-[1.2] min-w-0">
+                                                              <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">{isTimeBased ? 'Segundos' : 'Carga (kg)'}</span>
+                                                              <div className="relative w-full">
+                                                                <input 
+                                                                  type="number" 
+                                                                  inputMode="decimal"
+                                                                  pattern="[0-9]*"
+                                                                  className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-primary-600 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
+                                                                  value={ex.targetLoad} 
+                                                                  onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} 
+                                                                />
+                                                              </div>
                                                             </div>
                                                         </div>
                                                       </div>
