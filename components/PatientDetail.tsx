@@ -347,9 +347,35 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
       )}
 
       {/* SUB-NAV CON BOTÓN DE CIERRE DE SEMANA */}
-      <div className="bg-white/50 backdrop-blur-sm border-b border-slate-200/60 px-6 flex justify-between shrink-0 h-20 items-center relative z-10 shadow-sm">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar items-center h-full pt-4">
-            <div className="flex bg-slate-200/50 p-1 rounded-2xl mr-6 shrink-0 shadow-inner">
+      <div className="bg-white/50 backdrop-blur-sm border-b border-slate-200/60 px-4 md:px-6 flex flex-col md:flex-row justify-between shrink-0 items-start md:items-center relative z-10 shadow-sm gap-2 md:gap-0 pt-4 md:pt-0">
+          
+          {/* Top row on mobile: Switch & Icons */}
+          <div className="flex w-full md:w-auto justify-between items-center md:hidden mb-1">
+            <div className="flex bg-slate-200/50 p-1 rounded-2xl shadow-inner shrink-0">
+              <button 
+                onClick={() => setRoutineType('CLINIC')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2 ${routineType === 'CLINIC' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Clínica
+              </button>
+              <button 
+                onClick={() => setRoutineType('HOME')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2 ${routineType === 'HOME' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Domicilio
+              </button>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button onClick={() => setViewMode('plan')} title="Proyección Mensual" className={`p-2 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'plan' ? 'bg-primary-600 text-white shadow-primary-500/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><Layers size={18} strokeWidth={2.5} /></button>
+              <button onClick={() => setViewMode('stats')} title="Estadísticas" className={`p-2 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'stats' ? 'bg-slate-900 text-white shadow-slate-900/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><BarChart2 size={18} strokeWidth={2.5} /></button>
+              <button onClick={() => setViewMode('evaluations')} title="Evaluaciones Clínicas" className={`p-2 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'evaluations' ? 'bg-blue-600 text-white shadow-blue-500/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><Award size={18} strokeWidth={2.5} /></button>
+            </div>
+          </div>
+
+          {/* Days and Finalizar Semana row */}
+          <div className="flex gap-2 overflow-x-auto no-scrollbar items-center w-full md:w-auto h-14 md:h-20 md:pt-4">
+            {/* Desktop switch */}
+            <div className="hidden md:flex bg-slate-200/50 p-1 rounded-2xl mr-6 shrink-0 shadow-inner">
               <button 
                 onClick={() => setRoutineType('CLINIC')}
                 className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2 ${routineType === 'CLINIC' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
@@ -365,24 +391,25 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
             </div>
 
             {(routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.map((day) => (
-              <button key={day.id} onClick={() => {setActiveDayId(day.id); setViewMode('daily');}} className={`px-6 h-full rounded-t-3xl font-black text-xs uppercase tracking-wide transition-all border-t-2 border-x-2 ${activeDayId === day.id && viewMode === 'daily' ? 'bg-slate-50/80 border-slate-200/60 text-primary-600 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'} relative`}>
+              <button key={day.id} onClick={() => {setActiveDayId(day.id); setViewMode('daily');}} className={`px-4 md:px-6 h-full rounded-t-2xl md:rounded-t-3xl font-black text-xs uppercase tracking-wide transition-all border-t-2 border-x-2 shrink-0 ${activeDayId === day.id && viewMode === 'daily' ? 'bg-slate-50/80 border-slate-200/60 text-primary-600 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'} relative`}>
                 {day.name}
                 {activeDayId === day.id && viewMode === 'daily' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-500 rounded-t-full"></div>}
               </button>
             ))}
             
-            <div className="w-px h-8 bg-slate-300/50 mx-4 shrink-0"></div>
+            <div className="w-px h-6 md:h-8 bg-slate-300/50 mx-2 md:mx-4 shrink-0"></div>
             
             <button 
                 onClick={handleStartNewWeek}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-[1.25rem] font-black text-xs uppercase tracking-wide shadow-xl shadow-indigo-500/20 hover:-translate-y-0.5 hover:shadow-indigo-500/30 active:scale-95 transition-all shrink-0 mr-4"
+                className="flex items-center gap-1.5 md:gap-2 px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl md:rounded-[1.25rem] font-black text-[10px] md:text-xs uppercase tracking-wide shadow-xl shadow-indigo-500/20 hover:-translate-y-0.5 hover:shadow-indigo-500/30 active:scale-95 transition-all shrink-0 md:mr-4 mb-2 md:mb-0"
             >
-                <ChevronRightCircle size={18} strokeWidth={2.5} />
+                <ChevronRightCircle size={16} strokeWidth={2.5} />
                 Finalizar Semana
             </button>
           </div>
 
-          <div className="flex items-center gap-2 border-l border-slate-300/50 pl-6 ml-2 shrink-0">
+          {/* Desktop icons */}
+          <div className="hidden md:flex items-center gap-2 border-l border-slate-300/50 pl-6 ml-2 shrink-0">
               <button onClick={() => setViewMode('plan')} title="Proyección Mensual" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'plan' ? 'bg-primary-600 text-white shadow-primary-500/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><Layers size={20} strokeWidth={2.5} /></button>
               <button onClick={() => setViewMode('stats')} title="Estadísticas" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'stats' ? 'bg-slate-900 text-white shadow-slate-900/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><BarChart2 size={20} strokeWidth={2.5} /></button>
               <button onClick={() => setViewMode('evaluations')} title="Evaluaciones Clínicas" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'evaluations' ? 'bg-blue-600 text-white shadow-blue-500/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><Award size={20} strokeWidth={2.5} /></button>
