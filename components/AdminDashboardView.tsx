@@ -31,7 +31,7 @@ export const AdminDashboardView: React.FC = () => {
     lastName: '',
     username: '',
     password: '',
-    role: UserRole.KINE as UserRole,
+    role: UserRole.KINE as UserRole | string,
     activities: [] as string[],
     themeColor: 'blue'
   });
