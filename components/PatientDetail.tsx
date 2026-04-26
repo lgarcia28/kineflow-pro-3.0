@@ -839,25 +839,24 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
       {isAddingExerciseModal.show && (
           <div className="fixed inset-0 z-[350] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-white w-full max-w-xl h-[85vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-slide-up relative">
-                  <div className="p-8 border-b border-slate-100 flex flex-col gap-6 relative">
+                  <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col gap-3 relative shrink-0">
                       <div className="pr-12">
-                         <h3 className="text-2xl font-black text-slate-900 tracking-tight">Biblioteca de Ejercicios</h3>
-                         <p className="text-sm font-medium text-slate-500">Selecciona los ejercicios para agregar a este día.</p>
+                         <h3 className="text-xl font-black text-slate-900 tracking-tight">Biblioteca de Ejercicios</h3>
                       </div>
                       <div className="relative group">
-                          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={22} />
-                          <input type="text" placeholder="Buscar por nombre o músculo..." className="w-full pl-14 pr-6 py-4 bg-slate-100/80 border border-slate-200/50 rounded-[1.5rem] text-base font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all" value={exerciseSearch} onChange={e => setExerciseSearch(e.target.value)} />
+                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={18} />
+                          <input type="text" placeholder="Buscar por nombre o músculo..." className="w-full pl-11 pr-4 py-3 bg-slate-100/80 border border-slate-200/50 rounded-xl text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" value={exerciseSearch} onChange={e => setExerciseSearch(e.target.value)} />
                       </div>
-                      <button onClick={() => { setIsAddingExerciseModal({show:false, dayId:''}); setSelectedExerciseIds([]); }} className="absolute top-8 right-8 w-12 h-12 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm"><X size={24}/></button>
+                      <button onClick={() => { setIsAddingExerciseModal({show:false, dayId:''}); setSelectedExerciseIds([]); }} className="absolute top-4 right-4 w-8 h-8 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm"><X size={18}/></button>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-slate-50/50 scroll-container">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-slate-50/50 scroll-container">
                       {exercises.filter(ex => ex.name.toLowerCase().includes(exerciseSearch.toLowerCase())).map(ex => {
                           const isSelected = selectedExerciseIds.includes(ex.id);
                           return (
-                              <button key={ex.id} onClick={() => setSelectedExerciseIds(prev => isSelected ? prev.filter(i => i !== ex.id) : [...prev, ex.id])} className={`w-full flex items-center p-3 rounded-xl border-2 transition-all duration-300 text-left ${isSelected ? 'bg-primary-50/50 border-primary-500 shadow-sm ring-2 ring-primary-500/10' : 'bg-white border-slate-200/60 shadow-sm hover:shadow-md hover:border-slate-300'}`}>
+                              <button key={ex.id} onClick={() => setSelectedExerciseIds(prev => isSelected ? prev.filter(i => i !== ex.id) : [...prev, ex.id])} className={`w-full flex items-center p-2 rounded-lg border-2 transition-all duration-300 text-left ${isSelected ? 'bg-primary-50/50 border-primary-500 shadow-sm ring-2 ring-primary-500/10' : 'bg-white border-slate-200/60 shadow-sm hover:shadow-md hover:border-slate-300'}`}>
                                   <div className="mr-3 flex-shrink-0 relative">
-                                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-300'}`}>
-                                        {isSelected && <CheckCircle2 size={12} className="text-white"/>}
+                                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-300'}`}>
+                                        {isSelected && <CheckCircle2 size={10} className="text-white"/>}
                                     </div>
                                   </div>
                                   <div className="relative shrink-0 mr-3">
@@ -908,8 +907,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                           </div>
                       )}
                   </div>
-                  <div className="p-8 bg-white border-t border-slate-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
-                        <button disabled={selectedExerciseIds.length === 0} className="bg-slate-900 text-white flex items-center justify-center gap-3 w-full py-5 rounded-[1.5rem] font-black text-base shadow-xl shadow-slate-900/20 disabled:opacity-50 disabled:shadow-none hover:bg-black active:scale-95 transition-all" onClick={() => {
+                  <div className="p-4 bg-white border-t border-slate-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] shrink-0">
+                        <button disabled={selectedExerciseIds.length === 0} className="bg-slate-900 text-white flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-black text-sm shadow-xl shadow-slate-900/20 disabled:opacity-50 disabled:shadow-none hover:bg-black active:scale-95 transition-all" onClick={() => {
                                 const newExs: RoutineExercise[] = selectedExerciseIds.map(id => {
                                     const def = exercises.find(e => e.id === id)!;
                                     return {
@@ -924,7 +923,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                 setIsAddingExerciseModal({show:false, dayId:''});
                                 setSelectedExerciseIds([]);
                             }}>
-                                <CheckSquare size={22}/>
+                                <CheckSquare size={18}/>
                                 Confirmar {selectedExerciseIds.length > 0 ? selectedExerciseIds.length : ''} Ejercicio{selectedExerciseIds.length !== 1 ? 's' : ''}
                         </button>
                   </div>
