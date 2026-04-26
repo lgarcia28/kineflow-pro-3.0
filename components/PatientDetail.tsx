@@ -646,8 +646,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                       </div>
                       <button onClick={() => setShowRoutineEditor(false)} className="absolute top-4 sm:top-6 right-4 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm"><X size={24} /></button>
                   </header>
-                  <div className="flex-1 overflow-x-auto p-3 sm:p-8 bg-slate-50/50">
-                      <div className="flex items-start gap-6 h-full min-w-max pb-10">
+                  <div className="flex-1 overflow-auto p-3 sm:p-8 bg-slate-50/50 min-h-0">
+                      <div className="flex items-start gap-6 min-h-[400px] h-full min-w-max pb-10">
                           {(routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.map((day, dIdx) => (
                               <div key={day.id} className="w-[22rem] bg-white rounded-[2rem] border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full shrink-0 overflow-hidden">
                                   <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center gap-3">

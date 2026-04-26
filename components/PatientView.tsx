@@ -350,22 +350,20 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{ex.definition.category}</p>
                               </div>
                             </div>
-                            {/* Fila Inferior: Métricas - Compactas y de solo lectura */}
-                            <div className={`grid grid-cols-2 md:flex md:items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner mt-4 ${ssInfo ? 'ml-3' : ''}`}>
+                            {/* Fila Inferior: Métricas - En 1 sola línea */}
+                            <div className={`flex flex-nowrap items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner mt-4 overflow-x-auto hide-scrollbar ${ssInfo ? 'ml-3' : ''}`}>
                               {/* Series x Reps - SOLO LECTURA */}
-                              <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-b md:border-b-0 border-slate-200/60 md:flex-1">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Planificación</p>
-                                <div className="flex items-baseline gap-1">
-                                  <span className="text-base font-black text-slate-800 leading-none">{ex.targetSets}</span>
-                                  <span className="text-slate-400 text-[9px] font-bold uppercase tracking-tighter">Ser</span>
-                                  <span className="text-slate-300 text-xs font-bold mx-0.5">×</span>
-                                  <span className="text-base font-black text-slate-800 leading-none">{ex.targetReps}</span>
-                                  <span className="text-slate-400 text-[9px] font-bold uppercase tracking-tighter">Rep</span>
+                              <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[70px]">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Plan</p>
+                                <div className="flex items-baseline gap-0.5">
+                                  <span className="text-sm font-black text-slate-800 leading-none">{ex.targetSets}</span>
+                                  <span className="text-slate-300 text-[10px] font-bold mx-0.5">×</span>
+                                  <span className="text-sm font-black text-slate-800 leading-none">{ex.targetReps}</span>
                                 </div>
                               </div>
 
                               {/* Carga/Tiempo - EDITABLE SI ES GYM */}
-                              <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 md:flex-[1.2]">
+                              <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[75px] flex-1">
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
                                 {isGym ? (
                                   <div className="flex flex-col items-center">
@@ -387,13 +385,12 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                           onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
                                         }}
                                       />
-                                      <span className="text-[9px] font-black text-slate-400 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                      <span className="text-[8px] font-black text-slate-400 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
                                     </div>
-                                    <div className="w-6 h-0.5 bg-slate-200 rounded-full mt-0.5"></div>
                                   </div>
                                 ) : (
                                   <p className="text-sm font-black text-slate-800 leading-none">
-                                    {ex.targetLoad}<span className="text-[9px] font-bold text-primary-500 ml-1 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                    {ex.targetLoad}<span className="text-[8px] font-bold text-primary-500 ml-1 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
                                   </p>
                                 )}
                               </div>
@@ -401,11 +398,11 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                               {isGym && (
                                 <>
                                   {/* RPE */}
-                                  <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 md:flex-1">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Esfuerzo</p>
+                                  <div className="flex flex-col items-center justify-center py-2 px-1.5 border-r border-slate-200/60 shrink-0 min-w-[45px]">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">RPE</p>
                                     <select
                                       style={getBgColor(ex.currentRpe)}
-                                      className="font-black text-[10px] rounded-lg w-full max-w-[45px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center"
+                                      className="font-black text-[10px] rounded w-[38px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center appearance-none"
                                       value={ex.currentRpe || ""}
                                       onChange={(e) => {
                                         const newDays = patient.routine.days.map(d => {
@@ -425,11 +422,11 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                   </div>
 
                                   {/* Dolor */}
-                                  <div className="flex flex-col items-center justify-center py-2 px-2 md:flex-1">
+                                  <div className="flex flex-col items-center justify-center py-2 px-1.5 shrink-0 min-w-[45px]">
                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Dolor</p>
                                     <select
                                       style={getBgColor(ex.currentPain)}
-                                      className="font-black text-[10px] rounded-lg w-full max-w-[45px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center"
+                                      className="font-black text-[10px] rounded w-[38px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center appearance-none"
                                       value={ex.currentPain || ""}
                                       onChange={(e) => {
                                         const newDays = patient.routine.days.map(d => {

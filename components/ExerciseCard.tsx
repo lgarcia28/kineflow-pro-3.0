@@ -255,31 +255,29 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
             </div>
           </div>
 
-          {/* Fila Inferior: Métricas - Compactas y limpias */}
-          <div className="grid grid-cols-2 md:flex md:items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner">
+          {/* Fila Inferior: Métricas - En 1 sola línea (Restaurado a pedido del usuario) */}
+          <div className="flex items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner overflow-x-auto hide-scrollbar">
             {/* Series x Reps - SOLO LECTURA en esta vista */}
-            <div className="flex flex-col items-center justify-center py-2.5 px-2 border-r border-b md:border-b-0 border-slate-200/60 md:flex-[1.2]">
+            <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[70px]">
               <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">
-                {isTimeBased ? 'Series' : 'Planificación'}
+                {isTimeBased ? 'Series' : 'Plan'}
               </p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-base font-black text-slate-900 leading-none">{targetSets}</span>
+              <div className="flex items-baseline gap-0.5">
+                <span className="text-sm font-black text-slate-900 leading-none">{targetSets}</span>
                 {!isTimeBased && (
                   <>
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter">Ser</span>
-                    <span className="text-slate-300 text-xs font-bold mx-1">×</span>
-                    <span className="text-base font-black text-slate-900 leading-none">{targetReps}</span>
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter">Rep</span>
+                    <span className="text-slate-300 text-[10px] font-bold mx-0.5">×</span>
+                    <span className="text-sm font-black text-slate-900 leading-none">{targetReps}</span>
                   </>
                 )}
-                {isTimeBased && <span className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter ml-1">Ser</span>}
+                {isTimeBased && <span className="text-slate-400 text-[9px] font-bold uppercase tracking-tighter ml-0.5">Ser</span>}
               </div>
             </div>
 
             {/* Carga */}
-            <div className="flex flex-col items-center justify-center py-2.5 px-2 border-b md:border-b-0 md:border-r border-slate-200/60 md:flex-1">
+            <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[75px] flex-1">
               <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">
-                {isTimeBased ? 'Tiempo' : 'Intensidad'}
+                {isTimeBased ? 'Tiempo' : 'Carga'}
               </p>
               {isLoadReadOnly ? (
                 <span className="text-sm font-black text-slate-900 leading-none">
@@ -287,7 +285,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 </span>
               ) : (
                 <div className="flex items-center gap-1">
-                  <button onClick={(e) => adjustLoad(-0.5, e)} className="w-6 h-6 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={12} className="text-slate-600"/></button>
+                  <button onClick={(e) => adjustLoad(-0.5, e)} className="w-5 h-5 bg-white rounded-md shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={10} className="text-slate-600"/></button>
                   <div className="flex flex-col items-center">
                     <div className="flex items-baseline gap-0.5">
                       <input
@@ -298,14 +296,13 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                         step={0.5}
                         value={targetLoad}
                         onChange={e => onUpdate(exercise.id, { targetLoad: parseFloat(e.target.value) || 0 })}
-                        className="w-10 text-center font-black text-sm bg-transparent outline-none leading-none focus:text-primary-600 transition-colors"
+                        className="w-8 text-center font-black text-sm bg-transparent outline-none leading-none focus:text-primary-600 transition-colors"
                         onClick={e => e.stopPropagation()}
                       />
-                      <span className="text-[9px] font-black text-slate-400 uppercase leading-none">{isTimeBased ? 's' : 'kg'}</span>
+                      <span className="text-[8px] font-black text-slate-400 uppercase leading-none">{isTimeBased ? 's' : 'kg'}</span>
                     </div>
-                    <div className="w-6 h-0.5 bg-slate-200 rounded-full mt-0.5"></div>
                   </div>
-                  <button onClick={(e) => adjustLoad(0.5, e)} className="w-6 h-6 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={12} className="text-slate-600"/></button>
+                  <button onClick={(e) => adjustLoad(0.5, e)} className="w-5 h-5 bg-white rounded-md shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={10} className="text-slate-600"/></button>
                 </div>
               )}
             </div>
@@ -313,11 +310,11 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
             {role !== UserRole.RECEPCION && (
               <>
                 {/* RPE */}
-                <div className="flex flex-col items-center justify-center py-2.5 px-2 border-r border-slate-200/60 md:flex-[0.8]">
+                <div className="flex flex-col items-center justify-center py-2 px-1.5 border-r border-slate-200/60 shrink-0 min-w-[45px]">
                   <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">RPE</p>
                   <select
                     style={rpeStyle}
-                    className="font-black text-xs rounded-lg w-full max-w-[50px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center"
+                    className="font-black text-[10px] rounded w-[38px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center appearance-none"
                     value={currentRpe || ""}
                     onChange={e => onUpdate(exercise.id, { currentRpe: Number(e.target.value) })}
                   >
@@ -329,11 +326,11 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 </div>
 
                 {/* Dolor */}
-                <div className="flex flex-col items-center justify-center py-2.5 px-2 md:flex-[0.8]">
+                <div className="flex flex-col items-center justify-center py-2 px-1.5 shrink-0 min-w-[45px]">
                   <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">Dolor</p>
                   <select
                     style={painStyle}
-                    className="font-black text-xs rounded-lg w-full max-w-[50px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center"
+                    className="font-black text-[10px] rounded w-[38px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center appearance-none"
                     value={currentPain || ""}
                     onChange={e => onUpdate(exercise.id, { currentPain: Number(e.target.value) })}
                   >
