@@ -111,8 +111,8 @@ export const AdminDashboardView: React.FC = () => {
           firstName: newStaff.firstName,
           lastName: newStaff.lastName,
           role: newStaff.role,
-          activities: newStaff.role === UserRole.KINE ? newStaff.activities : undefined,
-          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : undefined
+          activities: newStaff.role === UserRole.KINE ? newStaff.activities : [],
+          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : ""
         };
         await setDoc(userRef, updates, { merge: true });
       } else {
@@ -130,8 +130,8 @@ export const AdminDashboardView: React.FC = () => {
           username: newStaff.username,
           role: newStaff.role,
           password: newStaff.password,
-          activities: newStaff.role === UserRole.KINE ? newStaff.activities : undefined,
-          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : undefined
+          activities: newStaff.role === UserRole.KINE ? newStaff.activities : [],
+          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : ""
         };
 
         await setDoc(doc(db, 'staff', newUid), userDoc);
