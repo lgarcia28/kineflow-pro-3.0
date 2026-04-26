@@ -252,11 +252,9 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                   </button>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Fila Inferior: Métricas - En 1 sola línea (Restaurado a pedido del usuario) */}
-          <div className="flex items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner overflow-x-auto hide-scrollbar">
+              
+              {/* Fila Inferior: Métricas - A la derecha de la imagen */}
+              <div className="flex items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner overflow-x-auto hide-scrollbar mt-3">
             {/* Series x Reps - SOLO LECTURA en esta vista */}
             <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[70px]">
               <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">
@@ -342,6 +340,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 </div>
               </>
             )}
+          </div>
+            </div>
           </div>
         </div>
 

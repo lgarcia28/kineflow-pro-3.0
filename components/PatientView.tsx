@@ -326,10 +326,10 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                             {ssInfo && (
                               <div className={`absolute left-0 top-0 bottom-0 w-2 ${ssInfo.color}`} />
                             )}
-                            <div className={`flex items-center gap-4 mb-4 ${ssInfo ? 'pl-3' : ''}`}>
+                            <div className={`flex items-start gap-4 ${ssInfo ? 'pl-3' : ''}`}>
                               <button 
                                 onClick={() => { if (url) setZoomedImage({ url, name: ex.definition.name }); }}
-                                className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative group ${media ? 'cursor-zoom-in' : ''} ${media?.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600' : 'bg-slate-50'}`}
+                                className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative group mt-1 ${media ? 'cursor-zoom-in' : ''} ${media?.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600' : 'bg-slate-50'}`}
                               >
                                 {media ? (
                                   <>
@@ -343,15 +343,14 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                 )}
                               </button>
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-black text-slate-900 truncate">{ex.definition.name}</h4>
-                                  {ssInfo && <span className={`${ssInfo.color} text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase`}>{ssInfo.label}</span>}
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <h4 className="font-black text-slate-900 truncate leading-tight">{ex.definition.name}</h4>
+                                  {ssInfo && <span className={`${ssInfo.color} text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase shrink-0`}>{ssInfo.label}</span>}
                                 </div>
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{ex.definition.category}</p>
-                              </div>
-                            </div>
-                            {/* Fila Inferior: Métricas - En 1 sola línea */}
-                            <div className={`flex flex-nowrap items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner mt-4 overflow-x-auto hide-scrollbar ${ssInfo ? 'ml-3' : ''}`}>
+                                
+                                {/* Fila Inferior: Métricas - A la derecha de la imagen */}
+                                <div className={`flex flex-nowrap items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner mt-3 overflow-x-auto hide-scrollbar`}>
                               {/* Series x Reps - SOLO LECTURA */}
                               <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[70px]">
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Plan</p>
@@ -445,7 +444,8 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                     </select>
                                   </div>
                                 </>
-                              )}
+                              </div>
+                              </div>
                             </div>
                           </div>
                         );
