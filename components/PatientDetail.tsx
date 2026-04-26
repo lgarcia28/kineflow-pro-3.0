@@ -854,13 +854,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                       {exercises.filter(ex => ex.name.toLowerCase().includes(exerciseSearch.toLowerCase())).map(ex => {
                           const isSelected = selectedExerciseIds.includes(ex.id);
                           return (
-                              <button key={ex.id} onClick={() => setSelectedExerciseIds(prev => isSelected ? prev.filter(i => i !== ex.id) : [...prev, ex.id])} className={`w-full flex items-center p-5 rounded-[1.5rem] border-2 transition-all duration-300 text-left ${isSelected ? 'bg-primary-50/50 border-primary-500 shadow-md ring-4 ring-primary-500/10' : 'bg-white border-slate-200/60 shadow-sm hover:shadow-md hover:border-slate-300'}`}>
-                                  <div className="mr-5 flex-shrink-0 relative">
-                                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-300'}`}>
-                                        {isSelected && <CheckCircle2 size={16} className="text-white"/>}
+                              <button key={ex.id} onClick={() => setSelectedExerciseIds(prev => isSelected ? prev.filter(i => i !== ex.id) : [...prev, ex.id])} className={`w-full flex items-center p-3 rounded-xl border-2 transition-all duration-300 text-left ${isSelected ? 'bg-primary-50/50 border-primary-500 shadow-sm ring-2 ring-primary-500/10' : 'bg-white border-slate-200/60 shadow-sm hover:shadow-md hover:border-slate-300'}`}>
+                                  <div className="mr-3 flex-shrink-0 relative">
+                                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-300'}`}>
+                                        {isSelected && <CheckCircle2 size={12} className="text-white"/>}
                                     </div>
                                   </div>
-                                  <div className="relative shrink-0 mr-5">
+                                  <div className="relative shrink-0 mr-3">
                                     {(() => {
                                       const media = ex.videoUrl ? parseMediaUrl(ex.videoUrl) : null;
                                       if (media && (media.thumbnailUrl || media.type === 'instagram')) {
@@ -870,31 +870,31 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                               e.stopPropagation();
                                               setZoomedImage({ url: ex.videoUrl || '', name: ex.name });
                                             }}
-                                            className={`w-16 h-16 rounded-[1.25rem] object-cover shadow-sm overflow-hidden relative group cursor-zoom-in flex items-center justify-center ${media.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600' : 'bg-slate-100'}`}
+                                            className={`w-10 h-10 rounded-lg object-cover shadow-sm overflow-hidden relative group cursor-zoom-in flex items-center justify-center ${media.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600' : 'bg-slate-100'}`}
                                           >
                                             {media.thumbnailUrl ? (
                                               <img src={media.thumbnailUrl} className="w-full h-full object-cover" />
                                             ) : (
-                                              <Activity size={24} className="text-white" />
+                                              <Activity size={16} className="text-white" />
                                             )}
                                             <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                              <Maximize2 size={16} className="text-white" />
+                                              <Maximize2 size={12} className="text-white" />
                                             </div>
                                           </button>
                                         );
                                       }
                                       return (
-                                        <div className="w-16 h-16 rounded-[1.25rem] bg-slate-100 flex items-center justify-center shadow-inner">
-                                            {ex.metricType === 'time' ? <Timer size={24} className="text-slate-400"/> : <Dumbbell size={24} className="text-slate-400"/>}
+                                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shadow-inner">
+                                            {ex.metricType === 'time' ? <Timer size={16} className="text-slate-400"/> : <Dumbbell size={16} className="text-slate-400"/>}
                                         </div>
                                       );
                                     })()}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                      <p className="font-black text-slate-800 text-base truncate mb-1">{ex.name}</p>
+                                      <p className="font-extrabold text-slate-800 text-sm truncate mb-0.5">{ex.name}</p>
                                       <div className="flex gap-2">
-                                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded flex items-center">{ex.category}</span>
-                                          {ex.metricType === 'time' && <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded flex items-center">Por Tiempo</span>}
+                                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-1.5 py-0.5 rounded flex items-center">{ex.category}</span>
+                                          {ex.metricType === 'time' && <span className="text-[9px] font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-1.5 py-0.5 rounded flex items-center">Por Tiempo</span>}
                                       </div>
                                   </div>
                               </button>
