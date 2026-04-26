@@ -742,45 +742,50 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                         </div>
                                                         
                                                         {/* Métricas del Editor - Rediseñadas para ser premium y claras */}
-                                                        <div className="flex items-center gap-2 mt-2.5 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                                                            <div className="flex flex-col items-center flex-1 min-w-0">
-                                                              <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">Series</span>
-                                                              <input 
-                                                                type="number" 
-                                                                inputMode="numeric"
-                                                                className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-slate-900 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
-                                                                value={ex.targetSets} 
-                                                                onChange={e => handleExerciseUpdate(ex.id, {targetSets: Number(e.target.value)})} 
-                                                              />
-                                                            </div>
-                                                            
-                                                            {!isTimeBased && (
-                                                              <div className="flex flex-col items-center flex-1 min-w-0">
-                                                                <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">Reps</span>
-                                                                <input 
-                                                                  type="number" 
-                                                                  inputMode="numeric"
-                                                                  className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-slate-900 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
-                                                                  value={ex.targetReps} 
-                                                                  onChange={e => handleExerciseUpdate(ex.id, {targetReps: Number(e.target.value)})} 
-                                                                />
-                                                              </div>
-                                                            )}
+                                                        {(() => {
+                                                          const isTimeBased = ex.definition.metricType === 'time';
+                                                          return (
+                                                            <div className="flex items-center gap-2 mt-2.5 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                                                                <div className="flex flex-col items-center flex-1 min-w-0">
+                                                                  <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">Series</span>
+                                                                  <input 
+                                                                    type="number" 
+                                                                    inputMode="numeric"
+                                                                    className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-slate-900 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
+                                                                    value={ex.targetSets} 
+                                                                    onChange={e => handleExerciseUpdate(ex.id, {targetSets: Number(e.target.value)})} 
+                                                                  />
+                                                                </div>
+                                                                
+                                                                {!isTimeBased && (
+                                                                  <div className="flex flex-col items-center flex-1 min-w-0">
+                                                                    <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">Reps</span>
+                                                                    <input 
+                                                                      type="number" 
+                                                                      inputMode="numeric"
+                                                                      className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-slate-900 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
+                                                                      value={ex.targetReps} 
+                                                                      onChange={e => handleExerciseUpdate(ex.id, {targetReps: Number(e.target.value)})} 
+                                                                    />
+                                                                  </div>
+                                                                )}
 
-                                                            <div className="flex flex-col items-center flex-[1.2] min-w-0">
-                                                              <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">{isTimeBased ? 'Segundos' : 'Carga (kg)'}</span>
-                                                              <div className="relative w-full">
-                                                                <input 
-                                                                  type="number" 
-                                                                  inputMode="decimal"
-                                                                  pattern="[0-9]*"
-                                                                  className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-primary-600 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
-                                                                  value={ex.targetLoad} 
-                                                                  onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} 
-                                                                />
-                                                              </div>
+                                                                <div className="flex flex-col items-center flex-[1.2] min-w-0">
+                                                                  <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">{isTimeBased ? 'Segundos' : 'Carga (kg)'}</span>
+                                                                  <div className="relative w-full">
+                                                                    <input 
+                                                                      type="number" 
+                                                                      inputMode="decimal"
+                                                                      pattern="[0-9]*"
+                                                                      className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-primary-600 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
+                                                                      value={ex.targetLoad} 
+                                                                      onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} 
+                                                                    />
+                                                                  </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                          );
+                                                        })()}
                                                       </div>
                                                   </div>
                                                   
