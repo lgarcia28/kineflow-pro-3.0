@@ -217,14 +217,12 @@ const App: React.FC = () => {
 
     const { role, tenantId, assignedDni } = user;
     
-    // Si es paciente, solo bajamos SUS datos usando el DNI asignado o su correo
+    // PATIENTS
     let q = query(collection(db, 'patients'));
-    
     if (role === UserRole.PATIENT) {
       q = query(collection(db, 'patients'), where('dni', '==', assignedDni));
-    } else {
-       // Kine y Recepcion ven todo pero acotado a su gimnasio (tenantId)
-      // q = query(collection(db, 'patients'), where('tenantId', '==', tenantId)); // DESACTIVADO HASTA CORREGIR TODOS LOS DOCUMENTOS PARA NO CRASHAR
+    } else if (role !== UserRole.SUPER_ADMIN) {
+      q = query(collection(db, 'patients'), where('tenantId', '==', tenantId || 'default_tenant'));
     }
 
     console.log("Starting Firestore snapshot listener...");
@@ -244,7 +242,10 @@ const App: React.FC = () => {
       setLoading(false);
     });
 
-    const staffQ = query(collection(db, 'staff'));
+    let staffQ = query(collection(db, 'staff'));
+    if (role !== UserRole.SUPER_ADMIN) {
+      staffQ = query(collection(db, 'staff'), where('tenantId', '==', tenantId || 'default_tenant'));
+    }
     const unsubscribeStaff = onSnapshot(staffQ, (snapshot) => {
       const staffData: StaffMember[] = [];
       snapshot.forEach((doc) => {
@@ -253,7 +254,10 @@ const App: React.FC = () => {
       setStaff(staffData);
     });
 
-    const productsQ = query(collection(db, 'products'));
+    let productsQ = query(collection(db, 'products'));
+    if (role !== UserRole.SUPER_ADMIN) {
+      productsQ = query(collection(db, 'products'), where('tenantId', '==', tenantId || 'default_tenant'));
+    }
     const unsubscribeProducts = onSnapshot(productsQ, (snapshot) => {
       const productsData: Product[] = [];
       snapshot.forEach((doc) => {
@@ -262,7 +266,10 @@ const App: React.FC = () => {
       setProducts(productsData);
     });
 
-    const appointmentsQ = query(collection(db, 'appointments'));
+    let appointmentsQ = query(collection(db, 'appointments'));
+    if (role !== UserRole.SUPER_ADMIN) {
+      appointmentsQ = query(collection(db, 'appointments'), where('tenantId', '==', tenantId || 'default_tenant'));
+    }
     const unsubscribeAppointments = onSnapshot(appointmentsQ, (snapshot) => {
       const appointmentsData: Appointment[] = [];
       snapshot.forEach((doc) => {
@@ -333,12 +340,12 @@ const App: React.FC = () => {
   };
 
   const handleAddPatient = async (newPatient: Patient) => {
-    console.log("Adding patient:", newPatient.firstName, newPatient.lastName);
-    setPatients(prev => [...prev, newPatient]);
+    const safeData = sanitizeForFirestore({ ...newPatient, tenantId: user?.tenantId || 'default_tenant' });
+    console.log("Adding patient:", safeData.firstName, safeData.lastName);
+    setPatients(prev => [...prev, safeData]);
     if (isConfigValid && db) {
       try {
-        const safeData = sanitizeForFirestore(newPatient);
-        await setDoc(doc(db, 'patients', newPatient.id), safeData);
+        await setDoc(doc(db, 'patients', safeData.id), safeData);
         console.log("Patient saved to Firestore successfully");
       } catch (e: any) { 
         console.error("Error saving patient to Firestore:", e);
@@ -409,12 +416,13 @@ const App: React.FC = () => {
   };
 
   const handleAddProduct = async (product: Product) => {
+    const safeData = sanitizeForFirestore({ ...product, tenantId: user?.tenantId || 'default_tenant' });
     if (db) {
       try {
-        await setDoc(doc(db, 'products', product.id), sanitizeForFirestore(product));
+        await setDoc(doc(db, 'products', safeData.id), safeData);
       } catch (e) { console.error(e); }
     } else {
-      setProducts(prev => [...prev, product]);
+      setProducts(prev => [...prev, safeData]);
     }
   };
 
@@ -439,12 +447,13 @@ const App: React.FC = () => {
   };
 
   const handleAddAppointment = async (app: Appointment) => {
+    const safeData = { ...app, tenantId: user?.tenantId || 'default_tenant' };
     if (db) {
       try {
-        await setDoc(doc(db, 'appointments', app.id), app);
+        await setDoc(doc(db, 'appointments', safeData.id), safeData);
       } catch (e) { console.error(e); }
     } else {
-      setAppointments(prev => [...prev, app]);
+      setAppointments(prev => [...prev, safeData]);
     }
   };
 
