@@ -319,7 +319,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                           const status = getAppStatus(app);
                           const kine = staff.find(s => s.id === app.kineId);
                           const kineColor = STAFF_COLORS.find(c => c.id === kine?.themeColor) || { class: 'bg-primary-50 border-primary-200 text-primary-800' };
-                          const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId);
+                          const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId) || (app.activityId ? { id: app.activityId, name: app.activityId, color: 'bg-indigo-500' } : undefined);
 
                           return (
                             <div 
@@ -391,7 +391,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                       const status = getAppStatus(app);
                       const kine = staff.find(s => s.id === app.kineId);
                       const kineColor = STAFF_COLORS.find(c => c.id === kine?.themeColor) || { class: 'bg-primary-50 text-primary-700 border-primary-200' };
-                      const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId);
+                      const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId) || (app.activityId ? { id: app.activityId, name: app.activityId, color: 'bg-indigo-500' } : undefined);
 
                       return (
                         <div 
@@ -649,7 +649,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     if (!selectedKine || !selectedKine.activities) return null;
                     return selectedKine.activities.map(actId => {
                       const act = CLINICAL_ACTIVITIES.find(a => a.id === actId);
-                      return act ? <option key={act.id} value={act.id}>{act.name}</option> : null;
+                      return <option key={actId} value={actId}>{act ? act.name : actId}</option>;
                     });
                   })()}
                 </select>

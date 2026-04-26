@@ -4,7 +4,7 @@ import { db, secondaryAuth } from '../firebase';
 import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { useAuthStore } from '../store/authStore';
 import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS, TenantSettings } from '../types';
-import { Users, Activity, Target, Settings, Building2, UserPlus, Shield, X, MoreVertical, Trash2 } from 'lucide-react';
+import { Users, Activity, Target, Settings, Building2, UserPlus, Shield, X, MoreVertical, Trash2, Plus } from 'lucide-react';
 
 export const AdminDashboardView: React.FC = () => {
   const { user } = useAuthStore();
@@ -13,8 +13,8 @@ export const AdminDashboardView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
-  const [isCustomRole, setIsCustomRole] = useState(false);
-  const [customRoleName, setCustomRoleName] = useState('');
+  const [isCustomActivity, setIsCustomActivity] = useState(false);
+  const [customActivityName, setCustomActivityName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -31,10 +31,19 @@ export const AdminDashboardView: React.FC = () => {
     lastName: '',
     username: '',
     password: '',
-    role: UserRole.KINE as UserRole | string,
+    role: UserRole.KINE as UserRole,
     activities: [] as string[],
     themeColor: 'blue'
   });
+
+  const handleAddCustomActivity = () => {
+    const act = customActivityName.trim().toUpperCase();
+    if (act && !newStaff.activities.includes(act)) {
+      setNewStaff({...newStaff, activities: [...newStaff.activities, act]});
+      setCustomActivityName('');
+      setIsCustomActivity(false);
+    }
+  };
 
   const tenantId = user?.tenantId || 'default_tenant';
 
@@ -93,13 +102,6 @@ export const AdminDashboardView: React.FC = () => {
       return;
     }
 
-    const finalRole = isCustomRole ? customRoleName.trim().toUpperCase() : newStaff.role;
-    if (isCustomRole && !finalRole) {
-      setError("Por favor ingresa un nombre para el nuevo rol.");
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
       if (!db) throw new Error("Firebase no inicializado");
 
@@ -108,14 +110,14 @@ export const AdminDashboardView: React.FC = () => {
         const updates: Partial<StaffMember> = {
           firstName: newStaff.firstName,
           lastName: newStaff.lastName,
-          role: finalRole,
-          activities: (newStaff.role === UserRole.KINE || newStaff.role === UserRole.GYM || isCustomRole) ? newStaff.activities : undefined,
-          themeColor: (newStaff.role === UserRole.KINE || newStaff.role === UserRole.GYM || isCustomRole) ? newStaff.themeColor : undefined
+          role: newStaff.role,
+          activities: newStaff.role === UserRole.KINE ? newStaff.activities : undefined,
+          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : undefined
         };
         await setDoc(userRef, updates, { merge: true });
       } else {
         if (!secondaryAuth) throw new Error("Firebase no inicializado");
-        const email = generateEmail(newStaff.username, finalRole);
+        const email = generateEmail(newStaff.username, newStaff.role);
         const cred = await createUserWithEmailAndPassword(secondaryAuth, email, newStaff.password);
         const newUid = cred.user.uid;
 
@@ -126,10 +128,10 @@ export const AdminDashboardView: React.FC = () => {
           firstName: newStaff.firstName,
           lastName: newStaff.lastName,
           username: newStaff.username,
-          role: finalRole,
+          role: newStaff.role,
           password: newStaff.password,
-          activities: (newStaff.role === UserRole.KINE || newStaff.role === UserRole.GYM || isCustomRole) ? newStaff.activities : undefined,
-          themeColor: (newStaff.role === UserRole.KINE || newStaff.role === UserRole.GYM || isCustomRole) ? newStaff.themeColor : undefined
+          activities: newStaff.role === UserRole.KINE ? newStaff.activities : undefined,
+          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : undefined
         };
 
         await setDoc(doc(db, 'staff', newUid), userDoc);
@@ -144,8 +146,8 @@ export const AdminDashboardView: React.FC = () => {
         activities: [],
         themeColor: 'blue'
       });
-      setIsCustomRole(false);
-      setCustomRoleName('');
+      setIsCustomActivity(false);
+      setCustomActivityName('');
       setEditingStaffId(null);
       setShowAddModal(false);
       fetchData(); // Refresh list
@@ -163,18 +165,15 @@ export const AdminDashboardView: React.FC = () => {
   };
 
   const handleEditStaff = (staff: StaffMember) => {
-    const isStandard = Object.values(UserRole).includes(staff.role as UserRole);
     setNewStaff({
       firstName: staff.firstName,
       lastName: staff.lastName,
       username: staff.username,
       password: staff.password || '',
-      role: isStandard ? (staff.role as UserRole) : 'CUSTOM',
+      role: staff.role as UserRole,
       activities: staff.activities || [],
       themeColor: staff.themeColor || 'blue'
     });
-    setIsCustomRole(!isStandard);
-    setCustomRoleName(isStandard ? '' : staff.role);
     setEditingStaffId(staff.id);
     setError('');
     setShowAddModal(true);
@@ -303,7 +302,7 @@ export const AdminDashboardView: React.FC = () => {
               <h2 className="text-2xl font-black text-slate-900">Equipo de Trabajo</h2>
               <p className="text-sm font-medium text-slate-500">Administra accesos y roles (Kinesiología/Recepción).</p>
             </div>
-            <button onClick={() => { setEditingStaffId(null); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue'}); setIsCustomRole(false); setCustomRoleName(''); setError(''); setShowAddModal(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-md shadow-indigo-200">
+            <button onClick={() => { setEditingStaffId(null); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue'}); setIsCustomActivity(false); setCustomActivityName(''); setError(''); setShowAddModal(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-md shadow-indigo-200">
               <UserPlus size={18} />
               <span className="hidden sm:inline">Nuevo Empleado</span>
             </button>
@@ -374,7 +373,7 @@ export const AdminDashboardView: React.FC = () => {
                  <h3 className="text-2xl font-black text-slate-900 mb-1">{editingStaffId ? 'Editar Empleado' : 'Nuevo Empleado'}</h3>
                  <p className="text-sm font-medium text-slate-500">{editingStaffId ? 'Actualiza los datos del perfil.' : 'El empleado heredará tu ID de forma segura.'}</p>
                </div>
-               <button onClick={() => { setShowAddModal(false); setError(''); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue'}); setIsCustomRole(false); setCustomRoleName(''); }} className="text-slate-400 hover:text-slate-600 bg-slate-100 p-2.5 rounded-full transition-colors shrink-0 ml-4">
+               <button onClick={() => { setShowAddModal(false); setError(''); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue'}); setIsCustomActivity(false); setCustomActivityName(''); }} className="text-slate-400 hover:text-slate-600 bg-slate-100 p-2.5 rounded-full transition-colors shrink-0 ml-4">
                  <X size={20} />
                </button>
             </div>
@@ -395,20 +394,13 @@ export const AdminDashboardView: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Rol</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-slate-100 rounded-[1.25rem]">
-                  <button type="button" onClick={() => { setNewStaff({...newStaff, role: UserRole.KINE}); setIsCustomRole(false); setCustomRoleName(''); }} className={`py-3 rounded-xl font-bold text-[10px] sm:text-xs transition-all shadow-sm ${newStaff.role === UserRole.KINE && !isCustomRole ? 'bg-white text-indigo-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Kinesiólogo</button>
-                  <button type="button" onClick={() => { setNewStaff({...newStaff, role: UserRole.GYM}); setIsCustomRole(false); setCustomRoleName(''); }} className={`py-3 rounded-xl font-bold text-[10px] sm:text-xs transition-all shadow-sm ${newStaff.role === UserRole.GYM && !isCustomRole ? 'bg-white text-indigo-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>GYM</button>
-                  <button type="button" onClick={() => { setNewStaff({...newStaff, role: UserRole.RECEPCION}); setIsCustomRole(false); setCustomRoleName(''); }} className={`py-3 rounded-xl font-bold text-[10px] sm:text-xs transition-all shadow-sm ${newStaff.role === UserRole.RECEPCION && !isCustomRole ? 'bg-white text-teal-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Recepción</button>
-                  <button type="button" onClick={() => { setIsCustomRole(true); }} className={`py-3 rounded-xl font-bold text-[10px] sm:text-xs transition-all shadow-sm ${isCustomRole ? 'bg-white text-indigo-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Otro...</button>
+                <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-100 rounded-[1.25rem]">
+                  <button type="button" onClick={() => setNewStaff({...newStaff, role: UserRole.KINE})} className={`py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${newStaff.role === UserRole.KINE ? 'bg-white text-indigo-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Kinesiólogo / Profesional</button>
+                  <button type="button" onClick={() => setNewStaff({...newStaff, role: UserRole.RECEPCION})} className={`py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${newStaff.role === UserRole.RECEPCION ? 'bg-white text-teal-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Recepcionista</button>
                 </div>
-                {isCustomRole && (
-                  <div className="mt-3 animate-in fade-in slide-in-from-top-2">
-                     <input type="text" placeholder="Nombre del nuevo rol (ej: NUTRICIONISTA)" value={customRoleName} onChange={e => setCustomRoleName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"/>
-                  </div>
-                )}
               </div>
 
-              {(newStaff.role === UserRole.KINE || newStaff.role === UserRole.GYM || isCustomRole) && (
+              {newStaff.role === UserRole.KINE && (
                 <div className="space-y-4 pt-2 pb-2 animate-in fade-in slide-in-from-top-2">
                   <div>
                     <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Color del Perfil en Calendario</label>
@@ -446,6 +438,44 @@ export const AdminDashboardView: React.FC = () => {
                           <span className={`text-[10px] sm:text-xs font-bold leading-tight ${newStaff.activities.includes(act.id) ? 'text-indigo-900' : 'text-slate-600'}`}>{act.name}</span>
                         </label>
                       ))}
+                      
+                      {newStaff.activities.filter(act => !CLINICAL_ACTIVITIES.some(ca => ca.id === act)).map(actId => (
+                        <label key={actId} className="flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-colors bg-indigo-50 border-indigo-200">
+                          <input 
+                            type="checkbox" 
+                            className="hidden"
+                            checked={true}
+                            onChange={() => {
+                              setNewStaff({...newStaff, activities: newStaff.activities.filter(a => a !== actId)});
+                            }}
+                          />
+                          <div className="w-4 h-4 rounded shadow-sm border flex items-center justify-center flex-shrink-0 bg-indigo-500 border-indigo-600">
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          </div>
+                          <span className="text-[10px] sm:text-xs font-bold leading-tight text-indigo-900">{actId}</span>
+                        </label>
+                      ))}
+
+                      <div className="col-span-2 mt-2 flex flex-col gap-2">
+                        {!isCustomActivity ? (
+                          <button type="button" onClick={() => setIsCustomActivity(true)} className="text-xs font-bold text-indigo-600 hover:text-indigo-700 self-start inline-flex items-center gap-1">
+                            <Plus size={14} /> Agregar otra actividad...
+                          </button>
+                        ) : (
+                          <div className="flex gap-2 items-center animate-in fade-in slide-in-from-top-2">
+                            <input 
+                              type="text" 
+                              placeholder="Ej: NUTRICION" 
+                              value={customActivityName} 
+                              onChange={e => setCustomActivityName(e.target.value)} 
+                              className="flex-1 bg-white border border-slate-200 text-xs font-bold px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20" 
+                              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomActivity(); } }} 
+                            />
+                            <button type="button" onClick={handleAddCustomActivity} className="bg-indigo-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors">Agregar</button>
+                            <button type="button" onClick={() => setIsCustomActivity(false)} className="bg-slate-100 text-slate-500 px-3 py-2 rounded-xl text-xs font-bold hover:bg-slate-200 transition-colors">Cancelar</button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

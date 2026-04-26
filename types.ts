@@ -9,7 +9,6 @@ export enum UserRole {
   TENANT_ADMIN = 'TENANT_ADMIN',
   RECEPCION = 'RECEPCION',
   KINE = 'KINE',
-  GYM = 'GYM',
   PATIENT = 'PATIENT',
 }
 
@@ -39,6 +38,7 @@ export const CLINICAL_ACTIVITIES = [
   { id: 'MEP', name: 'MEP', color: 'bg-orange-500' },
   { id: 'OND', name: 'Ondas de Choque', color: 'bg-cyan-500' },
   { id: 'EVAL', name: 'Evaluaciones Funcionales', color: 'bg-indigo-500' },
+  { id: 'GYM', name: 'Gimnasio', color: 'bg-lime-500' },
 ];
 
 export const STAFF_COLORS = [
@@ -165,7 +165,7 @@ export interface StaffMember {
   password?: string; // Por retrocompatibilidad (debe ser deprecado a futuro)
   firstName: string;
   lastName: string;
-  role: UserRole | string;
+  role: UserRole;
   activities?: string[];
   themeColor?: string;
 }
