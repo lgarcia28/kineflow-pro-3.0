@@ -31,14 +31,14 @@ export enum CheckInStatus {
 }
 
 export const CLINICAL_ACTIVITIES = [
-  { id: 'FKT', name: 'FKT', color: 'bg-yellow-500' },
-  { id: 'POST', name: 'Posturología', color: 'bg-emerald-500' },
-  { id: 'DREN', name: 'Drenaje Linfático', color: 'bg-purple-500' },
-  { id: 'TER', name: 'Terapia Manual', color: 'bg-rose-500' },
-  { id: 'MEP', name: 'MEP', color: 'bg-orange-500' },
-  { id: 'OND', name: 'Ondas de Choque', color: 'bg-cyan-500' },
-  { id: 'EVAL', name: 'Evaluaciones Funcionales', color: 'bg-indigo-500' },
-  { id: 'GYM', name: 'Gimnasio', color: 'bg-lime-500' },
+  { id: 'FKT',  name: 'FKT',                       color: 'bg-yellow-500',  hex: '#eab308' },
+  { id: 'POST', name: 'Posturología',              color: 'bg-emerald-500', hex: '#10b981' },
+  { id: 'DREN', name: 'Drenaje Linfático',         color: 'bg-purple-500',  hex: '#a855f7' },
+  { id: 'TER',  name: 'Terapia Manual',             color: 'bg-rose-500',    hex: '#f43f5e' },
+  { id: 'MEP',  name: 'MEP',                        color: 'bg-orange-500',  hex: '#f97316' },
+  { id: 'OND',  name: 'Ondas de Choque',            color: 'bg-cyan-500',    hex: '#06b6d4' },
+  { id: 'EVAL', name: 'Evaluaciones Funcionales',   color: 'bg-indigo-500',  hex: '#6366f1' },
+  { id: 'GYM',  name: 'Gimnasio',                  color: 'bg-lime-500',    hex: '#84cc16' },
 ];
 
 export const STAFF_COLORS = [
