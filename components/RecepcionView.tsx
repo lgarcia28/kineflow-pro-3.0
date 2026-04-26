@@ -852,16 +852,17 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
       {/* Modern Product Modal */}
       {showProductModal && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in shadow-2xl">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-slide-up">
-            <div className="p-8 pb-6 border-b border-slate-100 flex justify-between items-center">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slide-up relative">
+            <div className="p-8 pb-6 flex-shrink-0 border-b border-slate-100 flex justify-between items-center bg-white z-10">
               <div>
                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">{editingProduct ? 'Editar Ítem' : 'Añadir a Catálogo'}</h2>
               </div>
-              <button onClick={() => { setShowProductModal(false); resetProductForm(); }} className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+              <button onClick={() => { setShowProductModal(false); resetProductForm(); }} className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors shrink-0">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleProductSubmit} className="p-8 space-y-5">
+            <div className="flex-1 overflow-y-auto scroll-container relative">
+              <form onSubmit={handleProductSubmit} className="p-8 space-y-5">
               <div className="space-y-2">
                 <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Clasificación</label>
                 <div className="flex p-1 bg-slate-100 rounded-2xl shadow-inner border border-slate-200/50">
@@ -938,11 +939,13 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                   onChange={e => setProductForm({...productForm, imageUrl: e.target.value})}
                 />
               </div>
-              
-              <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-xl shadow-slate-900/20 mt-2 hover:bg-black active:scale-95 transition-all text-lg flex items-center justify-center gap-2">
-                <CheckCircle2 size={22} /> {editingProduct ? 'Aceptar Cambios' : 'Generar Ítem'}
-              </button>
+              <div className="sticky bottom-0 bg-white pt-2 pb-4 mt-4 border-t border-slate-100 z-10">
+                <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-xl shadow-slate-900/20 hover:bg-black active:scale-95 transition-all text-lg flex items-center justify-center gap-2">
+                  <CheckCircle2 size={22} /> {editingProduct ? 'Aceptar Cambios' : 'Generar Ítem'}
+                </button>
+              </div>
             </form>
+            </div>
           </div>
         </div>
       )}

@@ -585,15 +585,14 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden">
-        <div className="p-8 max-h-[90vh] overflow-y-auto scroll-container">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-black text-slate-900">{initialAppointment ? 'Editar Turno' : 'Agendar Turno'}</h2>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-              <XCircle size={24} />
-            </button>
-          </div>
-
+      <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="p-8 pb-6 flex-shrink-0 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+          <h2 className="text-2xl font-black text-slate-900">{initialAppointment ? 'Editar Turno' : 'Agendar Turno'}</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-full transition-colors shrink-0">
+            <XCircle size={24} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-8 scroll-container relative">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Paciente</label>
@@ -765,7 +764,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
               />
             </div>
 
-            <div className="flex flex-col gap-3 mt-4">
+            <div className="flex flex-col gap-3 mt-4 sticky bottom-0 bg-white pt-2 pb-2 border-t border-slate-100 z-10">
               <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-xl shadow-slate-200">
                 {initialAppointment ? 'Guardar Cambios' : (isRecurring ? 'Guardar Horarios y Generar' : 'Confirmar Turno')}
               </button>

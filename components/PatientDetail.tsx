@@ -152,6 +152,16 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
     onUpdatePatient({ ...patient, [routineKey]: { ...currentRoutine, days: newDays } });
   };
 
+  const handleRemoveDay = (dayId: string) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este día y todos sus ejercicios?")) return;
+    const routineKey = routineType === 'CLINIC' ? 'routine' : 'homeRoutine';
+    const currentRoutine = patient[routineKey];
+    if (!currentRoutine) return;
+
+    const newDays = currentRoutine.days.filter(d => d.id !== dayId);
+    onUpdatePatient({ ...patient, [routineKey]: { ...currentRoutine, days: newDays } });
+  };
+
   const handleUpdateStage = (newStage: Stage) => {
     onUpdatePatient({ ...patient, routine: { ...patient.routine, stage: newStage } });
   };
@@ -641,7 +651,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                           {(routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.map((day, dIdx) => (
                               <div key={day.id} className="w-[22rem] bg-white rounded-[2rem] border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full shrink-0 overflow-hidden">
                                   <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col gap-2">
-                                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Día {dIdx+1}</div>
+                                      <div className="flex justify-between items-center">
+                                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Día {dIdx+1}</div>
+                                          <button onClick={() => handleRemoveDay(day.id)} className="text-slate-400 hover:text-red-500 bg-white p-1.5 rounded-lg shadow-sm border border-slate-200 transition-colors" title="Borrar Día"><Trash2 size={14}/></button>
+                                      </div>
                                       <input className="font-black text-xl text-slate-900 bg-transparent border-none focus:ring-0 p-0 w-full placeholder:text-slate-300 focus:outline-none" value={day.name} onChange={(e) => handleRenameDay(day.id, e.target.value)} placeholder="Nombre del día" />
                                   </div>
                                   <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-container bg-white">
@@ -801,6 +814,19 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                   </div>
                               </div>
                           ))}
+
+                          {/* Agregar Día Button */}
+                          {(routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.length < 7 && (
+                              <button 
+                                onClick={handleAddDay}
+                                className="w-[22rem] rounded-[2rem] border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-600 transition-all flex flex-col items-center justify-center h-full min-h-[400px] shrink-0 text-slate-400 font-bold group"
+                              >
+                                  <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                      <Plus size={32} />
+                                  </div>
+                                  <span className="text-lg">Agregar Día</span>
+                              </button>
+                          )}
                       </div>
                   </div>
               </div>

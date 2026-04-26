@@ -320,12 +320,18 @@ export const AdminDashboardView: React.FC = () => {
       {/* Add Staff Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl relative animate-slide-up">
-            <button onClick={() => setShowAddModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 bg-slate-100 p-2 rounded-full transition-colors">
-              <X size={20} />
-            </button>
-            <h3 className="text-2xl font-black text-slate-900 mb-1">Nuevo Empleado</h3>
-            <p className="text-sm font-medium text-slate-500 mb-6">El empleado heredará tu ID de institución de forma segura.</p>
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] animate-slide-up relative">
+            <div className="p-8 pb-6 flex-shrink-0 border-b border-slate-100 flex justify-between items-start bg-white z-10">
+               <div>
+                 <h3 className="text-2xl font-black text-slate-900 mb-1">Nuevo Empleado</h3>
+                 <p className="text-sm font-medium text-slate-500">El empleado heredará tu ID de forma segura.</p>
+               </div>
+               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 bg-slate-100 p-2.5 rounded-full transition-colors shrink-0 ml-4">
+                 <X size={20} />
+               </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 scroll-container relative">
 
             {error && (
               <div className="mb-6 bg-red-50 text-red-600 border border-red-200 text-xs font-bold p-3 rounded-xl">
@@ -406,12 +412,13 @@ export const AdminDashboardView: React.FC = () => {
                 <input required minLength={6} value={newStaff.password} onChange={e => setNewStaff({...newStaff, password: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Mínimo 6 caracteres"/>
               </div>
 
-              <div className="pt-4 mt-8 border-t border-slate-100">
+              <div className="pt-4 mt-8 border-t border-slate-100 sticky bottom-0 bg-white z-10 pb-2">
                 <button type="submit" disabled={isSubmitting} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-600/30 flex justify-center items-center gap-2">
                   {isSubmitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Crear Acceso Empleado'}
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
