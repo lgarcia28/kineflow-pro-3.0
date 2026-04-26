@@ -442,7 +442,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                       const status = getAppStatus(app);
                       const kine = staff.find(s => s.id === app.kineId);
                       const kineColor = STAFF_COLORS.find(c => c.id === kine?.themeColor);
-                      const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId) || (app.activityId ? { id: app.activityId, name: app.activityId, color: 'bg-indigo-500' } : undefined);
+                      const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId) || (app.activityId ? { id: app.activityId, name: app.activityId, color: 'bg-indigo-500', hex: '#6366f1' } : undefined);
 
                           const appointmentStyle: React.CSSProperties = status === 'SCHEDULED' && kineColor
                             ? { backgroundColor: kineColor.bg, borderColor: kineColor.border, color: kineColor.text, borderLeftColor: kineColor.border }
