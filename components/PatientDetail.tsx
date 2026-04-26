@@ -745,7 +745,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                         {(() => {
                                                           const isTimeBased = ex.definition.metricType === 'time';
                                                           return (
-                                                            <div className="flex items-center gap-2 mt-2.5 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                                                            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 mt-2.5 bg-slate-50 p-2 rounded-xl border border-slate-100">
                                                                 <div className="flex flex-col items-center flex-1 min-w-0">
                                                                   <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">Series</span>
                                                                   <input 
@@ -770,7 +770,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                                   </div>
                                                                 )}
 
-                                                                <div className="flex flex-col items-center flex-[1.2] min-w-0">
+                                                                <div className="flex flex-col items-center flex-1 sm:flex-[1.2] min-w-0 col-span-2 sm:col-span-1">
                                                                   <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">{isTimeBased ? 'Segundos' : 'Carga (kg)'}</span>
                                                                   <div className="relative w-full">
                                                                     <input 
