@@ -12,6 +12,7 @@ export const AdminDashboardView: React.FC = () => {
   const [totalPatients, setTotalPatients] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -73,45 +74,57 @@ export const AdminDashboardView: React.FC = () => {
     return `${username.toLowerCase().trim()}@staff.kineflow.com`; // Usamos dominio generico porque el tenant restringe los datos igual.
   };
 
-  const handleCreateStaff = async (e: React.FormEvent) => {
+  const handleSubmitStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
 
-    if (!newStaff.firstName || !newStaff.lastName || !newStaff.username || !newStaff.password) {
-      setError("Todos los campos son obligatorios.");
+    if (!newStaff.firstName || !newStaff.lastName || (!editingStaffId && (!newStaff.username || !newStaff.password))) {
+      setError("Por favor completa los campos obligatorios.");
       setIsSubmitting(false);
       return;
     }
 
-    if (newStaff.password.length < 6) {
+    if (!editingStaffId && newStaff.password.length < 6) {
       setError("La contraseña debe tener al menos 6 caracteres.");
       setIsSubmitting(false);
       return;
     }
 
     try {
-      if (!secondaryAuth || !db) throw new Error("Firebase no inicializado");
+      if (!db) throw new Error("Firebase no inicializado");
 
-      const email = generateEmail(newStaff.username, newStaff.role);
-      
-      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, newStaff.password);
-      const newUid = cred.user.uid;
+      if (editingStaffId) {
+        const userRef = doc(db, 'staff', editingStaffId);
+        const updates: Partial<StaffMember> = {
+          firstName: newStaff.firstName,
+          lastName: newStaff.lastName,
+          role: newStaff.role,
+          activities: newStaff.role === UserRole.KINE ? newStaff.activities : undefined,
+          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : undefined
+        };
+        await setDoc(userRef, updates, { merge: true });
+      } else {
+        if (!secondaryAuth) throw new Error("Firebase no inicializado");
+        const email = generateEmail(newStaff.username, newStaff.role);
+        const cred = await createUserWithEmailAndPassword(secondaryAuth, email, newStaff.password);
+        const newUid = cred.user.uid;
 
-      const userDoc: StaffMember = {
-        id: newUid,
-        uid: newUid,
-        tenantId: tenantId,
-        firstName: newStaff.firstName,
-        lastName: newStaff.lastName,
-        username: newStaff.username,
-        role: newStaff.role,
-        password: newStaff.password, // Guardado solo de referencia inicial, Authentication lo maneja seguro.
-        activities: newStaff.role === UserRole.KINE ? newStaff.activities : undefined,
-        themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : undefined
-      };
+        const userDoc: StaffMember = {
+          id: newUid,
+          uid: newUid,
+          tenantId: tenantId,
+          firstName: newStaff.firstName,
+          lastName: newStaff.lastName,
+          username: newStaff.username,
+          role: newStaff.role,
+          password: newStaff.password,
+          activities: newStaff.role === UserRole.KINE ? newStaff.activities : undefined,
+          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : undefined
+        };
 
-      await setDoc(doc(db, 'staff', newUid), userDoc);
+        await setDoc(doc(db, 'staff', newUid), userDoc);
+      }
 
       setNewStaff({
         firstName: '',
@@ -122,19 +135,34 @@ export const AdminDashboardView: React.FC = () => {
         activities: [],
         themeColor: 'blue'
       });
+      setEditingStaffId(null);
       setShowAddModal(false);
       fetchData(); // Refresh list
 
     } catch (e: any) {
       console.error(e);
       if (e.code === 'auth/email-already-in-use') {
-        setError('Ese nombre de usuario ya está registrado en la red mundial.');
+        setError('Ese nombre de usuario ya está registrado.');
       } else {
-        setError('Hubo un error al crear el empleado: ' + e.message);
+        setError('Hubo un error al guardar el empleado: ' + e.message);
       }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEditStaff = (staff: StaffMember) => {
+    setNewStaff({
+      firstName: staff.firstName,
+      lastName: staff.lastName,
+      username: staff.username,
+      password: staff.password || '',
+      role: staff.role,
+      activities: staff.activities || [],
+      themeColor: staff.themeColor || 'blue'
+    });
+    setEditingStaffId(staff.id);
+    setShowAddModal(true);
   };
 
   const handleDeleteStaff = async (staffId: string) => {
@@ -260,7 +288,7 @@ export const AdminDashboardView: React.FC = () => {
               <h2 className="text-2xl font-black text-slate-900">Equipo de Trabajo</h2>
               <p className="text-sm font-medium text-slate-500">Administra accesos y roles (Kinesiología/Recepción).</p>
             </div>
-            <button onClick={() => setShowAddModal(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-md shadow-indigo-200">
+            <button onClick={() => { setEditingStaffId(null); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue'}); setShowAddModal(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-md shadow-indigo-200">
               <UserPlus size={18} />
               <span className="hidden sm:inline">Nuevo Empleado</span>
             </button>
@@ -304,9 +332,14 @@ export const AdminDashboardView: React.FC = () => {
                     </td>
                     <td className="px-8 py-5 text-right">
                       {staff.id !== user?.uid && (
-                        <button onClick={() => handleDeleteStaff(staff.id)} className="w-10 h-10 inline-flex border border-slate-200 items-center justify-center rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-colors">
-                          <Trash2 size={16} />
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => handleEditStaff(staff)} className="w-10 h-10 inline-flex border border-slate-200 items-center justify-center rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-colors" title="Editar">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                          </button>
+                          <button onClick={() => handleDeleteStaff(staff.id)} className="w-10 h-10 inline-flex border border-slate-200 items-center justify-center rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-colors" title="Eliminar">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -323,8 +356,8 @@ export const AdminDashboardView: React.FC = () => {
           <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] animate-slide-up relative">
             <div className="p-8 pb-6 flex-shrink-0 border-b border-slate-100 flex justify-between items-start bg-white z-10">
                <div>
-                 <h3 className="text-2xl font-black text-slate-900 mb-1">Nuevo Empleado</h3>
-                 <p className="text-sm font-medium text-slate-500">El empleado heredará tu ID de forma segura.</p>
+                 <h3 className="text-2xl font-black text-slate-900 mb-1">{editingStaffId ? 'Editar Empleado' : 'Nuevo Empleado'}</h3>
+                 <p className="text-sm font-medium text-slate-500">{editingStaffId ? 'Actualiza los datos del perfil.' : 'El empleado heredará tu ID de forma segura.'}</p>
                </div>
                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 bg-slate-100 p-2.5 rounded-full transition-colors shrink-0 ml-4">
                  <X size={20} />
@@ -339,82 +372,27 @@ export const AdminDashboardView: React.FC = () => {
               </div>
             )}
 
-            <form onSubmit={handleCreateStaff} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Nombre</label>
-                  <input required value={newStaff.firstName} onChange={e => setNewStaff({...newStaff, firstName: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Juan"/>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Apellido</label>
-                  <input required value={newStaff.lastName} onChange={e => setNewStaff({...newStaff, lastName: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Pérez"/>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Rol</label>
-                <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-100 rounded-[1.25rem]">
-                  <button type="button" onClick={() => setNewStaff({...newStaff, role: UserRole.KINE})} className={`py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${newStaff.role === UserRole.KINE ? 'bg-white text-indigo-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Kinesiólogo</button>
-                  <button type="button" onClick={() => setNewStaff({...newStaff, role: UserRole.RECEPCION})} className={`py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${newStaff.role === UserRole.RECEPCION ? 'bg-white text-teal-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Recepcionista</button>
-                </div>
-              </div>
-
-              {newStaff.role === UserRole.KINE && (
-                <div className="space-y-4 pt-2 pb-2 animate-in fade-in slide-in-from-top-2">
+              {!editingStaffId ? (
+                <>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Color del Perfil en Calendario</label>
-                    <div className="flex gap-3">
-                      {STAFF_COLORS.map(color => (
-                        <button 
-                          key={color.id} 
-                          type="button" 
-                          onClick={() => setNewStaff({...newStaff, themeColor: color.id})}
-                          className={`w-8 h-8 rounded-full border-2 transition-all ${color.class.split(' ')[0]} ${newStaff.themeColor === color.id ? 'border-indigo-500 scale-110 shadow-md ring-2 ring-indigo-200 ring-offset-1' : 'border-transparent opacity-70 hover:opacity-100'}`}
-                          title={color.name}
-                        />
-                      ))}
-                    </div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Usuario de Login</label>
+                    <input required value={newStaff.username} onChange={e => setNewStaff({...newStaff, username: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Ej: kinejuan"/>
                   </div>
+
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-3 ml-1">Actividades que realiza</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {CLINICAL_ACTIVITIES.map(act => (
-                        <label key={act.id} className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-colors ${newStaff.activities.includes(act.id) ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
-                          <input 
-                            type="checkbox" 
-                            className="hidden"
-                            checked={newStaff.activities.includes(act.id)}
-                            onChange={(e) => {
-                              const newActs = e.target.checked 
-                                ? [...newStaff.activities, act.id]
-                                : newStaff.activities.filter(a => a !== act.id);
-                              setNewStaff({...newStaff, activities: newActs});
-                            }}
-                          />
-                          <div className={`w-4 h-4 rounded shadow-sm border flex items-center justify-center flex-shrink-0 ${newStaff.activities.includes(act.id) ? 'bg-indigo-500 border-indigo-600' : 'bg-white border-slate-300'}`}>
-                            {newStaff.activities.includes(act.id) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                          </div>
-                          <span className={`text-[10px] sm:text-xs font-bold leading-tight ${newStaff.activities.includes(act.id) ? 'text-indigo-900' : 'text-slate-600'}`}>{act.name}</span>
-                        </label>
-                      ))}
-                    </div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Contraseña Inicial</label>
+                    <input required minLength={6} value={newStaff.password} onChange={e => setNewStaff({...newStaff, password: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Mínimo 6 caracteres"/>
                   </div>
+                </>
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold p-4 rounded-2xl">
+                  ⚠️ <strong>Por seguridad</strong>, el usuario de login y la contraseña no se pueden modificar. Si necesitas cambiarlos, elimina este empleado y vuelve a crearlo.
                 </div>
               )}
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Usuario de Login</label>
-                <input required value={newStaff.username} onChange={e => setNewStaff({...newStaff, username: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Ej: kinejuan"/>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Contraseña Inicial</label>
-                <input required minLength={6} value={newStaff.password} onChange={e => setNewStaff({...newStaff, password: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Mínimo 6 caracteres"/>
-              </div>
-
               <div className="pt-4 mt-8 border-t border-slate-100 sticky bottom-0 bg-white z-10 pb-2">
                 <button type="submit" disabled={isSubmitting} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-600/30 flex justify-center items-center gap-2">
-                  {isSubmitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Crear Acceso Empleado'}
+                  {isSubmitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : (editingStaffId ? 'Guardar Cambios' : 'Crear Acceso Empleado')}
                 </button>
               </div>
             </form>
