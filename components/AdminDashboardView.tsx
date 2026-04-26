@@ -13,6 +13,8 @@ export const AdminDashboardView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
+  const [isCustomRole, setIsCustomRole] = useState(false);
+  const [customRoleName, setCustomRoleName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -91,6 +93,13 @@ export const AdminDashboardView: React.FC = () => {
       return;
     }
 
+    const finalRole = isCustomRole ? customRoleName.trim().toUpperCase() : newStaff.role;
+    if (isCustomRole && !finalRole) {
+      setError("Por favor ingresa un nombre para el nuevo rol.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       if (!db) throw new Error("Firebase no inicializado");
 
@@ -99,14 +108,14 @@ export const AdminDashboardView: React.FC = () => {
         const updates: Partial<StaffMember> = {
           firstName: newStaff.firstName,
           lastName: newStaff.lastName,
-          role: newStaff.role,
-          activities: newStaff.role === UserRole.KINE ? newStaff.activities : undefined,
-          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : undefined
+          role: finalRole,
+          activities: (newStaff.role === UserRole.KINE || newStaff.role === UserRole.GYM || isCustomRole) ? newStaff.activities : undefined,
+          themeColor: (newStaff.role === UserRole.KINE || newStaff.role === UserRole.GYM || isCustomRole) ? newStaff.themeColor : undefined
         };
         await setDoc(userRef, updates, { merge: true });
       } else {
         if (!secondaryAuth) throw new Error("Firebase no inicializado");
-        const email = generateEmail(newStaff.username, newStaff.role);
+        const email = generateEmail(newStaff.username, finalRole);
         const cred = await createUserWithEmailAndPassword(secondaryAuth, email, newStaff.password);
         const newUid = cred.user.uid;
 
@@ -117,10 +126,10 @@ export const AdminDashboardView: React.FC = () => {
           firstName: newStaff.firstName,
           lastName: newStaff.lastName,
           username: newStaff.username,
-          role: newStaff.role,
+          role: finalRole,
           password: newStaff.password,
-          activities: newStaff.role === UserRole.KINE ? newStaff.activities : undefined,
-          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : undefined
+          activities: (newStaff.role === UserRole.KINE || newStaff.role === UserRole.GYM || isCustomRole) ? newStaff.activities : undefined,
+          themeColor: (newStaff.role === UserRole.KINE || newStaff.role === UserRole.GYM || isCustomRole) ? newStaff.themeColor : undefined
         };
 
         await setDoc(doc(db, 'staff', newUid), userDoc);
@@ -135,6 +144,8 @@ export const AdminDashboardView: React.FC = () => {
         activities: [],
         themeColor: 'blue'
       });
+      setIsCustomRole(false);
+      setCustomRoleName('');
       setEditingStaffId(null);
       setShowAddModal(false);
       fetchData(); // Refresh list
@@ -152,16 +163,20 @@ export const AdminDashboardView: React.FC = () => {
   };
 
   const handleEditStaff = (staff: StaffMember) => {
+    const isStandard = Object.values(UserRole).includes(staff.role as UserRole);
     setNewStaff({
       firstName: staff.firstName,
       lastName: staff.lastName,
       username: staff.username,
       password: staff.password || '',
-      role: staff.role,
+      role: isStandard ? (staff.role as UserRole) : 'CUSTOM',
       activities: staff.activities || [],
       themeColor: staff.themeColor || 'blue'
     });
+    setIsCustomRole(!isStandard);
+    setCustomRoleName(isStandard ? '' : staff.role);
     setEditingStaffId(staff.id);
+    setError('');
     setShowAddModal(true);
   };
 
@@ -288,7 +303,7 @@ export const AdminDashboardView: React.FC = () => {
               <h2 className="text-2xl font-black text-slate-900">Equipo de Trabajo</h2>
               <p className="text-sm font-medium text-slate-500">Administra accesos y roles (Kinesiología/Recepción).</p>
             </div>
-            <button onClick={() => { setEditingStaffId(null); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue'}); setShowAddModal(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-md shadow-indigo-200">
+            <button onClick={() => { setEditingStaffId(null); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue'}); setIsCustomRole(false); setCustomRoleName(''); setError(''); setShowAddModal(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-md shadow-indigo-200">
               <UserPlus size={18} />
               <span className="hidden sm:inline">Nuevo Empleado</span>
             </button>
@@ -359,18 +374,82 @@ export const AdminDashboardView: React.FC = () => {
                  <h3 className="text-2xl font-black text-slate-900 mb-1">{editingStaffId ? 'Editar Empleado' : 'Nuevo Empleado'}</h3>
                  <p className="text-sm font-medium text-slate-500">{editingStaffId ? 'Actualiza los datos del perfil.' : 'El empleado heredará tu ID de forma segura.'}</p>
                </div>
-               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 bg-slate-100 p-2.5 rounded-full transition-colors shrink-0 ml-4">
+               <button onClick={() => { setShowAddModal(false); setError(''); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue'}); setIsCustomRole(false); setCustomRoleName(''); }} className="text-slate-400 hover:text-slate-600 bg-slate-100 p-2.5 rounded-full transition-colors shrink-0 ml-4">
                  <X size={20} />
                </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-8 scroll-container relative">
 
-            {error && (
-              <div className="mb-6 bg-red-50 text-red-600 border border-red-200 text-xs font-bold p-3 rounded-xl">
-                {error}
+            <form onSubmit={handleSubmitStaff} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Nombre</label>
+                  <input required value={newStaff.firstName} onChange={e => setNewStaff({...newStaff, firstName: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Juan"/>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Apellido</label>
+                  <input required value={newStaff.lastName} onChange={e => setNewStaff({...newStaff, lastName: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Pérez"/>
+                </div>
               </div>
-            )}
+
+              <div>
+                <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Rol</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-slate-100 rounded-[1.25rem]">
+                  <button type="button" onClick={() => { setNewStaff({...newStaff, role: UserRole.KINE}); setIsCustomRole(false); setCustomRoleName(''); }} className={`py-3 rounded-xl font-bold text-[10px] sm:text-xs transition-all shadow-sm ${newStaff.role === UserRole.KINE && !isCustomRole ? 'bg-white text-indigo-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Kinesiólogo</button>
+                  <button type="button" onClick={() => { setNewStaff({...newStaff, role: UserRole.GYM}); setIsCustomRole(false); setCustomRoleName(''); }} className={`py-3 rounded-xl font-bold text-[10px] sm:text-xs transition-all shadow-sm ${newStaff.role === UserRole.GYM && !isCustomRole ? 'bg-white text-indigo-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>GYM</button>
+                  <button type="button" onClick={() => { setNewStaff({...newStaff, role: UserRole.RECEPCION}); setIsCustomRole(false); setCustomRoleName(''); }} className={`py-3 rounded-xl font-bold text-[10px] sm:text-xs transition-all shadow-sm ${newStaff.role === UserRole.RECEPCION && !isCustomRole ? 'bg-white text-teal-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Recepción</button>
+                  <button type="button" onClick={() => { setIsCustomRole(true); }} className={`py-3 rounded-xl font-bold text-[10px] sm:text-xs transition-all shadow-sm ${isCustomRole ? 'bg-white text-indigo-600' : 'text-slate-500 hover:bg-slate-200/50'}`}>Otro...</button>
+                </div>
+                {isCustomRole && (
+                  <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+                     <input type="text" placeholder="Nombre del nuevo rol (ej: NUTRICIONISTA)" value={customRoleName} onChange={e => setCustomRoleName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"/>
+                  </div>
+                )}
+              </div>
+
+              {(newStaff.role === UserRole.KINE || newStaff.role === UserRole.GYM || isCustomRole) && (
+                <div className="space-y-4 pt-2 pb-2 animate-in fade-in slide-in-from-top-2">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">Color del Perfil en Calendario</label>
+                    <div className="flex gap-3">
+                      {STAFF_COLORS.map(color => (
+                        <button 
+                          key={color.id} 
+                          type="button" 
+                          onClick={() => setNewStaff({...newStaff, themeColor: color.id})}
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${color.class.split(' ')[0]} ${newStaff.themeColor === color.id ? 'border-indigo-500 scale-110 shadow-md ring-2 ring-indigo-200 ring-offset-1' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                          title={color.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-3 ml-1">Actividades que realiza</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {CLINICAL_ACTIVITIES.map(act => (
+                        <label key={act.id} className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition-colors ${newStaff.activities.includes(act.id) ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                          <input 
+                            type="checkbox" 
+                            className="hidden"
+                            checked={newStaff.activities.includes(act.id)}
+                            onChange={(e) => {
+                              const newActs = e.target.checked 
+                                ? [...newStaff.activities, act.id]
+                                : newStaff.activities.filter(a => a !== act.id);
+                              setNewStaff({...newStaff, activities: newActs});
+                            }}
+                          />
+                          <div className={`w-4 h-4 rounded shadow-sm border flex items-center justify-center flex-shrink-0 ${newStaff.activities.includes(act.id) ? 'bg-indigo-500 border-indigo-600' : 'bg-white border-slate-300'}`}>
+                            {newStaff.activities.includes(act.id) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                          </div>
+                          <span className={`text-[10px] sm:text-xs font-bold leading-tight ${newStaff.activities.includes(act.id) ? 'text-indigo-900' : 'text-slate-600'}`}>{act.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {!editingStaffId ? (
                 <>
@@ -391,9 +470,14 @@ export const AdminDashboardView: React.FC = () => {
               )}
 
               <div className="pt-4 mt-8 border-t border-slate-100 sticky bottom-0 bg-white z-10 pb-2">
-                <button type="submit" disabled={isSubmitting} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-600/30 flex justify-center items-center gap-2">
+                <button type="submit" disabled={isSubmitting} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-600/30 flex justify-center items-center gap-2 mb-3">
                   {isSubmitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : (editingStaffId ? 'Guardar Cambios' : 'Crear Acceso Empleado')}
                 </button>
+                {error && (
+                  <div className="bg-red-50 text-red-600 border border-red-200 text-xs font-bold p-3 rounded-xl animate-in slide-in-from-top-2">
+                    {error}
+                  </div>
+                )}
               </div>
             </form>
             </div>

@@ -9,6 +9,7 @@ export enum UserRole {
   TENANT_ADMIN = 'TENANT_ADMIN',
   RECEPCION = 'RECEPCION',
   KINE = 'KINE',
+  GYM = 'GYM',
   PATIENT = 'PATIENT',
 }
 
@@ -164,7 +165,7 @@ export interface StaffMember {
   password?: string; // Por retrocompatibilidad (debe ser deprecado a futuro)
   firstName: string;
   lastName: string;
-  role: UserRole;
+  role: UserRole | string;
   activities?: string[];
   themeColor?: string;
 }
