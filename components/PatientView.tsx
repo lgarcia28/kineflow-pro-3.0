@@ -444,9 +444,10 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                     </select>
                                   </div>
                                 </>
-                              </div>
-                              </div>
+                              )}
                             </div>
+                          </div>
+                        </div>
                           </div>
                         );
                       })}
