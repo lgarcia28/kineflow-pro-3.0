@@ -368,31 +368,33 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                           const kineColor = STAFF_COLORS.find(c => c.id === kine?.themeColor);
                           const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId);
 
-                          // Debug: log color resolution
-                          if (app.kineId) {
-                            console.log(`[Calendar] App ${app.id?.substring(0,8)}: kineId=${app.kineId}, kine=${kine?.firstName}, themeColor=${kine?.themeColor}, kineColor=${kineColor?.id}, activityId=${app.activityId}`);
-                          }
+                          // Base color: always use kine color if available, otherwise blue default
+                          const baseBg    = kineColor?.bg     ?? '#eff6ff';
+                          const baseBorder = kineColor?.border ?? '#3b82f6';
+                          const baseText  = kineColor?.text   ?? '#1e3a8a';
 
-                          const appointmentStyle: React.CSSProperties = status === 'SCHEDULED' && kineColor
-                            ? { backgroundColor: kineColor.bg, borderColor: kineColor.border, color: kineColor.text, borderLeftColor: kineColor.border }
-                            : status === 'SCHEDULED' ? { backgroundColor: '#eff6ff', borderColor: '#bfdbfe', color: '#1e3a8a', borderLeftColor: '#3b82f6' }
-                            : {};
+                          // Adjust style per status
+                          const cardStyle: React.CSSProperties =
+                            status === 'COMPLETED'  ? { backgroundColor: '#d1fae5', borderColor: '#10b981', color: '#064e3b', borderLeftColor: '#10b981' } :
+                            status === 'CANCELLED'  ? { backgroundColor: '#fee2e2', borderColor: '#f87171', color: '#7f1d1d', borderLeftColor: '#ef4444', opacity: 0.7 } :
+                            status === 'NOSHOW'     ? { backgroundColor: baseBg,   borderColor: baseBorder, color: baseText,  borderLeftColor: baseBorder, opacity: 0.45 } :
+                            /* SCHEDULED */           { backgroundColor: baseBg,   borderColor: baseBorder, color: baseText,  borderLeftColor: baseBorder };
 
                           return (
-                            <div 
+                            <div
                               key={app.id}
                               onClick={(e) => { e.stopPropagation(); handleEditAppointment(app); }}
+                              style={cardStyle}
                               className="flex flex-col px-1.5 py-1.5 rounded-[8px] text-[10px] font-bold mb-[3px] shadow-sm border border-l-[3px] truncate leading-tight transition-all hover:scale-[1.02] cursor-pointer"
-                              style={appointmentStyle}
                             >
                               <div className="flex items-center justify-between">
                                 <span className="truncate">{app.patientName}</span>
                                 {app.isRecurring && <Repeat size={8} className="shrink-0 ml-1 opacity-50" />}
                               </div>
-                              {activity && status === 'SCHEDULED' && (
-                                <div className="flex items-center gap-1 mt-0.5 opacity-90">
-                                  <span style={{ backgroundColor: activity.hex || kineColor?.border || '#6366f1', width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0, display: 'inline-block' }}></span>
-                                  <span className="text-[8px] uppercase tracking-wider truncate">{activity.name}</span>
+                              {activity && (
+                                <div style={{ display:'flex', alignItems:'center', gap:'3px', marginTop:'2px' }}>
+                                  <span style={{ backgroundColor: activity.hex, width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0, display: 'inline-block' }}></span>
+                                  <span style={{ fontSize:'8px', textTransform:'uppercase', letterSpacing:'0.05em', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{activity.name}</span>
                                 </div>
                               )}
                             </div>
@@ -442,22 +444,27 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                       const status = getAppStatus(app);
                       const kine = staff.find(s => s.id === app.kineId);
                       const kineColor = STAFF_COLORS.find(c => c.id === kine?.themeColor);
-                      const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId) || (app.activityId ? { id: app.activityId, name: app.activityId, color: 'bg-indigo-500', hex: '#6366f1' } : undefined);
+                      const activity = CLINICAL_ACTIVITIES.find(a => a.id === app.activityId);
 
-                          const appointmentStyle: React.CSSProperties = status === 'SCHEDULED' && kineColor
-                            ? { backgroundColor: kineColor.bg, borderColor: kineColor.border, color: kineColor.text, borderLeftColor: kineColor.border }
-                            : status === 'SCHEDULED' ? { backgroundColor: '#eff6ff', borderColor: '#bfdbfe', color: '#1e3a8a', borderLeftColor: '#3b82f6' }
-                            : {};
+                      const baseBg     = kineColor?.bg     ?? '#eff6ff';
+                      const baseBorder = kineColor?.border ?? '#3b82f6';
+                      const baseText   = kineColor?.text   ?? '#1e3a8a';
 
-                          return (
-                            <div 
-                              key={app.id} 
-                              onClick={(e) => { e.stopPropagation(); handleEditAppointment(app); }}
-                              className="px-1.5 py-1 rounded-[6px] text-[9px] font-bold truncate leading-tight transition-all hover:scale-[1.02] border border-l-[3px] cursor-pointer"
-                              style={appointmentStyle}
-                            >
-                              <div className="flex items-center gap-1">
-                                {activity && status === 'SCHEDULED' && <span style={{ backgroundColor: activity.hex || '#6366f1', width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0, display: 'inline-block' }}></span>}
+                      const cardStyle: React.CSSProperties =
+                        status === 'COMPLETED'  ? { backgroundColor: '#d1fae5', borderColor: '#10b981', color: '#064e3b', borderLeftColor: '#10b981' } :
+                        status === 'CANCELLED'  ? { backgroundColor: '#fee2e2', borderColor: '#f87171', color: '#7f1d1d', borderLeftColor: '#ef4444', opacity: 0.7 } :
+                        status === 'NOSHOW'     ? { backgroundColor: baseBg,   borderColor: baseBorder, color: baseText,  borderLeftColor: baseBorder, opacity: 0.45 } :
+                        /* SCHEDULED */           { backgroundColor: baseBg,   borderColor: baseBorder, color: baseText,  borderLeftColor: baseBorder };
+
+                      return (
+                        <div
+                          key={app.id}
+                          onClick={(e) => { e.stopPropagation(); handleEditAppointment(app); }}
+                          style={cardStyle}
+                          className="px-1.5 py-1 rounded-[6px] text-[9px] font-bold truncate leading-tight transition-all hover:scale-[1.02] border border-l-[3px] cursor-pointer"
+                        >
+                          <div style={{ display:'flex', alignItems:'center', gap:'3px' }}>
+                            {activity && <span style={{ backgroundColor: activity.hex, width:'5px', height:'5px', borderRadius:'50%', flexShrink:0, display:'inline-block' }}></span>}
                             <span className="truncate">{app.time} {app.patientName}</span>
                           </div>
                         </div>
