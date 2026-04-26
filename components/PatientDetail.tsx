@@ -623,31 +623,32 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
       {showRoutineEditor && (
           <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex flex-col pt-[var(--sat)] animate-fade-in p-4 md:p-8">
               <div className="bg-white flex-1 rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-slide-up relative">
-                  <header className="bg-white border-b border-slate-100 px-6 sm:px-8 py-3 sm:py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-                          <div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Editor de Rutina</h2>
-                            <p className="text-sm font-medium text-slate-500 mt-1">Modifica la estructura y ejercicios</p>
+                  <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-3 flex flex-row items-center justify-between shrink-0 gap-2 sm:gap-4 overflow-x-auto hide-scrollbar">
+                      <div className="flex flex-row items-center gap-3 sm:gap-4 w-auto shrink-0">
+                          <div className="hidden sm:block landscape:hidden">
+                            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Editor de Rutina</h2>
+                            <p className="text-xs font-medium text-slate-500">Modifica la estructura</p>
                           </div>
                           
-                          <div className="w-px h-10 bg-slate-200 hidden sm:block mx-2"></div>
+                          <div className="w-px h-8 bg-slate-200 hidden sm:block mx-0 sm:mx-2 landscape:hidden"></div>
                           
-                          <div className="flex flex-wrap gap-4">
-                            <div className="flex bg-slate-100/80 p-1 rounded-2xl shadow-inner border border-slate-200/50">
-                                <button onClick={() => handleUpdateStage(Stage.KINESIOLOGY)} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wide transition-all ${patient.routine.stage === Stage.KINESIOLOGY ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}>Kinesiología</button>
-                                <button onClick={() => handleUpdateStage(Stage.GYM)} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wide transition-all ${patient.routine.stage === Stage.GYM ? 'bg-white text-teal-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}>Gimnasio</button>
+                          <div className="flex flex-row items-center gap-3 shrink-0">
+                            <div className="flex bg-slate-100/80 p-1 rounded-xl shadow-inner border border-slate-200/50">
+                                <button onClick={() => handleUpdateStage(Stage.KINESIOLOGY)} className={`px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg font-bold text-[10px] sm:text-xs uppercase tracking-wide transition-all ${patient.routine.stage === Stage.KINESIOLOGY ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}>Kinesiología</button>
+                                <button onClick={() => handleUpdateStage(Stage.GYM)} className={`px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg font-bold text-[10px] sm:text-xs uppercase tracking-wide transition-all ${patient.routine.stage === Stage.GYM ? 'bg-white text-teal-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}>Gimnasio</button>
                             </div>
-                            <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-2xl border border-slate-200 shadow-sm">
-                                <button onClick={handleRemoveLastDay} className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"><Minus size={20}/></button>
-                                <div className="flex flex-col items-center min-w-[50px]"><span className="text-xl font-black leading-none">{patient.routine.days.length}</span><span className="text-[9px] font-bold uppercase text-slate-400 tracking-widest mt-0.5">Días</span></div>
-                                <button onClick={handleAddDay} disabled={patient.routine.days.length >= 7} className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-primary-50 hover:text-primary-600 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"><Plus size={20}/></button>
+                            <div className="flex items-center gap-1 sm:gap-2 bg-white px-1 sm:px-2 py-1 rounded-xl border border-slate-200 shadow-sm shrink-0">
+                                <button onClick={handleRemoveLastDay} className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"><Minus size={16}/></button>
+                                <div className="flex flex-col items-center min-w-[40px]"><span className="text-lg sm:text-xl font-black leading-none">{patient.routine.days.length}</span><span className="text-[8px] font-bold uppercase text-slate-400 tracking-widest mt-0.5">Días</span></div>
+                                <button onClick={handleAddDay} disabled={patient.routine.days.length >= 7} className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-slate-400 hover:bg-primary-50 hover:text-primary-600 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"><Plus size={16}/></button>
                             </div>
                           </div>
                       </div>
-                      <button onClick={() => setShowRoutineEditor(false)} className="absolute top-4 sm:top-6 right-4 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm"><X size={24} /></button>
+                      <div className="flex-1"></div>
+                      <button onClick={() => setShowRoutineEditor(false)} className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm shrink-0 sticky right-0"><X size={20} /></button>
                   </header>
-                  <div className="flex-1 overflow-auto p-3 sm:p-8 bg-slate-50/50 min-h-0">
-                      <div className="flex items-start gap-6 min-h-[400px] h-full min-w-max pb-10">
+                  <div className="flex-1 overflow-x-auto p-3 sm:p-6 bg-slate-50/50 min-h-0">
+                      <div className="flex items-start gap-4 sm:gap-6 h-full min-w-max pb-10">
                           {(routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.map((day, dIdx) => (
                               <div key={day.id} className="w-[22rem] bg-white rounded-[2rem] border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full shrink-0 overflow-hidden">
                                   <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center gap-3">
