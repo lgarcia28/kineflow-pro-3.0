@@ -350,21 +350,21 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{ex.definition.category}</p>
                               </div>
                             </div>
-                            {/* Grid de métricas - Grid 2x2 en mobile, Fila en tablet/desktop */}
+                            {/* Fila Inferior: Métricas - Compactas y de solo lectura */}
                             <div className={`grid grid-cols-2 md:flex md:items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner mt-4 ${ssInfo ? 'ml-3' : ''}`}>
-                              {/* Series */}
+                              {/* Series x Reps - SOLO LECTURA */}
                               <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-b md:border-b-0 border-slate-200/60 md:flex-1">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Series</p>
-                                <p className="text-sm font-black text-slate-800 leading-none">{ex.targetSets}</p>
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Planificación</p>
+                                <div className="flex items-baseline gap-1">
+                                  <span className="text-base font-black text-slate-800 leading-none">{ex.targetSets}</span>
+                                  <span className="text-slate-400 text-[9px] font-bold uppercase tracking-tighter">Ser</span>
+                                  <span className="text-slate-300 text-xs font-bold mx-0.5">×</span>
+                                  <span className="text-base font-black text-slate-800 leading-none">{ex.targetReps}</span>
+                                  <span className="text-slate-400 text-[9px] font-bold uppercase tracking-tighter">Rep</span>
+                                </div>
                               </div>
 
-                              {/* Reps */}
-                              <div className="flex flex-col items-center justify-center py-2 px-2 border-b md:border-b-0 md:border-r border-slate-200/60 md:flex-1">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Reps</p>
-                                <p className="text-sm font-black text-slate-800 leading-none">{ex.targetReps}</p>
-                              </div>
-
-                              {/* Carga/Tiempo */}
+                              {/* Carga/Tiempo - EDITABLE SI ES GYM */}
                               <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 md:flex-[1.2]">
                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
                                 {isGym ? (

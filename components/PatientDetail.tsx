@@ -623,7 +623,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
       {showRoutineEditor && (
           <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex flex-col pt-[var(--sat)] animate-fade-in p-4 md:p-8">
               <div className="bg-white flex-1 rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-slide-up relative">
-                  <header className="bg-white border-b border-slate-100 px-6 sm:px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4">
+                  <header className="bg-white border-b border-slate-100 px-6 sm:px-8 py-3 sm:py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
                           <div>
                             <h2 className="text-2xl font-black text-slate-900 tracking-tight">Editor de Rutina</h2>
@@ -644,9 +644,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                             </div>
                           </div>
                       </div>
-                      <button onClick={() => setShowRoutineEditor(false)} className="absolute top-6 right-6 w-12 h-12 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm"><X size={24} /></button>
+                      <button onClick={() => setShowRoutineEditor(false)} className="absolute top-4 sm:top-6 right-4 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm"><X size={24} /></button>
                   </header>
-                  <div className="flex-1 overflow-x-auto p-6 sm:p-8 bg-slate-50/50">
+                  <div className="flex-1 overflow-x-auto p-3 sm:p-8 bg-slate-50/50">
                       <div className="flex items-start gap-6 h-full min-w-max pb-10">
                           {(routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.map((day, dIdx) => (
                               <div key={day.id} className="w-[22rem] bg-white rounded-[2rem] border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full shrink-0 overflow-hidden">

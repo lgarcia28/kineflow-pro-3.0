@@ -255,29 +255,24 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
             </div>
           </div>
 
-          {/* Fila Inferior: Métricas - Grid 2x2 en mobile, Fila en tablet/desktop */}
+          {/* Fila Inferior: Métricas - Compactas y limpias */}
           <div className="grid grid-cols-2 md:flex md:items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner">
-            {/* Series x Reps */}
+            {/* Series x Reps - SOLO LECTURA en esta vista */}
             <div className="flex flex-col items-center justify-center py-2.5 px-2 border-r border-b md:border-b-0 border-slate-200/60 md:flex-[1.2]">
               <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">
                 {isTimeBased ? 'Series' : 'Planificación'}
               </p>
-              <div className="flex items-center gap-1">
-                <div className="flex items-center gap-1">
-                  {!isReadOnly && <button onClick={(e) => adjustSets(-1, e)} className="w-6 h-6 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={12} className="text-slate-600"/></button>}
-                  <span className="text-sm font-black text-slate-900 w-5 text-center leading-none">{targetSets}</span>
-                  {!isReadOnly && <button onClick={(e) => adjustSets(1, e)} className="w-6 h-6 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={12} className="text-slate-600"/></button>}
-                </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-base font-black text-slate-900 leading-none">{targetSets}</span>
                 {!isTimeBased && (
                   <>
-                    <span className="text-slate-300 text-xs font-bold">×</span>
-                    <div className="flex items-center gap-1">
-                      {!isReadOnly && <button onClick={(e) => adjustReps(-1, e)} className="w-6 h-6 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={12} className="text-slate-600"/></button>}
-                      <span className="text-sm font-black text-slate-900 w-6 text-center leading-none">{targetReps}</span>
-                      {!isReadOnly && <button onClick={(e) => adjustReps(1, e)} className="w-6 h-6 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={12} className="text-slate-600"/></button>}
-                    </div>
+                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter">Ser</span>
+                    <span className="text-slate-300 text-xs font-bold mx-1">×</span>
+                    <span className="text-base font-black text-slate-900 leading-none">{targetReps}</span>
+                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter">Rep</span>
                   </>
                 )}
+                {isTimeBased && <span className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter ml-1">Ser</span>}
               </div>
             </div>
 
