@@ -102,6 +102,8 @@ export interface Routine {
 export interface RecurringSlot {
   dayOfWeek: number; // 0-6 (Sunday-Saturday)
   time: string; // "HH:mm"
+  kineId?: string;
+  activityId?: string;
 }
 
 export interface Appointment {

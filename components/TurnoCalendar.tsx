@@ -553,8 +553,8 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 duration: 60,
                 status: 'SCHEDULED',
                 isRecurring: true,
-                kineId,
-                activityId,
+                kineId: slot.kineId || kineId,
+                activityId: slot.activityId || activityId,
                 notes
               });
             }
@@ -609,52 +609,54 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Profesional (Kine)</label>
-                <select 
-                  className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold"
-                  value={kineId}
-                  onChange={e => {
-                    setKineId(e.target.value);
-                    setActivityId(''); // Reset activity when kine changes
-                  }}
-                  required
-                >
-                  <option value="">Seleccionar Profesional...</option>
-                  <option value="ANY">Cualquiera (Sin preferencia)</option>
-                  {staff.filter(s => s.role === UserRole.KINE).map(k => (
-                    <option key={k.id} value={k.id}>{k.firstName} {k.lastName}</option>
-                  ))}
-                </select>
-              </div>
+            {!isRecurring && (
+              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Profesional (Kine)</label>
+                  <select 
+                    className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold"
+                    value={kineId}
+                    onChange={e => {
+                      setKineId(e.target.value);
+                      setActivityId(''); // Reset activity when kine changes
+                    }}
+                    required={!isRecurring}
+                  >
+                    <option value="">Seleccionar Profesional...</option>
+                    <option value="ANY">Cualquiera (Sin preferencia)</option>
+                    {staff.filter(s => s.role === UserRole.KINE).map(k => (
+                      <option key={k.id} value={k.id}>{k.firstName} {k.lastName}</option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Actividad</label>
-                <select 
-                  className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold disabled:opacity-50"
-                  value={activityId}
-                  onChange={e => setActivityId(e.target.value)}
-                  required
-                  disabled={!kineId}
-                >
-                  <option value="">Elegir actividad...</option>
-                  {kineId && (() => {
-                    if (kineId === 'ANY') {
-                      return CLINICAL_ACTIVITIES.map(act => (
-                        <option key={act.id} value={act.id}>{act.name}</option>
-                      ));
-                    }
-                    const selectedKine = staff.find(s => s.id === kineId);
-                    if (!selectedKine || !selectedKine.activities) return null;
-                    return selectedKine.activities.map(actId => {
-                      const act = CLINICAL_ACTIVITIES.find(a => a.id === actId);
-                      return <option key={actId} value={actId}>{act ? act.name : actId}</option>;
-                    });
-                  })()}
-                </select>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Actividad</label>
+                  <select 
+                    className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold disabled:opacity-50"
+                    value={activityId}
+                    onChange={e => setActivityId(e.target.value)}
+                    required={!isRecurring && !!kineId}
+                    disabled={!kineId}
+                  >
+                    <option value="">Elegir actividad...</option>
+                    {kineId && (() => {
+                      if (kineId === 'ANY') {
+                        return CLINICAL_ACTIVITIES.map(act => (
+                          <option key={act.id} value={act.id}>{act.name}</option>
+                        ));
+                      }
+                      const selectedKine = staff.find(s => s.id === kineId);
+                      if (!selectedKine || !selectedKine.activities) return null;
+                      return selectedKine.activities.map(actId => {
+                        const act = CLINICAL_ACTIVITIES.find(a => a.id === actId);
+                        return <option key={actId} value={actId}>{act ? act.name : actId}</option>;
+                      });
+                    })()}
+                  </select>
+                </div>
               </div>
-            </div>
+            )}
 
             {!isRecurring ? (
               <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
@@ -694,29 +696,70 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 
                 <div className="space-y-2">
                   {recurringSlots.map((slot, index) => (
-                    <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl">
-                      <select 
-                        className="flex-1 bg-transparent border-none text-xs font-bold focus:ring-0"
-                        value={slot.dayOfWeek}
-                        onChange={e => handleUpdateSlot(index, 'dayOfWeek', Number(e.target.value))}
-                      >
-                        {daysLabels.map((label, i) => (
-                          <option key={i} value={i}>{label}</option>
-                        ))}
-                      </select>
-                      <input 
-                        type="time"
-                        className="w-24 bg-transparent border-none text-xs font-bold focus:ring-0"
-                        value={slot.time}
-                        onChange={e => handleUpdateSlot(index, 'time', e.target.value)}
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => handleRemoveSlot(index)}
-                        className="p-2 text-red-400 hover:text-red-600"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                    <div key={index} className="flex flex-col gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <select 
+                          className="flex-1 bg-white border-slate-200 rounded-lg text-xs font-bold p-2"
+                          value={slot.dayOfWeek}
+                          onChange={e => handleUpdateSlot(index, 'dayOfWeek', Number(e.target.value))}
+                        >
+                          {daysLabels.map((label, i) => (
+                            <option key={i} value={i}>{label}</option>
+                          ))}
+                        </select>
+                        <input 
+                          type="time"
+                          className="w-24 bg-white border-slate-200 rounded-lg text-xs font-bold p-2"
+                          value={slot.time}
+                          onChange={e => handleUpdateSlot(index, 'time', e.target.value)}
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => handleRemoveSlot(index)}
+                          className="p-2 text-red-400 hover:text-red-600 bg-white rounded-lg border border-red-100"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <select 
+                          className="flex-1 bg-white border-slate-200 rounded-lg text-[10px] font-bold p-2"
+                          value={slot.kineId || ''}
+                          onChange={e => {
+                            handleUpdateSlot(index, 'kineId', e.target.value);
+                            handleUpdateSlot(index, 'activityId', '');
+                          }}
+                          required
+                        >
+                          <option value="">Profesional...</option>
+                          <option value="ANY">Cualquiera</option>
+                          {staff.filter(s => s.role === UserRole.KINE).map(k => (
+                            <option key={k.id} value={k.id}>{k.firstName} {k.lastName}</option>
+                          ))}
+                        </select>
+                        <select 
+                          className="flex-1 bg-white border-slate-200 rounded-lg text-[10px] font-bold p-2 disabled:opacity-50"
+                          value={slot.activityId || ''}
+                          onChange={e => handleUpdateSlot(index, 'activityId', e.target.value)}
+                          required
+                          disabled={!slot.kineId}
+                        >
+                          <option value="">Actividad...</option>
+                          {slot.kineId && (() => {
+                            if (slot.kineId === 'ANY') {
+                              return CLINICAL_ACTIVITIES.map(act => (
+                                <option key={act.id} value={act.id}>{act.name}</option>
+                              ));
+                            }
+                            const selectedKine = staff.find(s => s.id === slot.kineId);
+                            if (!selectedKine || !selectedKine.activities) return null;
+                            return selectedKine.activities.map(actId => {
+                              const act = CLINICAL_ACTIVITIES.find(a => a.id === actId);
+                              return <option key={actId} value={actId}>{act ? act.name : actId}</option>;
+                            });
+                          })()}
+                        </select>
+                      </div>
                     </div>
                   ))}
                   {recurringSlots.length === 0 && (
