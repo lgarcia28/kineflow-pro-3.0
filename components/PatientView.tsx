@@ -350,91 +350,59 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{ex.definition.category}</p>
                               </div>
                             </div>
-                            {/* Grid de métricas — adaptado para mobile y desktop */}
-                            <div className={`flex flex-wrap gap-1.5 bg-slate-50 p-2.5 rounded-2xl ${ssInfo ? 'ml-3' : ''}`}>
+                            {/* Grid de métricas — Ocupando todo el ancho para mobile */}
+                            <div className={`flex flex-wrap items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner mt-4 ${ssInfo ? 'ml-3' : ''}`}>
                               {/* Series */}
-                              <div className="flex flex-col items-center justify-center min-w-[44px] flex-1">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Series</p>
-                                <p className="text-sm font-black text-slate-700 mt-0.5">{ex.targetSets}</p>
+                              <div className="flex flex-col items-center justify-center py-2.5 flex-1 min-w-[60px] border-r border-slate-200/60">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Series</p>
+                                <p className="text-base font-black text-slate-800 leading-none">{ex.targetSets}</p>
                               </div>
-
-                              <div className="w-px bg-slate-200 self-stretch"/>
 
                               {/* Reps */}
-                              <div className="flex flex-col items-center justify-center min-w-[44px] flex-1">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Reps</p>
-                                <p className="text-sm font-black text-slate-700 mt-0.5">{ex.targetReps}</p>
+                              <div className="flex flex-col items-center justify-center py-2.5 flex-1 min-w-[60px] border-r border-slate-200/60">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Reps</p>
+                                <p className="text-base font-black text-slate-800 leading-none">{ex.targetReps}</p>
                               </div>
 
-                              <div className="w-px bg-slate-200 self-stretch"/>
-
-                              {/* Carga */}
-                              <div className="flex flex-col items-center justify-center min-w-[52px] flex-1">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{ex.definition.metricType === 'kg' ? 'Carga' : 'T(s)'}</p>
+                              {/* Carga/Tiempo */}
+                              <div className="flex flex-col items-center justify-center py-2.5 flex-[1.2] min-w-[80px] border-r border-slate-200/60">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
                                 {isGym ? (
-                                  <input 
-                                    type="number"
-                                    inputMode="decimal"
-                                    className="w-full max-w-[56px] bg-white border border-slate-200 rounded-lg px-1 py-0.5 text-center text-sm font-black text-slate-700 focus:ring-2 focus:ring-primary-500 outline-none mt-0.5"
-                                    value={ex.targetLoad ?? ''}
-                                    onChange={(e) => {
-                                      const newLoad = Number(e.target.value);
-                                      const newDays = patient.routine.days.map(d => {
-                                        if (d.id === selectedDay!.id) {
-                                          return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
-                                        }
-                                        return d;
-                                      });
-                                      onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                    }}
-                                    onBlur={() => {
-                                      const today = new Date().toISOString().split('T')[0];
-                                      const newDays = patient.routine.days.map(d => {
-                                        if (d.id === selectedDay!.id) {
-                                          return {
-                                            ...d,
-                                            exercises: d.exercises.map(exItem => {
-                                              if (exItem.id === ex.id) {
-                                                const newHistory = [...(exItem.history || [])];
-                                                const existingIdx = newHistory.findIndex(h => h.date === today);
-                                                if (existingIdx !== -1) {
-                                                  newHistory[existingIdx] = { ...newHistory[existingIdx], load: exItem.targetLoad };
-                                                } else {
-                                                  newHistory.push({
-                                                    date: today,
-                                                    week: patient.routine.currentWeek || 1,
-                                                    load: exItem.targetLoad,
-                                                    reps: exItem.targetReps,
-                                                    rpe: exItem.currentRpe || 5,
-                                                    pain: exItem.currentPain || 0,
-                                                    observation: 'Auto-registrado (Gimnasio)'
-                                                  });
-                                                }
-                                                return { ...exItem, history: newHistory };
-                                              }
-                                              return exItem;
-                                            })
-                                          };
-                                        }
-                                        return d;
-                                      });
-                                      onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                    }}
-                                  />
+                                  <div className="relative flex items-center justify-center">
+                                    <input 
+                                      type="number"
+                                      inputMode="decimal"
+                                      pattern="[0-9]*"
+                                      className="w-14 bg-white border border-slate-200 rounded-lg px-1 py-1 text-center text-sm font-black text-slate-800 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                                      value={ex.targetLoad ?? ''}
+                                      onChange={(e) => {
+                                        const newLoad = Number(e.target.value);
+                                        const newDays = patient.routine.days.map(d => {
+                                          if (d.id === selectedDay!.id) {
+                                            return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
+                                          }
+                                          return d;
+                                        });
+                                        onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                      }}
+                                    />
+                                    <span className="absolute -right-5 text-[9px] font-black text-slate-400 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                  </div>
                                 ) : (
-                                  <p className="text-sm font-black text-slate-700 mt-0.5">{ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
+                                  <p className="text-base font-black text-slate-800 leading-none">
+                                    {ex.targetLoad}<span className="text-[10px] font-bold text-slate-400 ml-1 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                  </p>
                                 )}
                               </div>
 
                               {isGym && (
                                 <>
-                                  <div className="w-px bg-slate-200 self-stretch"/>
                                   {/* RPE */}
-                                  <div className="flex flex-col items-center justify-center min-w-[48px] flex-1">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Esfuerzo</p>
+                                  <div className="flex flex-col items-center justify-center py-2.5 flex-1 min-w-[65px] border-r border-slate-200/60">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Esfuerzo</p>
                                     <select
                                       style={getBgColor(ex.currentRpe)}
-                                      className="font-black text-xs rounded-lg w-full max-w-[52px] py-1 px-0.5 mt-0.5 outline-none transition-colors border shadow-sm cursor-pointer text-center"
+                                      className="font-black text-xs rounded-lg w-[85%] py-1.5 outline-none transition-all border shadow-sm cursor-pointer text-center"
                                       value={ex.currentRpe || ""}
                                       onChange={(e) => {
                                         const newDays = patient.routine.days.map(d => {
@@ -446,20 +414,19 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                         onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
                                       }}
                                     >
-                                      <option value="" className="bg-white text-slate-400 font-normal">-</option>
+                                      <option value="" className="bg-white text-slate-400 font-normal">—</option>
                                       {[...Array(10)].map((_, i) => (
-                                        <option key={i+1} value={i+1} style={getBgColor(i+1)} className="font-medium">{i+1}</option>
+                                        <option key={i+1} value={i+1} style={getBgColor(i+1)} className="font-bold">{i+1}</option>
                                       ))}
                                     </select>
                                   </div>
 
-                                  <div className="w-px bg-slate-200 self-stretch"/>
                                   {/* Dolor */}
-                                  <div className="flex flex-col items-center justify-center min-w-[48px] flex-1">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Dolor</p>
+                                  <div className="flex flex-col items-center justify-center py-2.5 flex-1 min-w-[65px]">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Dolor</p>
                                     <select
                                       style={getBgColor(ex.currentPain)}
-                                      className="font-black text-xs rounded-lg w-full max-w-[52px] py-1 px-0.5 mt-0.5 outline-none transition-colors border shadow-sm cursor-pointer text-center"
+                                      className="font-black text-xs rounded-lg w-[85%] py-1.5 outline-none transition-all border shadow-sm cursor-pointer text-center"
                                       value={ex.currentPain || ""}
                                       onChange={(e) => {
                                         const newDays = patient.routine.days.map(d => {
@@ -471,9 +438,9 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                         onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
                                       }}
                                     >
-                                      <option value="" className="bg-white text-slate-400 font-normal">-</option>
+                                      <option value="" className="bg-white text-slate-400 font-normal">—</option>
                                       {[...Array(10)].map((_, i) => (
-                                        <option key={i+1} value={i+1} style={getBgColor(i+1)} className="font-medium">{i+1}</option>
+                                        <option key={i+1} value={i+1} style={getBgColor(i+1)} className="font-bold">{i+1}</option>
                                       ))}
                                     </select>
                                   </div>

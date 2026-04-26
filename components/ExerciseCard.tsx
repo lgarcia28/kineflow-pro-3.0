@@ -215,137 +215,138 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
           <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${supersetColor}`} />
         )}
         
-        <div className={`p-4 ${supersetLabel ? 'pl-5' : ''}`}>
-          <div className="flex items-start gap-3">
+        <div className={`p-4 ${supersetLabel ? 'pl-5' : ''} space-y-4`}>
+          {/* Fila Superior: Check, Imagen e Información */}
+          <div className="flex items-start gap-4">
             <button
               onClick={toggleDone}
               disabled={role === UserRole.RECEPCION}
-              className={`shrink-0 mt-1 ${isDone ? 'text-kine' : 'text-slate-300'} ${role === UserRole.RECEPCION ? 'opacity-50' : ''}`}
+              className={`shrink-0 mt-1 transition-transform active:scale-90 ${isDone ? 'text-emerald-500' : 'text-slate-200'} ${role === UserRole.RECEPCION ? 'opacity-50' : ''}`}
             >
-              {isDone ? <CheckCircle size={28} fill="currentColor" /> : <Circle size={28} />}
+              {isDone ? <CheckCircle size={32} fill="currentColor" /> : <Circle size={32} strokeWidth={1.5} />}
             </button>
 
             {renderThumbnail()}
 
             <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-start mb-2 pr-6">
+              <div className="flex justify-between items-start pr-1">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className={`font-bold text-base truncate ${isDone ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <h4 className={`font-black text-lg leading-tight truncate ${isDone ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
                       {definition.name}
                     </h4>
                     {supersetLabel && (
-                      <span className={`${supersetColor} text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0`}>
+                      <span className={`${supersetColor} text-white text-[10px] font-black px-2.5 py-0.5 rounded-lg uppercase tracking-wider shrink-0 shadow-sm shadow-indigo-100`}>
                         {supersetLabel}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{definition.category}</span>
-                    {isTimeBased && <span className="bg-blue-50 text-blue-600 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">Tiempo</span>}
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{definition.category}</span>
+                    {isTimeBased && <span className="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wide">Cronómetro</span>}
                   </div>
                 </div>
                 {role === UserRole.KINE && (
-                  <button onClick={() => onShowHistory(exercise)} className="p-1.5 text-primary-600 bg-primary-50 rounded-lg shrink-0">
-                    <TrendingUp size={16} />
+                  <button onClick={() => onShowHistory(exercise)} className="p-2 text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl shrink-0 transition-colors shadow-sm border border-primary-100/50">
+                    <TrendingUp size={18} />
                   </button>
                 )}
               </div>
+            </div>
+          </div>
 
-              {/* Layout flex de métricas: siempre en una sola fila horizontal */}
-              <div className="flex items-stretch bg-slate-50 rounded-xl overflow-hidden border border-slate-100">
-                {/* Series x Reps */}
-                <div className="flex flex-col items-center justify-center px-2 py-1.5 flex-1 min-w-0">
-                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider whitespace-nowrap mb-1">
-                    {isTimeBased ? 'Series' : 'Ser × Rep'}
-                  </p>
-                  <div className="flex items-center gap-0.5">
-                    {!isReadOnly && <button onClick={(e) => adjustSets(-1, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Minus size={10}/></button>}
-                    <span className="text-sm font-black text-slate-800 w-5 text-center leading-none">{targetSets}</span>
-                    {!isReadOnly && <button onClick={(e) => adjustSets(1, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Plus size={10}/></button>}
-                    {!isTimeBased && (
-                      <>
-                        <span className="text-slate-300 text-xs mx-0.5">×</span>
-                        {!isReadOnly && <button onClick={(e) => adjustReps(-1, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Minus size={10}/></button>}
-                        <span className="text-sm font-black text-slate-800 w-6 text-center leading-none">{targetReps}</span>
-                        {!isReadOnly && <button onClick={(e) => adjustReps(1, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Plus size={10}/></button>}
-                      </>
-                    )}
-                  </div>
+          {/* Fila Inferior: Métricas ocupando todo el ancho */}
+          <div className="flex items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner">
+            {/* Series x Reps */}
+            <div className="flex flex-col items-center justify-center py-3 flex-[1.2] min-w-0 border-r border-slate-200/60">
+              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1.5 opacity-80">
+                {isTimeBased ? 'Series' : 'Planificación'}
+              </p>
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
+                  {!isReadOnly && <button onClick={(e) => adjustSets(-1, e)} className="w-7 h-7 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={14} className="text-slate-600"/></button>}
+                  <span className="text-base font-black text-slate-900 w-6 text-center leading-none">{targetSets}</span>
+                  {!isReadOnly && <button onClick={(e) => adjustSets(1, e)} className="w-7 h-7 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={14} className="text-slate-600"/></button>}
                 </div>
-
-                {/* Separador */}
-                <div className="w-px bg-slate-200 self-stretch" />
-
-                {/* Carga */}
-                <div className="flex flex-col items-center justify-center px-2 py-1.5 flex-1 min-w-0">
-                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider whitespace-nowrap mb-1">
-                    {isTimeBased ? 'Tiempo' : 'Carga'}
-                  </p>
-                  {isLoadReadOnly ? (
-                    <span className="text-sm font-black text-slate-800 leading-none">
-                      {targetLoad}<span className="text-[10px] font-normal text-slate-400 ml-0.5">{isTimeBased ? 's' : 'kg'}</span>
-                    </span>
-                  ) : (
-                    <div className="flex items-center gap-0.5">
-                      <button onClick={(e) => adjustLoad(-0.5, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Minus size={10}/></button>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        step={0.5}
-                        value={targetLoad}
-                        onChange={e => onUpdate(exercise.id, { targetLoad: parseFloat(e.target.value) || 0 })}
-                        className="w-10 text-center font-black text-sm bg-white rounded border border-slate-200 outline-none py-0.5 leading-none"
-                        onClick={e => e.stopPropagation()}
-                      />
-                      <span className="text-[9px] font-bold text-slate-400 leading-none">{isTimeBased ? 's' : 'kg'}</span>
-                      <button onClick={(e) => adjustLoad(0.5, e)} className="w-5 h-5 bg-white rounded shadow-sm flex items-center justify-center shrink-0"><Plus size={10}/></button>
-                    </div>
-                  )}
-                </div>
-
-                {role !== UserRole.RECEPCION && (
+                {!isTimeBased && (
                   <>
-                    {/* Separador */}
-                    <div className="w-px bg-slate-200 self-stretch" />
-                    {/* RPE */}
-                    <div className="flex flex-col items-center justify-center px-1.5 py-1.5 flex-1 min-w-0">
-                      <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider whitespace-nowrap mb-1">RPE</p>
-                      <select
-                        style={rpeStyle}
-                        className="font-black text-xs rounded-lg w-full p-1 outline-none transition-colors border shadow-sm cursor-pointer text-center"
-                        value={currentRpe || ""}
-                        onChange={e => onUpdate(exercise.id, { currentRpe: Number(e.target.value) })}
-                      >
-                        <option value="" className="bg-white text-slate-400 font-normal">—</option>
-                        {[...Array(10)].map((_, i) => (
-                          <option key={i+1} value={i+1} style={getRpeStyle(i+1)} className="font-medium">{i+1}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Separador */}
-                    <div className="w-px bg-slate-200 self-stretch" />
-                    {/* Dolor */}
-                    <div className="flex flex-col items-center justify-center px-1.5 py-1.5 flex-1 min-w-0">
-                      <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider whitespace-nowrap mb-1">Dolor</p>
-                      <select
-                        style={painStyle}
-                        className="font-black text-xs rounded-lg w-full p-1 outline-none transition-colors border shadow-sm cursor-pointer text-center"
-                        value={currentPain || ""}
-                        onChange={e => onUpdate(exercise.id, { currentPain: Number(e.target.value) })}
-                      >
-                        <option value="" className="bg-white text-slate-400 font-normal">—</option>
-                        {[...Array(10)].map((_, i) => (
-                          <option key={i+1} value={i+1} style={getPainStyle(i+1)} className="font-medium">{i+1}</option>
-                        ))}
-                      </select>
+                    <span className="text-slate-300 text-sm font-bold">×</span>
+                    <div className="flex items-center gap-1">
+                      {!isReadOnly && <button onClick={(e) => adjustReps(-1, e)} className="w-7 h-7 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={14} className="text-slate-600"/></button>}
+                      <span className="text-base font-black text-slate-900 w-7 text-center leading-none">{targetReps}</span>
+                      {!isReadOnly && <button onClick={(e) => adjustReps(1, e)} className="w-7 h-7 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={14} className="text-slate-600"/></button>}
                     </div>
                   </>
                 )}
               </div>
             </div>
+
+            {/* Carga */}
+            <div className="flex flex-col items-center justify-center py-3 flex-1 min-w-0 border-r border-slate-200/60">
+              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1.5 opacity-80">
+                {isTimeBased ? 'Tiempo' : 'Intensidad'}
+              </p>
+              {isLoadReadOnly ? (
+                <span className="text-base font-black text-slate-900 leading-none">
+                  {targetLoad}<span className="text-[10px] font-bold text-slate-400 ml-1 uppercase">{isTimeBased ? 's' : 'kg'}</span>
+                </span>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <button onClick={(e) => adjustLoad(-0.5, e)} className="w-7 h-7 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={14} className="text-slate-600"/></button>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      pattern="[0-9]*"
+                      min={0}
+                      step={0.5}
+                      value={targetLoad}
+                      onChange={e => onUpdate(exercise.id, { targetLoad: parseFloat(e.target.value) || 0 })}
+                      className="w-14 text-center font-black text-sm bg-white rounded-lg border border-slate-200 outline-none py-1.5 leading-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                      onClick={e => e.stopPropagation()}
+                    />
+                    <span className="absolute -right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase">{isTimeBased ? 's' : 'kg'}</span>
+                  </div>
+                  <button onClick={(e) => adjustLoad(0.5, e)} className="w-7 h-7 bg-white rounded-lg shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={14} className="text-slate-600"/></button>
+                </div>
+              )}
+            </div>
+
+            {role !== UserRole.RECEPCION && (
+              <>
+                {/* RPE */}
+                <div className="flex flex-col items-center justify-center py-3 flex-[0.8] min-w-0 border-r border-slate-200/60">
+                  <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1.5 opacity-80">RPE</p>
+                  <select
+                    style={rpeStyle}
+                    className="font-black text-sm rounded-lg w-[85%] py-1.5 outline-none transition-all border shadow-sm cursor-pointer text-center focus:ring-2 focus:ring-indigo-500/20"
+                    value={currentRpe || ""}
+                    onChange={e => onUpdate(exercise.id, { currentRpe: Number(e.target.value) })}
+                  >
+                    <option value="" className="bg-white text-slate-400 font-normal">—</option>
+                    {[...Array(10)].map((_, i) => (
+                      <option key={i+1} value={i+1} style={getRpeStyle(i+1)} className="font-bold">{i+1}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Dolor */}
+                <div className="flex flex-col items-center justify-center py-3 flex-[0.8] min-w-0">
+                  <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1.5 opacity-80">Dolor</p>
+                  <select
+                    style={painStyle}
+                    className="font-black text-sm rounded-lg w-[85%] py-1.5 outline-none transition-all border shadow-sm cursor-pointer text-center focus:ring-2 focus:ring-red-500/20"
+                    value={currentPain || ""}
+                    onChange={e => onUpdate(exercise.id, { currentPain: Number(e.target.value) })}
+                  >
+                    <option value="" className="bg-white text-slate-400 font-normal">—</option>
+                    {[...Array(10)].map((_, i) => (
+                      <option key={i+1} value={i+1} style={getPainStyle(i+1)} className="font-bold">{i+1}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
