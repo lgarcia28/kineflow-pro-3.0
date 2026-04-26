@@ -275,11 +275,29 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 </div>
 
                 <div className="col-span-4 sm:col-span-3 border-l border-slate-100 pl-2">
-                  <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">{isTimeBased ? 'Tiempo (s)' : 'Carga (kg)'}</p>
-                  <div className={`flex items-center rounded-lg p-0.5 w-full max-w-[100px] ${isReadOnly ? 'bg-slate-50' : 'bg-slate-100'}`}>
-                    {!isReadOnly && <button onClick={(e) => adjustLoad(-0.5, e)} className="p-1 bg-white rounded shadow-sm"><Minus size={12}/></button>}
-                    <span className="w-full text-center font-bold text-sm">{targetLoad}</span>
-                    {!isReadOnly && <button onClick={(e) => adjustLoad(0.5, e)} className="p-1 bg-white rounded shadow-sm"><Plus size={12}/></button>}
+                  <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">{isTimeBased ? 'Tiempo (s)' : 'Carga'}</p>
+                  <div className={`flex items-center rounded-lg p-0.5 w-full max-w-[120px] ${isReadOnly ? 'bg-slate-50' : 'bg-slate-100'}`}>
+                    {!isReadOnly && <button onClick={(e) => adjustLoad(-0.5, e)} className="p-1 bg-white rounded shadow-sm shrink-0"><Minus size={12}/></button>}
+                    {isReadOnly ? (
+                      <span className="w-full text-center font-bold text-sm">
+                        {targetLoad} <span className="text-[10px] font-normal text-slate-400">{isTimeBased ? 's' : 'kg'}</span>
+                      </span>
+                    ) : (
+                      <div className="flex items-center flex-1 min-w-0">
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min={0}
+                          step={0.5}
+                          value={targetLoad}
+                          onChange={e => onUpdate(exercise.id, { targetLoad: parseFloat(e.target.value) || 0 })}
+                          className="w-full text-center font-bold text-sm bg-transparent outline-none min-w-0"
+                          onClick={e => e.stopPropagation()}
+                        />
+                        <span className="text-[10px] font-bold text-slate-400 shrink-0 mr-0.5">{isTimeBased ? 's' : 'kg'}</span>
+                      </div>
+                    )}
+                    {!isReadOnly && <button onClick={(e) => adjustLoad(0.5, e)} className="p-1 bg-white rounded shadow-sm shrink-0"><Plus size={12}/></button>}
                   </div>
                 </div>
 
