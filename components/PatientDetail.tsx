@@ -650,12 +650,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                       <div className="flex items-start gap-6 h-full min-w-max pb-10">
                           {(routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.map((day, dIdx) => (
                               <div key={day.id} className="w-[22rem] bg-white rounded-[2rem] border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full shrink-0 overflow-hidden">
-                                  <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col gap-2">
-                                      <div className="flex justify-between items-center">
-                                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Día {dIdx+1}</div>
-                                          <button onClick={() => handleRemoveDay(day.id)} className="text-slate-400 hover:text-red-500 bg-white p-1.5 rounded-lg shadow-sm border border-slate-200 transition-colors" title="Borrar Día"><Trash2 size={14}/></button>
-                                      </div>
-                                      <input className="font-black text-xl text-slate-900 bg-transparent border-none focus:ring-0 p-0 w-full placeholder:text-slate-300 focus:outline-none" value={day.name} onChange={(e) => handleRenameDay(day.id, e.target.value)} placeholder="Nombre del día" />
+                                  <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center gap-3">
+                                      <input className="font-black text-xl text-slate-900 bg-transparent border-none focus:ring-0 p-0 w-full placeholder:text-slate-300 focus:outline-none" value={day.name} onChange={(e) => handleRenameDay(day.id, e.target.value)} placeholder={`Día ${dIdx+1}`} />
+                                      <button onClick={() => handleRemoveDay(day.id)} className="text-slate-400 hover:text-red-500 bg-white p-2 rounded-lg shadow-sm border border-slate-200 transition-colors shrink-0" title="Borrar Día"><Trash2 size={16}/></button>
                                   </div>
                                   <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-container bg-white">
                                       {/* Toolbar de Biserie/Triserie flotante se movió al final del contenedor para ser sticky */}
