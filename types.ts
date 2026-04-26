@@ -42,12 +42,12 @@ export const CLINICAL_ACTIVITIES = [
 ];
 
 export const STAFF_COLORS = [
-  { id: 'blue', class: 'bg-blue-100 border-blue-200 text-blue-900 border-l-blue-500', name: 'Azul' },
-  { id: 'emerald', class: 'bg-emerald-100 border-emerald-200 text-emerald-900 border-l-emerald-500', name: 'Esmeralda' },
-  { id: 'rose', class: 'bg-rose-100 border-rose-200 text-rose-900 border-l-rose-500', name: 'Rosa' },
-  { id: 'purple', class: 'bg-purple-100 border-purple-200 text-purple-900 border-l-purple-500', name: 'Púrpura' },
-  { id: 'amber', class: 'bg-amber-100 border-amber-200 text-amber-900 border-l-amber-500', name: 'Ámbar' },
-  { id: 'cyan', class: 'bg-cyan-100 border-cyan-200 text-cyan-900 border-l-cyan-500', name: 'Cian' },
+  { id: 'blue',    bg: '#dbeafe', border: '#3b82f6', text: '#1e3a8a', name: 'Azul' },
+  { id: 'emerald', bg: '#d1fae5', border: '#10b981', text: '#064e3b', name: 'Esmeralda' },
+  { id: 'rose',    bg: '#ffe4e6', border: '#f43f5e', text: '#881337', name: 'Rosa' },
+  { id: 'purple',  bg: '#ede9fe', border: '#8b5cf6', text: '#3b0764', name: 'Púrpura' },
+  { id: 'amber',   bg: '#fef3c7', border: '#f59e0b', text: '#78350f', name: 'Ámbar' },
+  { id: 'cyan',    bg: '#cffafe', border: '#06b6d4', text: '#164e63', name: 'Cian' },
 ];
 
 export interface ExerciseLog {

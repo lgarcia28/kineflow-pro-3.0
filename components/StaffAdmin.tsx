@@ -288,7 +288,8 @@ export const StaffAdmin: React.FC<StaffAdminProps> = ({ staff, onAddStaff, onDel
                             key={color.id}
                             type="button"
                             onClick={() => setNewMember({...newMember, themeColor: color.id})}
-                            className={`w-8 h-8 rounded-full border-2 transition-all ${color.class.split(' ')[0]} ${newMember.themeColor === color.id ? 'border-primary-600 scale-110 shadow-md ring-2 ring-primary-200' : 'border-transparent hover:scale-105'}`}
+                            style={{ backgroundColor: color.bg, borderColor: newMember.themeColor === color.id ? color.border : 'transparent' }}
+                            className={`w-8 h-8 rounded-full border-2 transition-all ${newMember.themeColor === color.id ? 'scale-110 shadow-md ring-2 ring-offset-1' : 'hover:scale-105'}`}
                             title={color.name}
                           />
                         ))}

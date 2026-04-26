@@ -410,7 +410,8 @@ export const AdminDashboardView: React.FC = () => {
                           key={color.id} 
                           type="button" 
                           onClick={() => setNewStaff({...newStaff, themeColor: color.id})}
-                          className={`w-8 h-8 rounded-full border-2 transition-all ${color.class.split(' ')[0]} ${newStaff.themeColor === color.id ? 'border-indigo-500 scale-110 shadow-md ring-2 ring-indigo-200 ring-offset-1' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                          style={{ backgroundColor: color.bg, borderColor: newStaff.themeColor === color.id ? color.border : 'transparent' }}
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${newStaff.themeColor === color.id ? 'scale-110 shadow-md ring-2 ring-offset-1' : 'opacity-70 hover:opacity-100'}`}
                           title={color.name}
                         />
                       ))}
