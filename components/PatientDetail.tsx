@@ -689,79 +689,83 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                               const bgSelection = isSelectedInEditor ? 'border-indigo-400 ring-2 ring-indigo-100 z-10' : 'border-slate-200 hover:shadow-md';
 
                                               return (
-                                                <div key={ex.id} className={`flex flex-col gap-3 p-4 bg-white border transition-all overflow-hidden relative group ${groupClasses} ${bgSelection} ${hasSupersetGroup ? 'pl-6' : ''}`}>
+                                                <div key={ex.id} className={`flex flex-col p-2.5 bg-white border transition-all overflow-hidden relative group ${groupClasses} ${bgSelection} ${hasSupersetGroup ? 'pl-4' : ''}`}>
                                                   {hasSupersetGroup && (
-                                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${ssInfo?.color || 'bg-indigo-500'}`} />
+                                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${ssInfo?.color || 'bg-indigo-500'}`} />
                                                   )}
 
                                                   {/* Checkbox de selección */}
-                                              <button
-                                                onClick={() => setEditorSelectedExIds(prev =>
-                                                  prev.includes(ex.id) ? prev.filter(id => id !== ex.id) : [...prev, ex.id]
-                                                )}
-                                                className={`absolute top-3 right-3 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all z-20 shadow-sm ${isSelectedInEditor ? 'bg-indigo-500 border-indigo-500' : 'bg-slate-50 border-slate-300 hover:border-indigo-400'}`}
-                                              >
-                                                {isSelectedInEditor && <CheckSquare size={14} className="text-white" />}
-                                              </button>
-                                              {hasSupersetGroup && (
-                                                <span className={`absolute top-3 left-4 text-[9px] font-black text-white ${ssInfo?.color || 'bg-indigo-500'} px-2 py-0.5 rounded-full uppercase tracking-wider z-10 shadow-sm`}>
-                                                  {ssInfo?.label}
-                                                </span>
-                                              )}
-                                              <div className="flex items-start justify-between gap-3 pl-7">
-                                                  {(() => {
-                                                    const media = ex.definition.videoUrl ? parseMediaUrl(ex.definition.videoUrl) : null;
-                                                    if (media && (media.thumbnailUrl || media.type === 'instagram')) {
-                                                      return (
-                                                        <button 
-                                                          onClick={() => setZoomedImage({ url: ex.definition.videoUrl || '', name: ex.definition.name })}
-                                                          className={`w-12 h-12 rounded-[1rem] object-cover shadow-sm overflow-hidden relative group cursor-zoom-in ${media.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600' : 'bg-slate-100'}`}
-                                                        >
-                                                          {media.thumbnailUrl ? (
-                                                            <img src={media.thumbnailUrl} className="w-full h-full object-cover" />
-                                                          ) : (
-                                                            <Activity size={14} className="text-white" />
-                                                          )}
-                                                          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                            <Maximize2 size={14} className="text-white" />
+                                                  <button
+                                                    onClick={() => setEditorSelectedExIds(prev =>
+                                                      prev.includes(ex.id) ? prev.filter(id => id !== ex.id) : [...prev, ex.id]
+                                                    )}
+                                                    className={`absolute top-2.5 right-2.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-all z-20 shadow-sm ${isSelectedInEditor ? 'bg-indigo-500 border-indigo-500' : 'bg-slate-50 border-slate-300 hover:border-indigo-400'}`}
+                                                  >
+                                                    {isSelectedInEditor && <CheckSquare size={12} className="text-white" />}
+                                                  </button>
+                                                  
+                                                  <div className="flex items-center gap-3 pr-6">
+                                                      {(() => {
+                                                        const media = ex.definition.videoUrl ? parseMediaUrl(ex.definition.videoUrl) : null;
+                                                        if (media && (media.thumbnailUrl || media.type === 'instagram')) {
+                                                          return (
+                                                            <button 
+                                                              onClick={() => setZoomedImage({ url: ex.definition.videoUrl || '', name: ex.definition.name })}
+                                                              className={`w-10 h-10 shrink-0 rounded-xl object-cover shadow-sm overflow-hidden relative group cursor-zoom-in ${media.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600' : 'bg-slate-100'}`}
+                                                            >
+                                                              {media.thumbnailUrl ? (
+                                                                <img src={media.thumbnailUrl} className="w-full h-full object-cover" />
+                                                              ) : (
+                                                                <Activity size={12} className="text-white" />
+                                                              )}
+                                                              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                                <Maximize2 size={12} className="text-white" />
+                                                              </div>
+                                                            </button>
+                                                          );
+                                                        }
+                                                        return (
+                                                          <div className="w-10 h-10 shrink-0 rounded-xl bg-slate-100 flex items-center justify-center shadow-inner">
+                                                              {ex.definition.metricType === 'time' ? <Timer size={16} className="text-slate-400"/> : <Dumbbell size={16} className="text-slate-400"/>}
                                                           </div>
-                                                        </button>
-                                                      );
-                                                    }
-                                                    return (
-                                                      <div className="w-12 h-12 rounded-[1rem] bg-slate-100 flex items-center justify-center shadow-inner">
-                                                          {ex.definition.metricType === 'time' ? <Timer size={20} className="text-slate-400"/> : <Dumbbell size={20} className="text-slate-400"/>}
+                                                        );
+                                                      })()}
+                                                      
+                                                      <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                          {hasSupersetGroup && (
+                                                            <span className={`text-[8px] font-black text-white ${ssInfo?.color || 'bg-indigo-500'} px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm shrink-0`}>
+                                                              {ssInfo?.label}
+                                                            </span>
+                                                          )}
+                                                          <p className="font-bold text-xs text-slate-900 leading-tight group-hover:text-primary-600 transition-colors truncate">{ex.definition.name}</p>
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center gap-3 mt-1.5">
+                                                            <div className="flex items-center gap-1">
+                                                              <span className="text-[9px] uppercase font-bold text-slate-400">Ser</span>
+                                                              <input type="number" className="w-8 bg-slate-50 rounded border border-slate-200 text-center text-xs font-black text-slate-900 focus:outline-none focus:border-primary-500 py-0.5" value={ex.targetSets} onChange={e => handleExerciseUpdate(ex.id, {targetSets: Number(e.target.value)})} />
+                                                            </div>
+                                                            
+                                                            <div className="flex items-center gap-1">
+                                                              <span className="text-[9px] uppercase font-bold text-slate-400">{ex.definition.metricType === 'time' ? '' : 'Rep'}</span>
+                                                              {ex.definition.metricType === 'time' ? (
+                                                                  <div className="w-8 text-center text-slate-300 font-bold text-xs">-</div>
+                                                              ) : (
+                                                                  <input type="number" className="w-8 bg-slate-50 rounded border border-slate-200 text-center text-xs font-black text-slate-900 focus:outline-none focus:border-primary-500 py-0.5" value={ex.targetReps} onChange={e => handleExerciseUpdate(ex.id, {targetReps: Number(e.target.value)})} />
+                                                              )}
+                                                            </div>
+
+                                                            <div className="flex items-center gap-1">
+                                                              <span className="text-[9px] uppercase font-bold text-slate-400">{ex.definition.metricType === 'time' ? 'Seg' : 'Kg'}</span>
+                                                              <input type="number" className="w-8 bg-slate-50 rounded border border-slate-200 text-center text-xs font-black text-primary-600 focus:outline-none focus:border-primary-500 py-0.5" value={ex.targetLoad} onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} />
+                                                            </div>
+                                                        </div>
                                                       </div>
-                                                    );
-                                                  })()}
-                                                  <div className="flex-1 min-w-0 pr-6 mt-1">
-                                                    <p className="font-extrabold text-sm text-slate-900 leading-tight group-hover:text-primary-600 transition-colors">{ex.definition.name}</p>
-                                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">{ex.definition.category}</p>
-                                                  </div>
-                                                  <button onClick={() => handleRemoveExercise(day.id, ex.id)} className="absolute bottom-3 right-3 p-2 bg-slate-50 text-slate-400 hover:text-white hover:bg-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100 shadow-sm"><Trash2 size={16}/></button>
-                                              </div>
-                                              <div className="grid grid-cols-3 gap-2 mt-2">
-                                                  <div className="bg-slate-50 rounded-xl p-2 border border-slate-100 flex flex-col focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-500 transition-all items-center">
-                                                    <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest mb-1">Series</span>
-                                                    <input type="number" className="w-full bg-transparent text-center font-black text-base text-slate-900 focus:outline-none p-0 border-none" value={ex.targetSets} onChange={e => handleExerciseUpdate(ex.id, {targetSets: Number(e.target.value)})} />
                                                   </div>
                                                   
-                                                  <div className="bg-slate-50 rounded-xl p-2 border border-slate-100 flex flex-col focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-500 transition-all items-center">
-                                                    <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest mb-1">{ex.definition.metricType === 'time' ? '' : 'Reps'}</span>
-                                                    {ex.definition.metricType === 'time' ? (
-                                                        <div className="w-full h-full flex items-center justify-center text-slate-300 font-bold">-</div>
-                                                    ) : (
-                                                        <input type="number" className="w-full bg-transparent text-center font-black text-base text-slate-900 focus:outline-none p-0 border-none" value={ex.targetReps} onChange={e => handleExerciseUpdate(ex.id, {targetReps: Number(e.target.value)})} />
-                                                    )}
-                                                  </div>
-
-
-                                                  <div className="bg-slate-50 rounded-xl p-2 border border-slate-100 flex flex-col focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-500 transition-all items-center">
-                                                    <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest mb-1">{ex.definition.metricType === 'time' ? 'Seg.' : 'Kg'}</span>
-                                                    <input type="number" className="w-full bg-transparent text-center font-black text-base text-primary-600 focus:outline-none p-0 border-none" value={ex.targetLoad} onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} />
-                                                  </div>
-                                              </div>
-                                            </div>
+                                                  <button onClick={() => handleRemoveExercise(day.id, ex.id)} className="absolute bottom-2.5 right-2.5 p-1 bg-white text-slate-400 hover:text-white hover:bg-red-500 rounded border border-slate-200 transition-all opacity-0 group-hover:opacity-100 shadow-sm"><Trash2 size={12}/></button>
+                                                </div>
                                             );
                                             })}
                                           </div>
