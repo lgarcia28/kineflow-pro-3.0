@@ -276,9 +276,9 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
                 <div className="col-span-4 sm:col-span-3 border-l border-slate-100 pl-2">
                   <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">{isTimeBased ? 'Tiempo (s)' : 'Carga'}</p>
-                  <div className={`flex items-center rounded-lg p-0.5 w-full max-w-[120px] ${isReadOnly ? 'bg-slate-50' : 'bg-slate-100'}`}>
-                    {!isReadOnly && <button onClick={(e) => adjustLoad(-0.5, e)} className="p-1 bg-white rounded shadow-sm shrink-0"><Minus size={12}/></button>}
-                    {isReadOnly ? (
+                  <div className={`flex items-center rounded-lg p-0.5 w-full max-w-[120px] ${role === UserRole.RECEPCION ? 'bg-slate-50' : 'bg-slate-100'}`}>
+                    {role !== UserRole.RECEPCION && <button onClick={(e) => adjustLoad(-0.5, e)} className="p-1 bg-white rounded shadow-sm shrink-0"><Minus size={12}/></button>}
+                    {role === UserRole.RECEPCION ? (
                       <span className="w-full text-center font-bold text-sm">
                         {targetLoad} <span className="text-[10px] font-normal text-slate-400">{isTimeBased ? 's' : 'kg'}</span>
                       </span>
@@ -291,13 +291,13 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                           step={0.5}
                           value={targetLoad}
                           onChange={e => onUpdate(exercise.id, { targetLoad: parseFloat(e.target.value) || 0 })}
-                          className="w-full text-center font-bold text-sm bg-transparent outline-none min-w-0"
+                          className="w-full text-center font-bold text-sm bg-transparent outline-none min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           onClick={e => e.stopPropagation()}
                         />
                         <span className="text-[10px] font-bold text-slate-400 shrink-0 mr-0.5">{isTimeBased ? 's' : 'kg'}</span>
                       </div>
                     )}
-                    {!isReadOnly && <button onClick={(e) => adjustLoad(0.5, e)} className="p-1 bg-white rounded shadow-sm shrink-0"><Plus size={12}/></button>}
+                    {role !== UserRole.RECEPCION && <button onClick={(e) => adjustLoad(0.5, e)} className="p-1 bg-white rounded shadow-sm shrink-0"><Plus size={12}/></button>}
                   </div>
                 </div>
 
