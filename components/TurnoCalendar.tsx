@@ -85,8 +85,17 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
     }
   }, [autoSchedulePatientId]);
 
-  // Hours to display in week view (e.g., 8:00 to 20:00)
-  const hours = Array.from({ length: 13 }, (_, i) => i + 8);
+  // Time slots to display in week view (e.g., 08:00 to 20:00 every 30 mins)
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    for (let h = 8; h <= 20; h++) {
+      slots.push(`${h.toString().padStart(2, '0')}:00`);
+      if (h < 20) {
+        slots.push(`${h.toString().padStart(2, '0')}:30`);
+      }
+    }
+    return slots;
+  }, []);
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -113,9 +122,9 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
     else setCurrentDate(addMonths(currentDate, 1));
   };
 
-  const handleSlotClick = (date: Date, hour: number) => {
+  const handleSlotClick = (date: Date, time: string) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+    const timeStr = time;
 
     if (isMultiBookingMode && multiBookingPatientId) {
       const patient = patients.find(p => p.id === multiBookingPatientId);
@@ -160,10 +169,9 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
     return app.status;
   };
 
-  const getAppointmentsForSlot = (date: Date, hour: number) => {
+  const getAppointmentsForSlot = (date: Date, time: string) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    const timeStr = `${hour.toString().padStart(2, '0')}:00`;
-    return appointments.filter(app => app.date === dateStr && app.time === timeStr);
+    return appointments.filter(app => app.date === dateStr && app.time === time);
   };
 
   const getAppointmentsForDay = (date: Date) => {
@@ -346,17 +354,17 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
 
             {/* Week Grid */}
             <div className="grid grid-cols-[60px_repeat(7,1fr)]">
-              {hours.map(hour => (
-                <React.Fragment key={hour}>
+              {timeSlots.map(time => (
+                <React.Fragment key={time}>
                   <div className="pr-2 py-0 border-b border-r border-slate-50 text-right sticky left-0 bg-white z-10 w-[60px]">
-                    <span className="text-[9px] font-bold text-slate-400 relative top-[-6px] bg-white px-1">{hour}:00</span>
+                    <span className="text-[9px] font-bold text-slate-400 relative top-[-6px] bg-white px-1">{time}</span>
                   </div>
                   {weekDays.map(day => {
-                    const slotAppointments = getAppointmentsForSlot(day, hour);
+                    const slotAppointments = getAppointmentsForSlot(day, time);
                     return (
                       <div 
-                        key={`${day}-${hour}`} 
-                        onClick={() => handleSlotClick(day, hour)}
+                        key={`${day}-${time}`} 
+                        onClick={() => handleSlotClick(day, time)}
                         className={cn(
                           "border-b border-r border-slate-100/50 last:border-r-0 min-h-[48px] p-[3px] transition-colors cursor-pointer group relative",
                           isMultiBookingMode && multiBookingPatientId ? "hover:bg-primary-50 cursor-crosshair" : "hover:bg-slate-50/80"
