@@ -106,6 +106,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     condition: '',
     injuryDate: new Date().toISOString().split('T')[0],
     surgeryDate: '',
+    surgeryType: '',
     sessionsPerWeek: 3,
     planType: PlanType.SESSIONS,
     totalSessionsPaid: 12,
@@ -139,6 +140,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
       condition: '',
       injuryDate: new Date().toISOString().split('T')[0],
       surgeryDate: '',
+      surgeryType: '',
       sessionsPerWeek: 3,
       planType: PlanType.SESSIONS,
       totalSessionsPaid: 12,
@@ -162,6 +164,32 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     setEditingPatient(patient);
     setFormStage(patient.routine?.stage || Stage.KINESIOLOGY);
     setShowAddModal(true);
+  };
+
+  const markAppointmentStatus = (patient: Patient, app: Appointment, status: 'COMPLETED' | 'CANCELLED' | 'NOSHOW') => {
+    onUpdateAppointment({ ...app, status });
+    let updatedPatient = { ...patient };
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (status === 'COMPLETED') {
+      if (patient.planType === PlanType.SESSIONS) {
+        updatedPatient.remainingSessions = (patient.remainingSessions ?? 0) - 1;
+      }
+      updatedPatient.checkInStatus = CheckInStatus.IN_ROOM;
+      updatedPatient.lastVisit = today;
+      updatedPatient.history = [`Turno completado (${today})`, ...(patient.history || [])];
+    } else if (status === 'NOSHOW') {
+      if (patient.planType === PlanType.SESSIONS) {
+        updatedPatient.remainingSessions = (patient.remainingSessions ?? 0) - 1;
+        updatedPatient.history = [`Ausente sin aviso (${today}) - Sesión descontada`, ...(patient.history || [])];
+      } else {
+        updatedPatient.history = [`Ausente sin aviso (${today})`, ...(patient.history || [])];
+      }
+    } else if (status === 'CANCELLED') {
+      updatedPatient.history = [`Ausente con aviso (${today})`, ...(patient.history || [])];
+    }
+    
+    onUpdatePatient(updatedPatient);
   };
 
   const resetProductForm = () => {
@@ -312,7 +340,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     
     onUpdatePatient(updatedPatient);
 
-    // Marcar turno de hoy como completado si existe
+    // Marcar turno de hoy como completado si existe y estaba SCHEDULED
     const today = new Date().toISOString().split('T')[0];
     const todayApp = appointments.find((a: Appointment) => a.patientId === patient.id && a.date === today && a.status === 'SCHEDULED');
     if (todayApp) {
@@ -324,7 +352,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     if (window.confirm(`¿Finalizar sesión de ${patient.firstName} ${patient.lastName}?`)) {
       const today = new Date().toISOString().split('T')[0];
       const newHistory = [`Sesión finalizada el ${today}`, ...(patient.history || [])];
-      onUpdatePatient({ ...patient, checkInStatus: CheckInStatus.IN_ROOM, lastVisit: today, history: newHistory });
+      onUpdatePatient({ ...patient, checkInStatus: CheckInStatus.IDLE, lastVisit: today, history: newHistory });
     }
   };
 
@@ -384,6 +412,10 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     `${p.firstName} ${p.lastName} ${p.dni}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todaysAppointments = appointments.filter(a => a.date === todayStr);
+
+
   return (
     <div className="flex-1 h-full bg-slate-50/50 overflow-hidden flex flex-col relative w-full">
       {/* Decorative background glow */}
@@ -421,7 +453,13 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
         <div className="flex items-center gap-2">
           <button 
             onClick={() => {
-              if (window.confirm('¿Desea finalizar la jornada? Se vaciará la sala de espera y se resetearán los estados de todos los pacientes.')) {
+              const inRoomPatients = patients.filter(p => p.checkInStatus === CheckInStatus.IN_ROOM);
+              let msg = '¿Desea finalizar la jornada? Se vaciará la sala de espera y se resetearán los estados de todos los pacientes.';
+              if (inRoomPatients.length > 0) {
+                const names = inRoomPatients.map(p => `${p.firstName} ${p.lastName}`).join(', ');
+                msg = `Hay pacientes que no se les finalizó el día:\n\n${names}\n\nSe finalizarán automáticamente. ¿Desea continuar?`;
+              }
+              if (window.confirm(msg)) {
                 onClearWaitingRoom();
               }
             }}
@@ -457,6 +495,59 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                 <UserPlus size={20} strokeWidth={2.5} /> Nuevo Ingreso
               </button>
             </div>
+
+            {/* Turnos de Hoy Section */}
+            {todaysAppointments.length > 0 && !searchTerm && (
+              <div className="mb-8">
+                <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <CalendarDays size={16} /> Pacientes con Turno Hoy
+                </h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {todaysAppointments.map(app => {
+                    const patient = patients.find(p => p.id === app.patientId);
+                    if (!patient) return null;
+                    return (
+                      <div key={app.id} className="bg-white rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between border border-slate-100 shadow-sm gap-4">
+                        <div className="flex items-center gap-4 w-full md:w-auto">
+                          <div className="w-12 h-12 bg-primary-50 text-primary-600 rounded-xl flex flex-col items-center justify-center shrink-0">
+                            <span className="text-sm font-black">{app.time}</span>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-slate-900">{app.patientName}</h4>
+                            <p className="text-xs text-slate-500 font-medium">
+                              {staff.find(s => s.id === app.kineId)?.firstName} {staff.find(s => s.id === app.kineId)?.lastName}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                          {app.status === 'SCHEDULED' && patient.checkInStatus === CheckInStatus.IDLE ? (
+                            <>
+                              <button onClick={() => markAppointmentStatus(patient, app, 'COMPLETED')} className="shrink-0 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-xl text-xs font-bold transition-colors">
+                                Dar Presente
+                              </button>
+                              <button onClick={() => markAppointmentStatus(patient, app, 'NOSHOW')} className="shrink-0 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl text-xs font-bold transition-colors">
+                                Ausente (Sin Aviso)
+                              </button>
+                              <button onClick={() => markAppointmentStatus(patient, app, 'CANCELLED')} className="shrink-0 px-4 py-2 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700 rounded-xl text-xs font-bold transition-colors">
+                                Ausente (Con Aviso)
+                              </button>
+                            </>
+                          ) : (
+                            <div className="px-4 py-2 bg-slate-50 text-slate-500 rounded-xl text-xs font-bold border border-slate-100 flex items-center gap-2">
+                              {app.status === 'COMPLETED' ? <><CheckCircle2 size={14} className="text-emerald-500"/> Presente</> : 
+                               app.status === 'NOSHOW' ? <><X size={14} className="text-red-500"/> Faltó (Sin Aviso)</> :
+                               app.status === 'CANCELLED' ? <><X size={14} className="text-orange-500"/> Faltó (Con Aviso)</> : 
+                               patient.checkInStatus !== CheckInStatus.IDLE ? <><Clock size={14} className="text-amber-500" /> En Sala</> :
+                               'Turno Procesado'}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Patient List */}
             <div className="grid grid-cols-1 gap-4">
@@ -708,14 +799,29 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                     <div className="flex bg-slate-100 p-1 rounded-2xl">
                       <button 
                         type="button"
-                        onClick={() => setFormStage(Stage.KINESIOLOGY)}
+                        onClick={() => {
+                          setFormStage(Stage.KINESIOLOGY);
+                          if (!editingPatient) setPatientForm({...patientForm, planType: PlanType.SESSIONS});
+                        }}
                         className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${formStage === Stage.KINESIOLOGY ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
                       >
                         Kinesiología
                       </button>
                       <button 
                         type="button"
-                        onClick={() => setFormStage(Stage.GYM)}
+                        onClick={() => {
+                          setFormStage(Stage.GYM);
+                          if (!editingPatient) {
+                            const oneMonthLater = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+                            setPatientForm({
+                              ...patientForm, 
+                              planType: PlanType.TIME,
+                              expirationDate: oneMonthLater,
+                              totalSessionsPaid: 0,
+                              remainingSessions: 0
+                            });
+                          }
+                        }}
                         className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${formStage === Stage.GYM ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
                       >
                         Gimnasio
@@ -743,6 +849,17 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                       onChange={e => setPatientForm({...patientForm, surgeryDate: e.target.value})}
                     />
                   </div>
+                  {patientForm.surgeryDate && (
+                    <div className="col-span-full space-y-1.5 animate-in fade-in slide-in-from-top-2">
+                      <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Tipo de Cirugía</label>
+                      <input 
+                        placeholder="Ej: Plástica HTH, Meniscectomía..."
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+                        value={patientForm.surgeryType || ''}
+                        onChange={e => setPatientForm({...patientForm, surgeryType: e.target.value})}
+                      />
+                    </div>
+                  )}
                   
                   <div className="col-span-full h-px bg-slate-100 my-2"></div>
 

@@ -384,8 +384,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                           // Adjust style per status
                           const cardStyle: React.CSSProperties =
                             status === 'COMPLETED'  ? { backgroundColor: '#d1fae5', borderColor: '#10b981', color: '#064e3b', borderLeftColor: '#10b981' } :
-                            status === 'CANCELLED'  ? { backgroundColor: '#fee2e2', borderColor: '#f87171', color: '#7f1d1d', borderLeftColor: '#ef4444', opacity: 0.7 } :
-                            status === 'NOSHOW'     ? { backgroundColor: baseBg,   borderColor: baseBorder, color: baseText,  borderLeftColor: baseBorder, opacity: 0.45 } :
+                            (status === 'CANCELLED' || status === 'NOSHOW')  ? { backgroundColor: '#fee2e2', borderColor: '#f87171', color: '#7f1d1d', borderLeftColor: '#ef4444', opacity: 0.8 } :
                             /* SCHEDULED */           { backgroundColor: baseBg,   borderColor: baseBorder, color: baseText,  borderLeftColor: baseBorder };
 
                           return (
@@ -460,8 +459,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
 
                       const cardStyle: React.CSSProperties =
                         status === 'COMPLETED'  ? { backgroundColor: '#d1fae5', borderColor: '#10b981', color: '#064e3b', borderLeftColor: '#10b981' } :
-                        status === 'CANCELLED'  ? { backgroundColor: '#fee2e2', borderColor: '#f87171', color: '#7f1d1d', borderLeftColor: '#ef4444', opacity: 0.7 } :
-                        status === 'NOSHOW'     ? { backgroundColor: baseBg,   borderColor: baseBorder, color: baseText,  borderLeftColor: baseBorder, opacity: 0.45 } :
+                        (status === 'CANCELLED' || status === 'NOSHOW') ? { backgroundColor: '#fee2e2', borderColor: '#f87171', color: '#7f1d1d', borderLeftColor: '#ef4444', opacity: 0.8 } :
                         /* SCHEDULED */           { backgroundColor: baseBg,   borderColor: baseBorder, color: baseText,  borderLeftColor: baseBorder };
 
                       return (
@@ -675,54 +673,52 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
               </select>
             </div>
 
-            {!isRecurring && (
-              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Profesional (Kine)</label>
-                  <select 
-                    className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold"
-                    value={kineId}
-                    onChange={e => {
-                      setKineId(e.target.value);
-                      setActivityId(''); // Reset activity when kine changes
-                    }}
-                    required={!isRecurring}
-                  >
-                    <option value="">Seleccionar Profesional...</option>
-                    <option value="ANY">Cualquiera (Sin preferencia)</option>
-                    {staff.filter(s => s.role === UserRole.KINE).map(k => (
-                      <option key={k.id} value={k.id}>{k.firstName} {k.lastName}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Actividad</label>
-                  <select 
-                    className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold disabled:opacity-50"
-                    value={activityId}
-                    onChange={e => setActivityId(e.target.value)}
-                    required={!isRecurring && !!kineId}
-                    disabled={!kineId}
-                  >
-                    <option value="">Elegir actividad...</option>
-                    {kineId && (() => {
-                      if (kineId === 'ANY') {
-                        return CLINICAL_ACTIVITIES.map(act => (
-                          <option key={act.id} value={act.id}>{act.name}</option>
-                        ));
-                      }
-                      const selectedKine = staff.find(s => s.id === kineId);
-                      if (!selectedKine || !selectedKine.activities) return null;
-                      return selectedKine.activities.map(actId => {
-                        const act = CLINICAL_ACTIVITIES.find(a => a.id === actId);
-                        return <option key={actId} value={actId}>{act ? act.name : actId}</option>;
-                      });
-                    })()}
-                  </select>
-                </div>
+            <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Profesional {isRecurring && '(Por Defecto)'}</label>
+                <select 
+                  className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold"
+                  value={kineId}
+                  onChange={e => {
+                    setKineId(e.target.value);
+                    setActivityId(''); // Reset activity when kine changes
+                  }}
+                  required={!isRecurring}
+                >
+                  <option value="">Seleccionar Profesional...</option>
+                  <option value="ANY">Cualquiera (Sin preferencia)</option>
+                  {staff.filter(s => s.role === UserRole.KINE).map(k => (
+                    <option key={k.id} value={k.id}>{k.firstName} {k.lastName}</option>
+                  ))}
+                </select>
               </div>
-            )}
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Actividad {isRecurring && '(Por Defecto)'}</label>
+                <select 
+                  className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold disabled:opacity-50"
+                  value={activityId}
+                  onChange={e => setActivityId(e.target.value)}
+                  required={!isRecurring && !!kineId}
+                  disabled={!kineId}
+                >
+                  <option value="">Elegir actividad...</option>
+                  {kineId && (() => {
+                    if (kineId === 'ANY') {
+                      return CLINICAL_ACTIVITIES.map(act => (
+                        <option key={act.id} value={act.id}>{act.name}</option>
+                      ));
+                    }
+                    const selectedKine = staff.find(s => s.id === kineId);
+                    if (!selectedKine || !selectedKine.activities) return null;
+                    return selectedKine.activities.map(actId => {
+                      const act = CLINICAL_ACTIVITIES.find(a => a.id === actId);
+                      return <option key={actId} value={actId}>{act ? act.name : actId}</option>;
+                    });
+                  })()}
+                </select>
+              </div>
+            </div>
 
             {!isRecurring ? (
               <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
@@ -795,9 +791,8 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                             handleUpdateSlot(index, 'kineId', e.target.value);
                             handleUpdateSlot(index, 'activityId', '');
                           }}
-                          required
                         >
-                          <option value="">Profesional...</option>
+                          <option value="">(Usar Por Defecto)</option>
                           <option value="ANY">Cualquiera</option>
                           {staff.filter(s => s.role === UserRole.KINE).map(k => (
                             <option key={k.id} value={k.id}>{k.firstName} {k.lastName}</option>
@@ -807,17 +802,17 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                           className="flex-1 bg-white border-slate-200 rounded-lg text-[10px] font-bold p-2 disabled:opacity-50"
                           value={slot.activityId || ''}
                           onChange={e => handleUpdateSlot(index, 'activityId', e.target.value)}
-                          required
-                          disabled={!slot.kineId}
+                          disabled={!slot.kineId && !kineId}
                         >
-                          <option value="">Actividad...</option>
-                          {slot.kineId && (() => {
-                            if (slot.kineId === 'ANY') {
+                          <option value="">(Usar Por Defecto)</option>
+                          {(slot.kineId || kineId) && (() => {
+                            const kId = slot.kineId || kineId;
+                            if (kId === 'ANY') {
                               return CLINICAL_ACTIVITIES.map(act => (
                                 <option key={act.id} value={act.id}>{act.name}</option>
                               ));
                             }
-                            const selectedKine = staff.find(s => s.id === slot.kineId);
+                            const selectedKine = staff.find(s => s.id === kId);
                             if (!selectedKine || !selectedKine.activities) return null;
                             return selectedKine.activities.map(actId => {
                               const act = CLINICAL_ACTIVITIES.find(a => a.id === actId);

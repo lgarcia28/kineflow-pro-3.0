@@ -131,6 +131,7 @@ export interface Patient {
   condition: string;
   injuryDate: string;
   surgeryDate?: string;
+  surgeryType?: string;
   sessionsPerWeek: number;
   planType: PlanType;
   totalSessionsPaid?: number;

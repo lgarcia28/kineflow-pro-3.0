@@ -16,9 +16,11 @@ import {
   Timer,
   X,
   Maximize2,
-  Award
+  Award,
+  TrendingUp
 } from 'lucide-react';
 import { EvaluationDashboard } from './EvaluationDashboard';
+import { ProgressChart } from './ProgressChart';
 import { parseMediaUrl } from '../utils/mediaUrl';
 
 interface PatientViewProps {
@@ -42,6 +44,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
   // Derivamos selectedDay dinámicamente desde la prop patient para que siempre esté actualizado
   const selectedDay = patient.routine.days.find(d => d.id === selectedDayId) || patient.routine.days[0] || null;
   const [zoomedImage, setZoomedImage] = useState<{url: string, name: string} | null>(null);
+  const [chartExercise, setChartExercise] = useState<RoutineExercise | null>(null);
 
   const supersetPalette = [
     { bg: 'bg-indigo-500', text: 'text-indigo-600', key: 'indigo' },
@@ -343,11 +346,18 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                 )}
                               </button>
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                  <h4 className="font-black text-slate-900 truncate leading-tight">{ex.definition.name}</h4>
-                                  {ssInfo && <span className={`${ssInfo.color} text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase shrink-0`}>{ssInfo.label}</span>}
+                                <div className="flex justify-between items-start pr-1">
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                      <h4 className="font-black text-slate-900 truncate leading-tight">{ex.definition.name}</h4>
+                                      {ssInfo && <span className={`${ssInfo.color} text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase shrink-0`}>{ssInfo.label}</span>}
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{ex.definition.category}</p>
+                                  </div>
+                                  <button onClick={() => setChartExercise(ex)} className="p-2 text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl shrink-0 transition-colors shadow-sm border border-primary-100/50">
+                                    <TrendingUp size={18} />
+                                  </button>
                                 </div>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{ex.definition.category}</p>
                                 
                                 {/* Fila Inferior: Métricas - A la derecha de la imagen */}
                                 <div className={`flex flex-nowrap items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner mt-3 overflow-x-auto hide-scrollbar`}>
@@ -368,13 +378,14 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                   <div className="flex flex-col items-center">
                                     <div className="flex items-baseline gap-0.5">
                                       <input 
-                                        type="number"
+                                        type="text"
                                         inputMode="decimal"
-                                        pattern="[0-9]*"
-                                        className="w-10 bg-transparent text-center text-sm font-black text-slate-800 outline-none focus:text-primary-600 transition-colors"
-                                        value={ex.targetLoad ?? ''}
+                                        className="w-10 bg-transparent text-center text-sm font-black text-slate-800 outline-none focus:text-primary-600 transition-colors touch-none"
+                                        value={ex.targetLoad?.toString() || '0'}
                                         onChange={(e) => {
-                                          const newLoad = Number(e.target.value);
+                                          let valStr = e.target.value.replace(/[^0-9.]/g, '');
+                                          valStr = valStr.replace(/^0+(?=\d)/, '');
+                                          const newLoad = parseFloat(valStr) || 0;
                                           const newDays = patient.routine.days.map(d => {
                                             if (d.id === selectedDay!.id) {
                                               return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
@@ -382,6 +393,45 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                             return d;
                                           });
                                           onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                        }}
+                                        onWheel={(e) => {
+                                          e.preventDefault();
+                                          const current = parseFloat(ex.targetLoad?.toString() || '0');
+                                          const step = ex.definition.metricType === 'time' ? 5 : 0.5;
+                                          let newLoad = Math.max(0, Math.round((current + (e.deltaY < 0 ? step : -step)) * 100) / 100);
+                                          const newDays = patient.routine.days.map(d => {
+                                            if (d.id === selectedDay!.id) {
+                                              return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
+                                            }
+                                            return d;
+                                          });
+                                          onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.currentTarget.dataset.startY = e.touches[0].clientY.toString();
+                                          e.currentTarget.dataset.startLoad = (ex.targetLoad || 0).toString();
+                                        }}
+                                        onTouchMove={(e) => {
+                                          const startY = parseFloat(e.currentTarget.dataset.startY || '0');
+                                          const startLoad = parseFloat(e.currentTarget.dataset.startLoad || '0');
+                                          const currentY = e.touches[0].clientY;
+                                          const deltaY = startY - currentY; // positive if dragging up
+                                          
+                                          if (Math.abs(deltaY) > 10) {
+                                            const steps = Math.sign(deltaY) * Math.floor(Math.abs(deltaY) / 15);
+                                            const stepValue = ex.definition.metricType === 'time' ? 5 : 0.5;
+                                            const newLoad = Math.max(0, Math.round((startLoad + steps * stepValue) * 100) / 100);
+                                            
+                                            if (newLoad !== ex.targetLoad) {
+                                                const newDays = patient.routine.days.map(d => {
+                                                  if (d.id === selectedDay!.id) {
+                                                    return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
+                                                  }
+                                                  return d;
+                                                });
+                                                onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                            }
+                                          }
                                         }}
                                       />
                                       <span className="text-[8px] font-black text-slate-400 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
@@ -446,6 +496,26 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                 </>
                               )}
                             </div>
+                            
+                            {/* Observaciones (Opcional) */}
+                            <div className="mt-2">
+                              <textarea
+                                placeholder="Añadir una observación o comentario..."
+                                className="w-full bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none shadow-inner"
+                                rows={2}
+                                value={ex.notes || ''}
+                                onChange={(e) => {
+                                  const newDays = patient.routine.days.map(d => {
+                                    if (d.id === selectedDay!.id) {
+                                      return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, notes: e.target.value } : exItem) };
+                                    }
+                                    return d;
+                                  });
+                                  onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                }}
+                              />
+                            </div>
+                            
                           </div>
                         </div>
                           </div>
@@ -634,6 +704,12 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
           </div>
         );
       })()}
+
+      {/* Progress Chart Modal */}
+      {chartExercise && (
+        <ProgressChart exercise={chartExercise} onClose={() => setChartExercise(null)} />
+      )}
     </div>
   );
 };
+

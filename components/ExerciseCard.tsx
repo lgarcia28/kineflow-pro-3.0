@@ -246,7 +246,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                     {isTimeBased && <span className="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wide">Cronómetro</span>}
                   </div>
                 </div>
-                {role === UserRole.KINE && (
+                {role !== UserRole.RECEPCION && (
                   <button onClick={() => onShowHistory(exercise)} className="p-2 text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl shrink-0 transition-colors shadow-sm border border-primary-100/50">
                     <TrendingUp size={18} />
                   </button>
@@ -287,15 +287,41 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                   <div className="flex flex-col items-center">
                     <div className="flex items-baseline gap-0.5">
                       <input
-                        type="number"
+                        type="text"
                         inputMode="decimal"
-                        pattern="[0-9]*"
-                        min={0}
-                        step={0.5}
-                        value={targetLoad}
-                        onChange={e => onUpdate(exercise.id, { targetLoad: parseFloat(e.target.value) || 0 })}
-                        className="w-8 text-center font-black text-sm bg-transparent outline-none leading-none focus:text-primary-600 transition-colors"
+                        value={targetLoad.toString()}
+                        onChange={e => {
+                          let valStr = e.target.value.replace(/[^0-9.]/g, '');
+                          valStr = valStr.replace(/^0+(?=\d)/, '');
+                          onUpdate(exercise.id, { targetLoad: parseFloat(valStr) || 0 });
+                        }}
+                        className="w-8 text-center font-black text-sm bg-transparent outline-none leading-none focus:text-primary-600 transition-colors touch-none"
                         onClick={e => e.stopPropagation()}
+                        onWheel={(e) => {
+                          e.preventDefault();
+                          const step = isTimeBased ? 5 : 0.5;
+                          let newLoad = Math.max(0, Math.round((targetLoad + (e.deltaY < 0 ? step : -step)) * 100) / 100);
+                          onUpdate(exercise.id, { targetLoad: newLoad });
+                        }}
+                        onTouchStart={(e) => {
+                          e.currentTarget.dataset.startY = e.touches[0].clientY.toString();
+                          e.currentTarget.dataset.startLoad = targetLoad.toString();
+                        }}
+                        onTouchMove={(e) => {
+                          const startY = parseFloat(e.currentTarget.dataset.startY || '0');
+                          const startLoad = parseFloat(e.currentTarget.dataset.startLoad || '0');
+                          const currentY = e.touches[0].clientY;
+                          const deltaY = startY - currentY;
+                          
+                          if (Math.abs(deltaY) > 10) {
+                            const steps = Math.sign(deltaY) * Math.floor(Math.abs(deltaY) / 15);
+                            const stepValue = isTimeBased ? 5 : 0.5;
+                            const newLoad = Math.max(0, Math.round((startLoad + steps * stepValue) * 100) / 100);
+                            if (newLoad !== targetLoad) {
+                                onUpdate(exercise.id, { targetLoad: newLoad });
+                            }
+                          }
+                        }}
                       />
                       <span className="text-[8px] font-black text-slate-400 uppercase leading-none">{isTimeBased ? 's' : 'kg'}</span>
                     </div>
@@ -341,6 +367,21 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
               </>
             )}
           </div>
+          
+          {/* Fila Opcional: Observaciones */}
+          {role !== UserRole.RECEPCION && (
+            <div className={`mt-2 ${supersetLabel ? 'ml-3' : ''}`}>
+              <textarea
+                placeholder="Añadir una observación o comentario..."
+                className="w-full bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none shadow-inner"
+                rows={2}
+                value={exercise.notes || ''}
+                onChange={(e) => onUpdate(exercise.id, { notes: e.target.value })}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          )}
+
             </div>
           </div>
         </div>

@@ -195,7 +195,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
   };
 
   const handleMarkAttended = () => {
-    onUpdatePatient({ ...patient, checkInStatus: CheckInStatus.ATTENDED });
+    if (window.confirm('¿Finalizar sesión del paciente?')) {
+      const today = new Date().toISOString().split('T')[0];
+      const newHistory = [`Sesión finalizada por Kinesiólogo el ${today}`, ...(patient.history || [])];
+      onUpdatePatient({ ...patient, checkInStatus: CheckInStatus.IDLE, lastVisit: today, history: newHistory });
+    }
   };
 
   const handleAddNote = () => {
@@ -320,7 +324,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                 onClick={handleMarkAttended}
                 className="bg-emerald-500 text-white px-4 py-2.5 rounded-[1.25rem] font-bold text-xs hover:bg-emerald-600 transition-all flex items-center gap-2 shadow-xl shadow-emerald-500/20 active:scale-95"
               >
-                <CheckCircle2 size={16} strokeWidth={2.5} /> <span className="hidden md:inline">Marcar Atendido</span>
+                <CheckCircle2 size={16} strokeWidth={2.5} /> <span className="hidden md:inline">Finalizar Sesión</span>
               </button>
             )}
             <span className={`hidden md:flex px-4 py-2 rounded-[1.25rem] text-xs font-bold uppercase tracking-wide border shadow-sm ${patient.routine.stage === Stage.KINESIOLOGY ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-teal-50 border-teal-100 text-teal-600'}`}>
@@ -338,10 +342,56 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
       </header>
 
       {showHistory && (
-          <div className="bg-white/80 backdrop-blur-md text-slate-900 p-4 shadow-xl z-20 border-b border-slate-200 animate-in slide-in-from-top-2 duration-300 relative">
-              <div className="max-w-4xl mx-auto flex gap-4 items-center">
-                  <textarea className="flex-1 h-14 bg-white/50 backdrop-blur-sm text-slate-700 p-3 rounded-[1.25rem] border border-slate-200 focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 outline-none resize-none text-sm shadow-inner transition-all font-medium" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Añadir una nota a la historia clínica..." />
-                  <button onClick={handleAddNote} className="bg-primary-600 text-white p-4 rounded-[1.25rem] hover:bg-primary-700 hover:-translate-y-0.5 active:scale-95 transition-all shadow-xl shadow-primary-500/20"><Save size={20}/></button>
+          <div className="bg-white/80 backdrop-blur-md text-slate-900 p-4 shadow-xl z-20 border-b border-slate-200 animate-in slide-in-from-top-2 duration-300 relative max-h-96 flex flex-col">
+              <div className="max-w-4xl mx-auto w-full flex flex-col gap-4">
+                  {/* DETALLE CLINICO */}
+                  <div className="bg-blue-50/50 border border-blue-100 rounded-[1.25rem] p-4 flex flex-col gap-2 shrink-0">
+                    <h4 className="text-xs font-black text-blue-800 uppercase tracking-widest flex items-center gap-2"><FileText size={14} /> Información de Ingreso</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-1">
+                       <div>
+                         <span className="block text-[10px] font-bold text-slate-400 uppercase">Condición / Lesión</span>
+                         <span className="font-bold text-slate-700">{patient.condition || 'No especificada'}</span>
+                       </div>
+                       <div>
+                         <span className="block text-[10px] font-bold text-slate-400 uppercase">Fecha de Ingreso</span>
+                         <span className="font-bold text-slate-700">
+                           {patient.paymentDate ? new Date(patient.paymentDate).toLocaleDateString('es-AR', {timeZone: 'UTC'}) : 'No registrada'}
+                         </span>
+                       </div>
+                       <div>
+                         <span className="block text-[10px] font-bold text-slate-400 uppercase">Fecha de Lesión</span>
+                         <span className="font-bold text-slate-700">
+                           {patient.injuryDate ? new Date(patient.injuryDate).toLocaleDateString('es-AR', {timeZone: 'UTC'}) : 'No registrada'}
+                         </span>
+                       </div>
+                       <div>
+                         <span className="block text-[10px] font-bold text-slate-400 uppercase">¿Se operó?</span>
+                         {patient.surgeryDate ? (
+                           <div>
+                             <span className="font-bold text-slate-700 block">Sí ({new Date(patient.surgeryDate).toLocaleDateString('es-AR', {timeZone: 'UTC'})})</span>
+                             {patient.surgeryType && <span className="text-xs font-medium text-slate-500">{patient.surgeryType}</span>}
+                           </div>
+                         ) : (
+                           <span className="font-bold text-slate-700">No</span>
+                         )}
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 items-center shrink-0">
+                      <textarea className="flex-1 h-14 bg-white/50 backdrop-blur-sm text-slate-700 p-3 rounded-[1.25rem] border border-slate-200 focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 outline-none resize-none text-sm shadow-inner transition-all font-medium" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Añadir una nota a la historia clínica..." />
+                      <button onClick={handleAddNote} className="bg-primary-600 text-white p-4 rounded-[1.25rem] hover:bg-primary-700 hover:-translate-y-0.5 active:scale-95 transition-all shadow-xl shadow-primary-500/20"><Save size={20}/></button>
+                  </div>
+                  
+                  {patient.history && patient.history.length > 0 && (
+                      <div className="overflow-y-auto pr-2 pb-2 scroll-container space-y-2 mt-2">
+                        {patient.history.map((log, i) => (
+                          <div key={i} className="text-sm text-slate-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                            {log}
+                          </div>
+                        ))}
+                      </div>
+                  )}
               </div>
           </div>
       )}

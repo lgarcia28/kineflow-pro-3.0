@@ -3,13 +3,15 @@ import { collection, query, where, getDocs, doc, setDoc, deleteDoc, getDoc } fro
 import { db, secondaryAuth } from '../firebase';
 import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { useAuthStore } from '../store/authStore';
-import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS, TenantSettings } from '../types';
+import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS, TenantSettings, Appointment } from '../types';
 import { Users, Activity, Target, Settings, Building2, UserPlus, Shield, X, MoreVertical, Trash2, Plus } from 'lucide-react';
 
 export const AdminDashboardView: React.FC = () => {
   const { user } = useAuthStore();
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [totalPatients, setTotalPatients] = useState(0);
+  const [todaysAppointments, setTodaysAppointments] = useState<Appointment[]>([]);
+  const [selectedKineFilter, setSelectedKineFilter] = useState<string>('ALL');
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
@@ -69,6 +71,14 @@ export const AdminDashboardView: React.FC = () => {
       if (settingsSnap.exists()) {
         setTenantSettings(settingsSnap.data() as TenantSettings);
       }
+
+      // 4. Fetch today's appointments
+      const todayStr = new Date().toISOString().split('T')[0];
+      const appQ = query(collection(db, 'appointments'), where('tenantId', '==', tenantId), where('date', '==', todayStr));
+      const appSnap = await getDocs(appQ);
+      const appData: Appointment[] = [];
+      appSnap.forEach(doc => appData.push(doc.data() as Appointment));
+      setTodaysAppointments(appData);
 
     } catch (e: any) {
       console.error("Error fetching admin data:", e);
@@ -250,6 +260,84 @@ export const AdminDashboardView: React.FC = () => {
             <div>
               <div className="text-3xl font-black text-slate-900">{staffList.length - 1}</div>
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Empleados Activos</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Daily Report Card */}
+        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 mb-8 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Activity size={24} /></div>
+              <div>
+                <h2 className="text-2xl font-black text-slate-900">Reporte Diario ({new Date().toLocaleDateString('es-AR')})</h2>
+                <p className="text-sm font-medium text-slate-500">Pacientes atendidos y ausencias de hoy.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase text-slate-400">Filtrar Kine:</span>
+              <select 
+                className="bg-slate-50 border border-slate-200 text-slate-900 font-bold px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm"
+                value={selectedKineFilter}
+                onChange={e => setSelectedKineFilter(e.target.value)}
+              >
+                <option value="ALL">Todos</option>
+                {staffList.filter(s => s.role === UserRole.KINE).map(k => (
+                  <option key={k.id} value={k.id}>{k.firstName} {k.lastName}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Atendidos */}
+            <div className="border border-emerald-100 bg-emerald-50/30 rounded-2xl p-6">
+              <h3 className="text-emerald-700 font-black mb-4 uppercase tracking-wider text-sm flex items-center justify-between">
+                <span>Atendidos Hoy</span>
+                <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-lg">
+                  {todaysAppointments.filter(a => a.status === 'COMPLETED' && (selectedKineFilter === 'ALL' || a.kineId === selectedKineFilter)).length}
+                </span>
+              </h3>
+              <div className="space-y-3">
+                {todaysAppointments
+                  .filter(a => a.status === 'COMPLETED' && (selectedKineFilter === 'ALL' || a.kineId === selectedKineFilter))
+                  .map(app => (
+                    <div key={app.id} className="bg-white p-3 rounded-xl shadow-sm border border-emerald-100 flex justify-between items-center">
+                      <span className="font-bold text-slate-800 text-sm">{app.patientName}</span>
+                      <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">{app.time}</span>
+                    </div>
+                ))}
+                {todaysAppointments.filter(a => a.status === 'COMPLETED' && (selectedKineFilter === 'ALL' || a.kineId === selectedKineFilter)).length === 0 && (
+                  <p className="text-xs text-emerald-600/60 font-bold">No hay pacientes registrados.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Ausentes */}
+            <div className="border border-red-100 bg-red-50/30 rounded-2xl p-6">
+              <h3 className="text-red-700 font-black mb-4 uppercase tracking-wider text-sm flex items-center justify-between">
+                <span>Ausentes Hoy</span>
+                <span className="bg-red-100 text-red-800 px-2.5 py-0.5 rounded-lg">
+                  {todaysAppointments.filter(a => (a.status === 'NOSHOW' || a.status === 'CANCELLED') && (selectedKineFilter === 'ALL' || a.kineId === selectedKineFilter)).length}
+                </span>
+              </h3>
+              <div className="space-y-3">
+                {todaysAppointments
+                  .filter(a => (a.status === 'NOSHOW' || a.status === 'CANCELLED') && (selectedKineFilter === 'ALL' || a.kineId === selectedKineFilter))
+                  .map(app => (
+                    <div key={app.id} className="bg-white p-3 rounded-xl shadow-sm border border-red-100 flex justify-between items-center">
+                      <span className="font-bold text-slate-800 text-sm">{app.patientName}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black text-red-500 uppercase">{app.status === 'NOSHOW' ? 'Sin Aviso' : 'Con Aviso'}</span>
+                        <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md">{app.time}</span>
+                      </div>
+                    </div>
+                ))}
+                {todaysAppointments.filter(a => (a.status === 'NOSHOW' || a.status === 'CANCELLED') && (selectedKineFilter === 'ALL' || a.kineId === selectedKineFilter)).length === 0 && (
+                  <p className="text-xs text-red-600/60 font-bold">No hay ausencias registradas.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
