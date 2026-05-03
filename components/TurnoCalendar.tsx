@@ -382,10 +382,13 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                           const baseText  = kineColor?.text   ?? '#1e3a8a';
 
                           // Adjust style per status
-                          const cardStyle: React.CSSProperties =
-                            status === 'COMPLETED'  ? { backgroundColor: '#d1fae5', borderColor: '#10b981', color: '#064e3b', borderLeftColor: '#10b981' } :
-                            (status === 'CANCELLED' || status === 'NOSHOW')  ? { backgroundColor: '#fee2e2', borderColor: '#f87171', color: '#7f1d1d', borderLeftColor: '#ef4444', opacity: 0.8 } :
-                            /* SCHEDULED */           { backgroundColor: baseBg,   borderColor: baseBorder, color: baseText,  borderLeftColor: baseBorder };
+                          const cardStyle: React.CSSProperties = {
+                            backgroundColor: baseBg,
+                            color: baseText,
+                            borderColor: status === 'COMPLETED' ? '#10b981' : (status === 'CANCELLED' || status === 'NOSHOW') ? '#ef4444' : baseBorder,
+                            borderLeftColor: status === 'COMPLETED' ? '#10b981' : (status === 'CANCELLED' || status === 'NOSHOW') ? '#ef4444' : baseBorder,
+                            opacity: (status === 'CANCELLED' || status === 'NOSHOW') ? 0.8 : 1
+                          };
 
                           return (
                             <div
@@ -457,10 +460,13 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
                       const baseBorder = kineColor?.border ?? '#3b82f6';
                       const baseText   = kineColor?.text   ?? '#1e3a8a';
 
-                      const cardStyle: React.CSSProperties =
-                        status === 'COMPLETED'  ? { backgroundColor: '#d1fae5', borderColor: '#10b981', color: '#064e3b', borderLeftColor: '#10b981' } :
-                        (status === 'CANCELLED' || status === 'NOSHOW') ? { backgroundColor: '#fee2e2', borderColor: '#f87171', color: '#7f1d1d', borderLeftColor: '#ef4444', opacity: 0.8 } :
-                        /* SCHEDULED */           { backgroundColor: baseBg,   borderColor: baseBorder, color: baseText,  borderLeftColor: baseBorder };
+                      const cardStyle: React.CSSProperties = {
+                        backgroundColor: baseBg,
+                        color: baseText,
+                        borderColor: status === 'COMPLETED' ? '#10b981' : (status === 'CANCELLED' || status === 'NOSHOW') ? '#ef4444' : baseBorder,
+                        borderLeftColor: status === 'COMPLETED' ? '#10b981' : (status === 'CANCELLED' || status === 'NOSHOW') ? '#ef4444' : baseBorder,
+                        opacity: (status === 'CANCELLED' || status === 'NOSHOW') ? 0.8 : 1
+                      };
 
                       return (
                         <div
