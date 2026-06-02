@@ -371,75 +371,109 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                 </div>
                               </div>
 
-                              {/* Carga/Tiempo - EDITABLE SI ES GYM */}
+                              {/* Carga/Tiempo/Tensión - EDITABLE SI ES GYM */}
                               <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[75px] flex-1">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">{ex.definition.metricType === 'kg' ? 'Carga' : 'Tiempo'}</p>
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">
+                                  {ex.definition.metricType === 'kg' ? 'Carga' : ex.definition.metricType === 'tension' ? 'Tensión' : 'Tiempo'}
+                                </p>
                                 {isGym ? (
-                                  <div className="flex flex-col items-center">
-                                    <div className="flex items-baseline gap-0.5">
-                                      <input 
-                                        type="text"
-                                        inputMode="decimal"
-                                        className="w-10 bg-transparent text-center text-sm font-black text-slate-800 outline-none focus:text-primary-600 transition-colors touch-none"
-                                        value={ex.targetLoad?.toString() || '0'}
-                                        onChange={(e) => {
-                                          let valStr = e.target.value.replace(/[^0-9.]/g, '');
-                                          valStr = valStr.replace(/^0+(?=\d)/, '');
-                                          const newLoad = parseFloat(valStr) || 0;
-                                          const newDays = patient.routine.days.map(d => {
-                                            if (d.id === selectedDay!.id) {
-                                              return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
-                                            }
-                                            return d;
-                                          });
-                                          onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                        }}
-                                        onWheel={(e) => {
-                                          e.preventDefault();
-                                          const current = parseFloat(ex.targetLoad?.toString() || '0');
-                                          const step = ex.definition.metricType === 'time' ? 5 : 0.5;
-                                          let newLoad = Math.max(0, Math.round((current + (e.deltaY < 0 ? step : -step)) * 100) / 100);
-                                          const newDays = patient.routine.days.map(d => {
-                                            if (d.id === selectedDay!.id) {
-                                              return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
-                                            }
-                                            return d;
-                                          });
-                                          onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                        }}
-                                        onTouchStart={(e) => {
-                                          e.currentTarget.dataset.startY = e.touches[0].clientY.toString();
-                                          e.currentTarget.dataset.startLoad = (ex.targetLoad || 0).toString();
-                                        }}
-                                        onTouchMove={(e) => {
-                                          const startY = parseFloat(e.currentTarget.dataset.startY || '0');
-                                          const startLoad = parseFloat(e.currentTarget.dataset.startLoad || '0');
-                                          const currentY = e.touches[0].clientY;
-                                          const deltaY = startY - currentY; // positive if dragging up
-                                          
-                                          if (Math.abs(deltaY) > 10) {
-                                            const steps = Math.sign(deltaY) * Math.floor(Math.abs(deltaY) / 15);
-                                            const stepValue = ex.definition.metricType === 'time' ? 5 : 0.5;
-                                            const newLoad = Math.max(0, Math.round((startLoad + steps * stepValue) * 100) / 100);
-                                            
-                                            if (newLoad !== ex.targetLoad) {
-                                                const newDays = patient.routine.days.map(d => {
-                                                  if (d.id === selectedDay!.id) {
-                                                    return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
-                                                  }
-                                                  return d;
-                                                });
-                                                onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                            }
-                                          }
-                                        }}
-                                      />
-                                      <span className="text-[8px] font-black text-slate-400 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                  <div className="flex flex-col items-center w-full">
+                                    <div className="flex items-baseline gap-0.5 w-full justify-center">
+                                      {ex.definition.metricType === 'tension' ? (
+                                        <select
+                                          className="bg-transparent text-center text-sm font-black text-purple-600 outline-none cursor-pointer"
+                                          value={ex.targetLoad || 2}
+                                          onChange={(e) => {
+                                            const newLoad = Number(e.target.value);
+                                            const newDays = patient.routine.days.map(d => {
+                                              if (d.id === selectedDay!.id) {
+                                                return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
+                                              }
+                                              return d;
+                                            });
+                                            onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                          }}
+                                        >
+                                          <option value={1}>Baja</option>
+                                          <option value={2}>Media</option>
+                                          <option value={3}>Alta</option>
+                                        </select>
+                                      ) : (
+                                        <>
+                                          <input 
+                                            type="text"
+                                            inputMode="decimal"
+                                            className="w-10 bg-transparent text-center text-sm font-black text-slate-800 outline-none focus:text-primary-600 transition-colors touch-none"
+                                            value={ex.targetLoad?.toString() || '0'}
+                                            onChange={(e) => {
+                                              let valStr = e.target.value.replace(/[^0-9.]/g, '');
+                                              valStr = valStr.replace(/^0+(?=\d)/, '');
+                                              const newLoad = parseFloat(valStr) || 0;
+                                              const newDays = patient.routine.days.map(d => {
+                                                if (d.id === selectedDay!.id) {
+                                                  return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
+                                                }
+                                                return d;
+                                              });
+                                              onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                            }}
+                                            onWheel={(e) => {
+                                              e.preventDefault();
+                                              const current = parseFloat(ex.targetLoad?.toString() || '0');
+                                              const step = ex.definition.metricType === 'time' ? 5 : 0.5;
+                                              let newLoad = Math.max(0, Math.round((current + (e.deltaY < 0 ? step : -step)) * 100) / 100);
+                                              const newDays = patient.routine.days.map(d => {
+                                                if (d.id === selectedDay!.id) {
+                                                  return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
+                                                }
+                                                return d;
+                                              });
+                                              onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                            }}
+                                            onTouchStart={(e) => {
+                                              e.currentTarget.dataset.startY = e.touches[0].clientY.toString();
+                                              e.currentTarget.dataset.startLoad = (ex.targetLoad || 0).toString();
+                                            }}
+                                            onTouchMove={(e) => {
+                                              const startY = parseFloat(e.currentTarget.dataset.startY || '0');
+                                              const startLoad = parseFloat(e.currentTarget.dataset.startLoad || '0');
+                                              const currentY = e.touches[0].clientY;
+                                              const deltaY = startY - currentY; // positive if dragging up
+                                              
+                                              if (Math.abs(deltaY) > 10) {
+                                                const steps = Math.sign(deltaY) * Math.floor(Math.abs(deltaY) / 15);
+                                                const stepValue = ex.definition.metricType === 'time' ? 5 : 0.5;
+                                                const newLoad = Math.max(0, Math.round((startLoad + steps * stepValue) * 100) / 100);
+                                                
+                                                if (newLoad !== ex.targetLoad) {
+                                                    const newDays = patient.routine.days.map(d => {
+                                                      if (d.id === selectedDay!.id) {
+                                                        return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
+                                                      }
+                                                      return d;
+                                                    });
+                                                    onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+                                                }
+                                              }
+                                            }}
+                                          />
+                                          <span className="text-[8px] font-black text-slate-400 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                        </>
+                                      )}
                                     </div>
                                   </div>
                                 ) : (
                                   <p className="text-sm font-black text-slate-800 leading-none">
-                                    {ex.targetLoad}<span className="text-[8px] font-bold text-primary-500 ml-1 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
+                                    {ex.definition.metricType === 'tension' ? (
+                                      ex.targetLoad === 1 ? 'Baja' : ex.targetLoad === 2 ? 'Media' : 'Alta'
+                                    ) : (
+                                      <>
+                                        {ex.targetLoad}
+                                        <span className="text-[8px] font-bold text-primary-500 ml-1 uppercase">
+                                          {ex.definition.metricType === 'kg' ? 'kg' : 's'}
+                                        </span>
+                                      </>
+                                    )}
                                   </p>
                                 )}
                               </div>
@@ -602,7 +636,13 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                                       <h4 className={`font-black truncate ${ex.isDone ? 'text-emerald-900' : 'text-slate-900'}`}>{ex.definition.name}</h4>
                                       {ssInfo && !ex.isDone && <span className={`${ssInfo.color} text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase shrink-0`}>{ssInfo.label}</span>}
                                     </div>
-                                    <p className="text-xs text-slate-400 font-bold mt-0.5">{ex.targetSets}x{ex.targetReps} • {ex.targetLoad}{ex.definition.metricType === 'kg' ? 'kg' : 's'}</p>
+                                    <p className="text-xs text-slate-400 font-bold mt-0.5">
+                                      {ex.targetSets}x{ex.targetReps} • {ex.definition.metricType === 'tension' ? (
+                                        ex.targetLoad === 1 ? 'Baja' : ex.targetLoad === 2 ? 'Media' : 'Alta'
+                                      ) : (
+                                        `${ex.targetLoad}${ex.definition.metricType === 'kg' ? 'kg' : 's'}`
+                                      )}
+                                    </p>
                                   </div>
                                 </div>
                                 {!ex.isDone && (
