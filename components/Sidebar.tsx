@@ -25,7 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   return (
-    <aside className="w-full md:w-20 glass-panel md:border-x-0 md:border-y-0 border-r border-slate-200/50 flex flex-row md:flex-col h-auto md:h-full shrink-0 z-50 px-2 md:px-0 bg-white/70 relative">
+    <aside className="hidden md:flex md:w-20 glass-panel md:border-x-0 md:border-y-0 border-r border-slate-200/50 md:flex-col md:h-full shrink-0 z-50 md:px-0 bg-white/70 relative">
       {/* Logo & Menu Section */}
       <div className="flex items-center md:justify-center py-3 md:py-6 px-2 md:px-0 relative group">
         <button 

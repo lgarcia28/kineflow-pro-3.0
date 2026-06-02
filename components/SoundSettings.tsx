@@ -17,9 +17,9 @@ interface SoundSettingsProps {
 
 export const SoundSettings: React.FC<SoundSettingsProps> = ({ options, selectedUrl, onSelect, onClose }) => {
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[300] flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">
-        <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[300] flex items-end md:items-center justify-center p-0 md:p-4">
+      <div className="bg-white w-full max-w-md rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 max-h-[85vh] md:max-h-none flex flex-col animate-in slide-in-from-bottom duration-300 md:animate-none">
+        <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50 shrink-0">
           <div>
             <h2 className="text-xl font-black text-slate-900 tracking-tight">Ajustes de Sonido</h2>
             <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Notificaciones de Sala</p>
@@ -29,7 +29,7 @@ export const SoundSettings: React.FC<SoundSettingsProps> = ({ options, selectedU
           </button>
         </div>
         
-        <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2">
+        <div className="p-4 overflow-y-auto space-y-2 flex-1 scroll-container">
           {options.map((option) => (
             <button
               key={option.id}
@@ -59,7 +59,7 @@ export const SoundSettings: React.FC<SoundSettingsProps> = ({ options, selectedU
           ))}
         </div>
 
-        <div className="p-6 bg-slate-50 border-t border-slate-100">
+        <div className="p-6 bg-slate-50 border-t border-slate-100 shrink-0 pb-[calc(1.5rem+var(--sab))] md:pb-6">
           <button 
             onClick={onClose}
             className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-slate-800 transition-all active:scale-95"

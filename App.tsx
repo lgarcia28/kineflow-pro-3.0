@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { db, isConfigValid } from './firebase';
-import { Download, X, LogOut, Activity } from 'lucide-react';
+import { Download, X, LogOut, Activity, Home, Dumbbell, Settings } from 'lucide-react';
 import { 
   collection, 
   onSnapshot, 
@@ -606,11 +606,11 @@ const App: React.FC = () => {
 
 
 
-        <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+        <main className="flex-1 flex flex-col h-full overflow-hidden relative pb-[calc(4.5rem+var(--sab))] md:pb-0">
           {/* Logout button for all roles */}
           <button 
             onClick={handleLogout}
-            className="fixed bottom-6 right-6 z-[100] w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center text-red-500 border border-slate-100 hover:bg-red-50 transition-all"
+            className="fixed bottom-20 md:bottom-6 right-6 z-[100] w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center text-red-500 border border-slate-100 hover:bg-red-50 transition-all"
           >
             <LogOut size={20} />
           </button>
@@ -666,6 +666,33 @@ const App: React.FC = () => {
             )
           )}
         </main>
+
+        {/* Mobile Bottom Navigation Bar */}
+        {user.role === UserRole.KINE && (
+          <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-lg border-t border-slate-200/50 px-6 py-3 flex justify-around items-center pb-[calc(0.75rem+var(--sab))] shadow-lg">
+             <button 
+               onClick={() => { setView('HOME'); setSelectedPatientId(null); }}
+               className={`flex flex-col items-center gap-1 p-2 transition-all ${view === 'HOME' && !selectedPatientId ? 'text-primary-600 scale-105' : 'text-slate-400'}`}
+             >
+               <Home size={20} className="transition-transform active:scale-90" />
+               <span className="text-[9px] font-black uppercase tracking-wider">Inicio</span>
+             </button>
+             <button 
+               onClick={() => setShowExerciseLibrary(true)}
+               className="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-primary-600 active:scale-95"
+             >
+               <Dumbbell size={20} className="transition-transform active:scale-90" />
+               <span className="text-[9px] font-black uppercase tracking-wider">Biblioteca</span>
+             </button>
+             <button 
+               onClick={() => setShowSoundSettings(true)}
+               className="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-primary-600 active:scale-95"
+             >
+               <Settings size={20} className="transition-transform active:scale-90" />
+               <span className="text-[9px] font-black uppercase tracking-wider">Ajustes</span>
+             </button>
+          </div>
+        )}
       </Suspense>
     </div>
   );

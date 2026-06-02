@@ -116,26 +116,26 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-4xl h-[85vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+      <div className="bg-white w-full max-w-4xl h-[90vh] md:h-[85vh] rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 md:animate-none">
         
         {/* Header */}
-        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+        <div className="px-6 md:px-8 py-5 md:py-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Biblioteca de Ejercicios</h2>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Gestión Global</p>
+            <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tight">Biblioteca de Ejercicios</h2>
+            <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mt-1">Gestión Global</p>
           </div>
-          <button onClick={onClose} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
-            <X size={24} />
+          <button onClick={onClose} className="p-2 md:p-3 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+            <X className="w-5 h-5 md:w-6 md:h-6" />
           </button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden relative">
           
           {/* Panel Izquierdo: Lista */}
-          <div className="flex-1 flex flex-col border-r border-slate-100 min-w-0 bg-slate-50/50">
-            <div className="p-4 border-b border-slate-100 bg-white">
-               <div className="relative mb-4">
+          <div className={`flex-1 flex flex-col border-r border-slate-100 min-w-0 bg-slate-50/50 ${(isCreating || editingId) ? 'hidden md:flex' : 'flex'}`}>
+            <div className="p-4 border-b border-slate-100 bg-white shrink-0">
+               <div className="relative mb-3">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                   <input 
                     className="w-full pl-11 pr-4 py-3 bg-slate-50 rounded-xl text-sm font-bold outline-none border border-transparent focus:bg-white focus:border-primary-200 transition-all" 
@@ -144,7 +144,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                     onChange={e => setSearchTerm(e.target.value)}
                   />
                </div>
-               <button onClick={startCreating} className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+               <button onClick={startCreating} className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
                   <Plus size={16} /> Nuevo Ejercicio
                </button>
             </div>
@@ -184,7 +184,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
 
           {/* Panel Derecho: Formulario */}
           {(isCreating || editingId) ? (
-            <div className="w-1/3 min-w-[320px] bg-white p-8 flex flex-col border-l border-slate-100 overflow-y-auto">
+            <div className="w-full md:w-1/3 md:min-w-[320px] bg-white p-6 md:p-8 flex flex-col border-l border-slate-100 overflow-y-auto">
                <h3 className="text-lg font-black text-slate-900 mb-6 uppercase">{isCreating ? 'Crear Ejercicio' : 'Editar Ejercicio'}</h3>
                
                <div className="space-y-6 flex-1">
@@ -200,14 +200,14 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Tipo de Medición</label>
-                    <div className="flex flex-col sm:flex-row gap-2 p-1 bg-slate-50 rounded-2xl">
-                       <button onClick={() => setFormData({...formData, metricType: 'kg'})} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${formData.metricType === 'kg' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                    <div className="flex flex-col gap-2 p-1 bg-slate-50 rounded-2xl">
+                       <button onClick={() => setFormData({...formData, metricType: 'kg'})} className={`w-full py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${formData.metricType === 'kg' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
                           <Dumbbell size={16}/> Peso (Kg)
                        </button>
-                       <button onClick={() => setFormData({...formData, metricType: 'time'})} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${formData.metricType === 'time' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                       <button onClick={() => setFormData({...formData, metricType: 'time'})} className={`w-full py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${formData.metricType === 'time' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
                           <Timer size={16}/> Tiempo (s)
                        </button>
-                       <button onClick={() => setFormData({...formData, metricType: 'tension'})} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${formData.metricType === 'tension' ? 'bg-white text-purple-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                       <button onClick={() => setFormData({...formData, metricType: 'tension'})} className={`w-full py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${formData.metricType === 'tension' ? 'bg-white text-purple-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
                           <Activity size={16}/> Tensión (Banda)
                        </button>
                     </div>
@@ -260,7 +260,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                   </div>
                </div>
 
-               <div className="mt-8 flex gap-3">
+               <div className="mt-8 flex gap-3 pb-[calc(1rem+var(--sab))] md:pb-0">
                   <button onClick={() => { setIsCreating(false); setEditingId(null); }} className="flex-1 py-4 text-xs font-black uppercase text-slate-400 hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
                   <button onClick={handleSave} disabled={isUploading} className="flex-[2] py-4 bg-primary-600 text-white rounded-xl text-xs font-black uppercase shadow-xl shadow-primary-200 hover:bg-primary-500 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50">
                      <Save size={18} /> Guardar
@@ -268,7 +268,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                </div>
             </div>
           ) : (
-            <div className="w-1/3 min-w-[320px] bg-slate-50/30 flex flex-col items-center justify-center text-center p-8 border-l border-slate-100">
+            <div className="hidden md:flex w-1/3 min-w-[320px] bg-slate-50/30 flex-col items-center justify-center text-center p-8 border-l border-slate-100">
                 <Dumbbell className="text-slate-200 mb-4" size={64} />
                 <p className="text-slate-400 font-bold text-sm max-w-[200px]">Selecciona un ejercicio para editar o crea uno nuevo.</p>
             </div>
