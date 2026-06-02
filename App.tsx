@@ -332,6 +332,12 @@ const App: React.FC = () => {
   };
 
   const handleSelectPatient = (patient: Patient) => {
+    let updatedPatient = { ...patient };
+    if (patient.checkInStatus === CheckInStatus.IN_ROOM) {
+      updatedPatient.checkInStatus = CheckInStatus.ATTENDED;
+      handleUpdatePatient(updatedPatient);
+    }
+    
     if (!activePatientIds.includes(patient.id)) {
       setActivePatientIds(prev => [patient.id, ...prev]);
     }
@@ -582,7 +588,10 @@ const App: React.FC = () => {
           <Sidebar 
               activePatients={sidebarPatients}
               selectedPatientId={selectedPatientId}
-              onSelectPatient={(id) => { setSelectedPatientId(id); setView('PATIENT_DETAIL'); }}
+              onSelectPatient={(id) => {
+                  const pat = patients.find(p => p.id === id);
+                  if (pat) handleSelectPatient(pat);
+              }}
               onOpenSettings={() => setShowSoundSettings(true)}
               onRemoveActive={(id, e) => {
                   e.stopPropagation();
