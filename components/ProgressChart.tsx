@@ -9,17 +9,77 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import { RoutineExercise } from '../types';
+import { RoutineExercise, Patient } from '../types';
 
 interface ProgressChartProps {
   exercise: RoutineExercise;
+  patient?: Patient;
   onClose: () => void;
 }
 
-export const ProgressChart: React.FC<ProgressChartProps> = ({ exercise, onClose }) => {
-  const data = exercise.history || [];
+export const ProgressChart: React.FC<ProgressChartProps> = ({ exercise, patient, onClose }) => {
   const metricType = exercise.definition.metricType || 'kg';
   
+  // Aggregate history from all instances of the same exercise definition across all days
+  let data: any[] = [];
+  
+  if (patient) {
+    const seen = new Set<string>();
+    const allHistory: any[] = [];
+
+    const processExerciseHistory = (ex: RoutineExercise) => {
+      if (ex.definitionId === exercise.definitionId && ex.history) {
+        ex.history.forEach(log => {
+          // Unique key based on date, week, reps and load
+          const uniqueKey = `${log.date}-${log.week || ''}-${log.load}-${log.reps}`;
+          if (!seen.has(uniqueKey)) {
+            seen.add(uniqueKey);
+            allHistory.push(log);
+          }
+        });
+      }
+    };
+
+    // Collect from clinic routine
+    if (patient.routine && patient.routine.days) {
+      patient.routine.days.forEach(day => {
+        day.exercises.forEach(processExerciseHistory);
+      });
+    }
+
+    // Collect from home routine
+    if (patient.homeRoutine && patient.homeRoutine.days) {
+      patient.homeRoutine.days.forEach(day => {
+        day.exercises.forEach(processExerciseHistory);
+      });
+    }
+
+    // Sort chronologically by date
+    allHistory.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    data = allHistory;
+
+    // Append the active week's current target load as a live active point
+    const currentWeekNum = patient.routine?.currentWeek || 1;
+    const isAlreadyLogged = data.some(log => log.week === currentWeekNum);
+    if (!isAlreadyLogged && exercise.targetLoad !== undefined) {
+      data = [
+        ...data,
+        {
+          date: new Date().toISOString().split('T')[0],
+          week: currentWeekNum,
+          load: exercise.targetLoad,
+          reps: exercise.targetReps,
+          rpe: exercise.currentRpe || 5,
+          pain: exercise.currentPain || 0,
+          isLivePoint: true
+        }
+      ];
+    }
+  } else {
+    // Fall back to the single exercise history if patient is not passed
+    data = exercise.history || [];
+  }
+
   // Dynamic labels based on metric type
   const labelText = metricType === 'time' ? 'Tiempo (s)' : metricType === 'tension' ? 'Tensión' : 'Carga (kg)';
 
@@ -66,13 +126,16 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({ exercise, onClose 
                     
                     <Tooltip 
                         contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                        formatter={(value: any, name: string) => {
+                        formatter={(value: any, name: string, props: any) => {
+                          const payload = props.payload;
+                          const suffix = payload && payload.isLivePoint ? ' (Actual)' : '';
+                          
                           if (name === 'Tensión') {
-                            if (value === 1) return ['Baja', name];
-                            if (value === 2) return ['Media', name];
-                            if (value === 3) return ['Alta', name];
+                            if (value === 1) return [`Baja${suffix}`, name];
+                            if (value === 2) return [`Media${suffix}`, name];
+                            if (value === 3) return [`Alta${suffix}`, name];
                           }
-                          return [value, name];
+                          return [`${value}${suffix}`, name];
                         }}
                     />
                     <Legend />

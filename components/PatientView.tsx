@@ -747,7 +747,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
 
       {/* Progress Chart Modal */}
       {chartExercise && (
-        <ProgressChart exercise={chartExercise} onClose={() => setChartExercise(null)} />
+        <ProgressChart exercise={chartExercise} patient={patient} onClose={() => setChartExercise(null)} />
       )}
     </div>
   );

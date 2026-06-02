@@ -958,7 +958,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
           </div>
       )}
 
-      {chartExercise && <ProgressChart exercise={chartExercise} onClose={() => setChartExercise(null)} />}
+      {chartExercise && <ProgressChart exercise={chartExercise} patient={patient} onClose={() => setChartExercise(null)} />}
       
       {isAddingExerciseModal.show && (
           <div className="fixed inset-0 z-[350] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
