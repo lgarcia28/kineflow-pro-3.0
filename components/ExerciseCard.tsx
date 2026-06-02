@@ -415,12 +415,6 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
             </div>
           </div>
         </div>
-
-        {role === UserRole.KINE && (
-          <button onClick={() => onDelete(exercise.id)} className="absolute top-3 right-3 p-1.5 text-slate-200 hover:text-red-500 transition-colors">
-            <Trash2 size={16} />
-          </button>
-        )}
       </div>
 
       {renderZoomedContent()}
