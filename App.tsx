@@ -610,7 +610,9 @@ const App: React.FC = () => {
           {/* Logout button for all roles */}
           <button 
             onClick={handleLogout}
-            className="fixed bottom-20 md:bottom-6 right-6 z-[100] w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center text-red-500 border border-slate-100 hover:bg-red-50 transition-all"
+            className={`fixed right-6 z-[100] w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center text-red-500 border border-slate-100 hover:bg-red-50 transition-all ${
+              user.role === UserRole.KINE ? 'bottom-20' : 'bottom-6'
+            } md:bottom-6`}
           >
             <LogOut size={20} />
           </button>
