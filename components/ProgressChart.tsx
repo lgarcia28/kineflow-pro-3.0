@@ -18,6 +18,10 @@ interface ProgressChartProps {
 
 export const ProgressChart: React.FC<ProgressChartProps> = ({ exercise, onClose }) => {
   const data = exercise.history || [];
+  const metricType = exercise.definition.metricType || 'kg';
+  
+  // Dynamic labels based on metric type
+  const labelText = metricType === 'time' ? 'Tiempo (s)' : metricType === 'tension' ? 'Tensión' : 'Carga (kg)';
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6">
@@ -38,14 +42,42 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({ exercise, onClose 
                     <LineChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="date" tick={{fontSize: 12}} stroke="#94a3b8" />
-                    <YAxis yAxisId="left" stroke="#0ea5e9" label={{ value: 'Carga (kg)', angle: -90, position: 'insideLeft', fill: '#0ea5e9' }} />
-                    <YAxis yAxisId="right" orientation="right" stroke="#f59e0b" label={{ value: 'RPE', angle: 90, position: 'insideRight', fill: '#f59e0b' }} />
+                    
+                    {metricType === 'tension' ? (
+                      <YAxis 
+                        yAxisId="left" 
+                        stroke="#7c3aed" 
+                        domain={[1, 3]} 
+                        ticks={[1, 2, 3]} 
+                        tickFormatter={(tick) => tick === 1 ? 'Baja' : tick === 2 ? 'Media' : 'Alta'} 
+                        tick={{fontSize: 11}} 
+                        label={{ value: labelText, angle: -90, position: 'insideLeft', fill: '#7c3aed', offset: -5 }} 
+                      />
+                    ) : (
+                      <YAxis 
+                        yAxisId="left" 
+                        stroke="#0ea5e9" 
+                        tick={{fontSize: 11}} 
+                        label={{ value: labelText, angle: -90, position: 'insideLeft', fill: '#0ea5e9', offset: -5 }} 
+                      />
+                    )}
+                    
+                    <YAxis yAxisId="right" orientation="right" stroke="#f59e0b" label={{ value: 'RPE', angle: 90, position: 'insideRight', fill: '#f59e0b', offset: 5 }} tick={{fontSize: 11}} />
+                    
                     <Tooltip 
                         contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                        formatter={(value: any, name: string) => {
+                          if (name === 'Tensión') {
+                            if (value === 1) return ['Baja', name];
+                            if (value === 2) return ['Media', name];
+                            if (value === 3) return ['Alta', name];
+                          }
+                          return [value, name];
+                        }}
                     />
                     <Legend />
-                    <Line yAxisId="left" type="monotone" dataKey="load" name="Carga (kg)" stroke="#0ea5e9" strokeWidth={3} activeDot={{ r: 8 }} />
-                    <Line yAxisId="right" type="monotone" dataKey="rpe" name="Esferzo (RPE)" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" />
+                    <Line yAxisId="left" type="monotone" dataKey="load" name={labelText} stroke={metricType === 'tension' ? '#7c3aed' : '#0ea5e9'} strokeWidth={3} activeDot={{ r: 8 }} />
+                    <Line yAxisId="right" type="monotone" dataKey="rpe" name="Esfuerzo (RPE)" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" />
                     </LineChart>
                 </ResponsiveContainer>
             ) : (
