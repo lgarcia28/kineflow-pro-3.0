@@ -568,7 +568,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                         <span className="text-[11px] font-extrabold text-slate-800 leading-tight">{ex.definition.name}</span>
                                                         <div className="flex justify-between items-center">
                                                           <span className="text-[11px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-md">{ex.targetSets}x{ex.targetReps}</span>
-                                                          <span className="text-[12px] font-black text-primary-600">{ex.targetLoad}kg</span>
+                                                          <span className={`text-[12px] font-black ${ex.definition.metricType === 'tension' ? 'text-purple-600' : 'text-primary-600'}`}>
+                                                            {ex.definition.metricType === 'time' ? `${ex.targetLoad}s` : 
+                                                             ex.definition.metricType === 'tension' ? (ex.targetLoad === 1 ? 'Baja' : ex.targetLoad === 2 ? 'Media' : 'Alta') : 
+                                                             `${ex.targetLoad}kg`}
+                                                          </span>
                                                         </div>
                                                         <div className="h-px bg-slate-100 mt-2"></div>
                                                     </div>
@@ -660,8 +664,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                                           <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
                                                                             {item.definition.metricType === 'time' ? `${item.log.load}s` : `${item.log.reps} reps`}
                                                                           </span>
-                                                                          <span className="text-[13px] font-black text-primary-600">
-                                                                              {item.definition.metricType === 'time' ? '' : `${item.log.load}kg`}
+                                                                          <span className={`text-[13px] font-black ${item.definition.metricType === 'tension' ? 'text-purple-600' : 'text-primary-600'}`}>
+                                                                              {item.definition.metricType === 'time' ? '' : 
+                                                                               item.definition.metricType === 'tension' ? (item.log.load === 1 ? 'Baja' : item.log.load === 2 ? 'Media' : 'Alta') : 
+                                                                               `${item.log.load}kg`}
                                                                           </span>
                                                                         </div>
                                                                     </div>
@@ -804,7 +810,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                         }
                                                         return (
                                                           <div className="w-10 h-10 shrink-0 rounded-xl bg-slate-100 flex items-center justify-center shadow-inner">
-                                                              {ex.definition.metricType === 'time' ? <Timer size={16} className="text-slate-400"/> : <Dumbbell size={16} className="text-slate-400"/>}
+                                                              {ex.definition.metricType === 'time' ? <Timer size={16} className="text-slate-400"/> : ex.definition.metricType === 'tension' ? <Activity size={16} className="text-purple-400"/> : <Dumbbell size={16} className="text-slate-400"/>}
                                                           </div>
                                                         );
                                                       })()}
@@ -822,6 +828,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                         {/* Métricas del Editor - Rediseñadas para ser premium y claras */}
                                                         {(() => {
                                                           const isTimeBased = ex.definition.metricType === 'time';
+                                                          const isTensionBased = ex.definition.metricType === 'tension';
                                                           return (
                                                             <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 mt-2.5 bg-slate-50 p-2 rounded-xl border border-slate-100">
                                                                 <div className="flex flex-col items-center flex-1 min-w-0">
@@ -849,16 +856,30 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                                                 )}
 
                                                                 <div className="flex flex-col items-center flex-1 sm:flex-[1.2] min-w-0 col-span-2 sm:col-span-1">
-                                                                  <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">{isTimeBased ? 'Segundos' : 'Carga (kg)'}</span>
+                                                                  <span className="text-[7px] uppercase font-black text-slate-400 tracking-widest mb-0.5">
+                                                                    {isTimeBased ? 'Segundos' : isTensionBased ? 'Tensión' : 'Carga (kg)'}
+                                                                  </span>
                                                                   <div className="relative w-full">
-                                                                    <input 
-                                                                      type="number" 
-                                                                      inputMode="decimal"
-                                                                      pattern="[0-9]*"
-                                                                      className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-primary-600 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
-                                                                      value={ex.targetLoad} 
-                                                                      onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} 
-                                                                    />
+                                                                    {isTensionBased ? (
+                                                                      <select
+                                                                        className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-purple-600 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm cursor-pointer"
+                                                                        value={ex.targetLoad || 2}
+                                                                        onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})}
+                                                                      >
+                                                                        <option value={1}>Baja</option>
+                                                                        <option value={2}>Media</option>
+                                                                        <option value={3}>Alta</option>
+                                                                      </select>
+                                                                    ) : (
+                                                                      <input 
+                                                                        type="number" 
+                                                                        inputMode="decimal"
+                                                                        pattern="[0-9]*"
+                                                                        className="w-full bg-white rounded-md border border-slate-200 text-center text-xs font-black text-primary-600 focus:ring-1 focus:ring-primary-500 py-1 outline-none shadow-sm" 
+                                                                        value={ex.targetLoad} 
+                                                                        onChange={e => handleExerciseUpdate(ex.id, {targetLoad: Number(e.target.value)})} 
+                                                                      />
+                                                                    )}
                                                                   </div>
                                                                 </div>
                                                             </div>
@@ -987,7 +1008,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                       }
                                       return (
                                         <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shadow-inner">
-                                            {ex.metricType === 'time' ? <Timer size={16} className="text-slate-400"/> : <Dumbbell size={16} className="text-slate-400"/>}
+                                            {ex.metricType === 'time' ? <Timer size={16} className="text-slate-400"/> : ex.metricType === 'tension' ? <Activity size={16} className="text-purple-400"/> : <Dumbbell size={16} className="text-slate-400"/>}
                                         </div>
                                       );
                                     })()}
@@ -997,6 +1018,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                       <div className="flex gap-2">
                                           <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-1.5 py-0.5 rounded flex items-center">{ex.category}</span>
                                           {ex.metricType === 'time' && <span className="text-[9px] font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-1.5 py-0.5 rounded flex items-center">Por Tiempo</span>}
+                                          {ex.metricType === 'tension' && <span className="text-[9px] font-bold text-purple-500 uppercase tracking-widest bg-purple-50 px-1.5 py-0.5 rounded flex items-center">Banda Elástica</span>}
                                       </div>
                                   </div>
                               </button>
@@ -1016,7 +1038,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                     const def = exercises.find(e => e.id === id)!;
                                     return {
                                         id: `re-${Date.now()}-${id}`, definitionId: id, definition: def,
-                                        targetSets: 3, targetReps: def.metricType === 'time' ? 0 : 12, targetLoad: 0, isDone: false, history: []
+                                        targetSets: 3, targetReps: def.metricType === 'time' ? 0 : 12, targetLoad: def.metricType === 'tension' ? 2 : 0, isDone: false, history: []
                                     };
                                 });
                                 const routineKey = routineType === 'CLINIC' ? 'routine' : 'homeRoutine';

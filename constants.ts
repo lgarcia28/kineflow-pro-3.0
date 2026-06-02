@@ -12,6 +12,8 @@ export const EXERCISES: ExerciseDefinition[] = [
   { id: 'ex8', name: 'Bicho Muerto (Deadbug)', category: 'Core', videoUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=200&h=200&fit=crop', metricType: 'kg' },
   { id: 'ex9', name: 'Monster Walk', category: 'Cadera', videoUrl: 'https://images.unsplash.com/photo-1542766788-a2f588f447ee?w=200&h=200&fit=crop', metricType: 'kg' },
   { id: 'ex10', name: 'Vuelos Laterales', category: 'Hombro', videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200&h=200&fit=crop', metricType: 'kg' },
+  { id: 'ex11', name: 'Rotación externa con banda', category: 'Hombro', videoUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=200&h=200&fit=crop', metricType: 'tension' },
+  { id: 'ex12', name: 'Monster Walk con banda loop', category: 'Cadera', videoUrl: 'https://images.unsplash.com/photo-1542766788-a2f588f447ee?w=200&h=200&fit=crop', metricType: 'tension' },
 ];
 
 const generateHistory = (baseLoad: number): any[] => {

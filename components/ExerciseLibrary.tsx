@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ExerciseDefinition, MetricType } from '../types';
 import { storage } from '../firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { X, Search, Plus, Trash2, Edit2, Save, Dumbbell, Timer, Image as ImageIcon, Upload, Loader2, Link, Maximize2 } from 'lucide-react';
+import { X, Search, Plus, Trash2, Edit2, Save, Dumbbell, Timer, Image as ImageIcon, Upload, Loader2, Link, Maximize2, Activity } from 'lucide-react';
 
 interface ExerciseLibraryProps {
   exercises: ExerciseDefinition[];
@@ -164,7 +164,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                      </button>
                    ) : (
                      <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300">
-                        {ex.metricType === 'time' ? <Timer size={20}/> : <Dumbbell size={20}/>}
+                        {ex.metricType === 'time' ? <Timer size={20}/> : ex.metricType === 'tension' ? <Activity size={20}/> : <Dumbbell size={20}/>}
                      </div>
                    )}
                    <div className="flex-1 min-w-0">
@@ -172,6 +172,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] font-bold text-slate-400">{ex.category}</span>
                         {ex.metricType === 'time' && <span className="text-[8px] bg-blue-50 text-blue-600 px-1.5 rounded uppercase font-bold">Tiempo</span>}
+                        {ex.metricType === 'tension' && <span className="text-[8px] bg-purple-50 text-purple-600 px-1.5 rounded uppercase font-bold">Tensión</span>}
                       </div>
                    </div>
                    <button onClick={() => startEditing(ex)} className="p-2 text-slate-300 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"><Edit2 size={16}/></button>
@@ -199,12 +200,15 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Tipo de Medición</label>
-                    <div className="flex gap-2 p-1 bg-slate-50 rounded-2xl">
+                    <div className="flex flex-col sm:flex-row gap-2 p-1 bg-slate-50 rounded-2xl">
                        <button onClick={() => setFormData({...formData, metricType: 'kg'})} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${formData.metricType === 'kg' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
                           <Dumbbell size={16}/> Peso (Kg)
                        </button>
                        <button onClick={() => setFormData({...formData, metricType: 'time'})} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${formData.metricType === 'time' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
                           <Timer size={16}/> Tiempo (s)
+                       </button>
+                       <button onClick={() => setFormData({...formData, metricType: 'tension'})} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${formData.metricType === 'tension' ? 'bg-white text-purple-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                          <Activity size={16}/> Tensión (Banda)
                        </button>
                     </div>
                   </div>

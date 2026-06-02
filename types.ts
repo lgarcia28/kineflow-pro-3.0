@@ -60,7 +60,7 @@ export interface ExerciseLog {
   observation?: string; // Para rutina domiciliaria
 }
 
-export type MetricType = 'kg' | 'time';
+export type MetricType = 'kg' | 'time' | 'tension';
 
 export interface ExerciseDefinition {
   id: string;

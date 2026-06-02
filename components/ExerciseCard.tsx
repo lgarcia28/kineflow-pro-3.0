@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { RoutineExercise, UserRole } from '../types';
-import { CheckCircle, Circle, Minus, Plus, TrendingUp, Trash2, Maximize2, X, Timer, Dumbbell, Play } from 'lucide-react';
+import { CheckCircle, Circle, Minus, Plus, TrendingUp, Trash2, Maximize2, X, Timer, Dumbbell, Play, Activity } from 'lucide-react';
 import { parseMediaUrl } from '../utils/mediaUrl';
 
 interface ExerciseCardProps {
@@ -35,6 +35,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   const isReadOnly = role === UserRole.PATIENT || role === UserRole.RECEPCION;
   const isLoadReadOnly = role === UserRole.RECEPCION; // Pacientes pueden editar la carga (registro propio)
   const isTimeBased = definition.metricType === 'time';
+  const isTensionBased = definition.metricType === 'tension';
 
   const media = definition.videoUrl ? parseMediaUrl(definition.videoUrl) : null;
 
@@ -89,7 +90,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
     if (!media) {
       return (
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-50 rounded-xl shrink-0 border border-slate-100 flex items-center justify-center">
-          {isTimeBased ? <Timer className="text-slate-300" /> : <Dumbbell className="text-slate-300" />}
+          {isTimeBased ? <Timer className="text-slate-300" /> : isTensionBased ? <Activity className="text-purple-500" /> : <Dumbbell className="text-slate-300" />}
         </div>
       );
     }
@@ -182,6 +183,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
             <div className="flex items-center gap-2 mt-1">
               <p className="text-slate-500 uppercase font-bold text-xs tracking-widest">{definition.category}</p>
               {isTimeBased && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Por Tiempo</span>}
+              {isTensionBased && <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Banda Elástica</span>}
               {media.type !== 'image' && media.type !== 'unknown' && (
                 <a
                   href={definition.videoUrl}
@@ -244,6 +246,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{definition.category}</span>
                     {isTimeBased && <span className="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wide">Cronómetro</span>}
+                    {isTensionBased && <span className="bg-purple-50 text-purple-600 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wide">Banda Elástica</span>}
                   </div>
                 </div>
                 {role !== UserRole.RECEPCION && (
@@ -272,12 +275,39 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
               </div>
             </div>
 
-            {/* Carga */}
+            {/* Carga / Tensión */}
             <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[75px] flex-1">
               <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">
-                {isTimeBased ? 'Tiempo' : 'Carga'}
+                {isTimeBased ? 'Tiempo' : isTensionBased ? 'Tensión' : 'Carga'}
               </p>
-              {isLoadReadOnly ? (
+              {isTensionBased ? (
+                isLoadReadOnly ? (
+                  <span className="text-xs font-black text-slate-900 leading-none bg-purple-50 text-purple-700 px-2 py-1 rounded-md border border-purple-100/50">
+                    {targetLoad === 1 ? 'Baja' : targetLoad === 2 ? 'Media' : targetLoad === 3 ? 'Alta' : 'Media'}
+                  </span>
+                ) : (
+                  <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 shadow-sm shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 1 }); }}
+                      className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all ${targetLoad === 1 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      Baja
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 2 }); }}
+                      className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all ${targetLoad === 2 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      Media
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 3 }); }}
+                      className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all ${targetLoad === 3 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      Alta
+                    </button>
+                  </div>
+                )
+              ) : isLoadReadOnly ? (
                 <span className="text-sm font-black text-slate-900 leading-none">
                   {targetLoad}<span className="text-[9px] font-bold text-primary-500 ml-1 uppercase">{isTimeBased ? 's' : 'kg'}</span>
                 </span>
