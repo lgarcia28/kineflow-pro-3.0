@@ -606,7 +606,7 @@ const App: React.FC = () => {
 
 
 
-        <main className="flex-1 flex flex-col h-full overflow-hidden relative pb-[calc(4.5rem+var(--sab))] md:pb-0">
+        <main className="flex-1 flex flex-col h-full overflow-hidden relative">
           {/* Logout button for all roles */}
           <button 
             onClick={handleLogout}

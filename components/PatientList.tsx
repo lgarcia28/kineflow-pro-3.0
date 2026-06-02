@@ -25,7 +25,7 @@ export const PatientList: React.FC<PatientListProps> = ({
   });
 
   return (
-    <div className="flex-1 h-screen overflow-y-auto bg-slate-50/50 p-4 md:p-8 relative w-full">
+    <div className="flex-1 h-screen overflow-y-auto bg-slate-50/50 p-4 pb-24 md:p-8 relative w-full">
       {/* Decorative Background */}
       <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-primary-100 rounded-full mix-blend-multiply filter blur-[80px] opacity-60 z-0 pointer-events-none"></div>
 
