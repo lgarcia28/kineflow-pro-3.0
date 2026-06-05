@@ -8,6 +8,8 @@ import {
 import { ClinicalEvaluation, Patient, UserRole } from '../types';
 import { processEvaluation } from '../services/evaluationLogic';
 import { evaluationService } from '../services/evaluationService';
+import { EVALUATION_PROTOCOLS } from '../constants';
+
 
 // --- Sub-components outside to fix focus issues ---
 
@@ -57,12 +59,37 @@ const VASSelector = ({ label, value, onChange }: { label: string, value: number,
 };
 
 
-const InputField = ({ label, value, onChange, type = 'number', options, unit, step }: { 
-  label: string, value: any, onChange: (v: any) => void, type?: 'number' | 'text' | 'select' | 'date', options?: string[], unit?: string, step?: string 
+const InputField = ({ label, value, onChange, type = 'number', options, unit, step, tooltip }: { 
+  label: string, value: any, onChange: (v: any) => void, type?: 'number' | 'text' | 'select' | 'date', options?: string[], unit?: string, step?: string, tooltip?: string 
 }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
     <div className="space-y-1">
-      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-normal block" title={label}>{label}</label>
+      <div className="flex items-center gap-1.5 min-h-[16px]">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-normal block truncate" title={label}>{label}</label>
+        {tooltip && (
+          <div className="relative inline-flex items-center shrink-0">
+            <button
+              type="button"
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+              onClick={() => setShowTooltip(!showTooltip)}
+              className="text-slate-400 hover:text-primary-500 focus:outline-none transition-colors p-0.5"
+              title="Ver protocolo clínico"
+            >
+              <Info size={11} strokeWidth={2.5} />
+            </button>
+            {showTooltip && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-slate-900/95 backdrop-blur text-white text-[10px] leading-relaxed font-bold rounded-xl shadow-xl border border-slate-800 p-3 z-[110] animate-in fade-in slide-in-from-bottom-1 pointer-events-none">
+                <div className="text-primary-400 font-extrabold uppercase text-[8px] tracking-widest mb-1">Protocolo Clínico:</div>
+                <div className="whitespace-pre-line text-slate-100 font-medium">{tooltip}</div>
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-900/95"></div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       <div className="relative">
         {type === 'select' ? (
           <div className="relative">
@@ -381,32 +408,32 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
             {activeTab === 'MOBILITY' && (
               <div className="space-y-2">
                 <SectionGrid title="Cadera (ROM 90º)">
-                  <InputField label="Rotación interna de cadera 90º Derecha" value={measurements.mobility.hip_ir_90_r} onChange={v => updateMeasurement('mobility', 'hip_ir_90_r', v)} unit="º" />
-                  <InputField label="Rotación interna de cadera 90º Izquierda" value={measurements.mobility.hip_ir_90_l} onChange={v => updateMeasurement('mobility', 'hip_ir_90_l', v)} unit="º" />
-                  <InputField label="Rotación externa de cadera 90º Derecha" value={measurements.mobility.hip_er_90_r} onChange={v => updateMeasurement('mobility', 'hip_er_90_r', v)} unit="º" />
-                  <InputField label="Rotación externa de cadera 90º Izquierda" value={measurements.mobility.hip_er_90_l} onChange={v => updateMeasurement('mobility', 'hip_er_90_l', v)} unit="º" />
+                  <InputField label="Rotación interna de cadera 90º Derecha" value={measurements.mobility.hip_ir_90_r} onChange={v => updateMeasurement('mobility', 'hip_ir_90_r', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.hip_ir_90?.description} />
+                  <InputField label="Rotación interna de cadera 90º Izquierda" value={measurements.mobility.hip_ir_90_l} onChange={v => updateMeasurement('mobility', 'hip_ir_90_l', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.hip_ir_90?.description} />
+                  <InputField label="Rotación externa de cadera 90º Derecha" value={measurements.mobility.hip_er_90_r} onChange={v => updateMeasurement('mobility', 'hip_er_90_r', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.hip_er_90?.description} />
+                  <InputField label="Rotación externa de cadera 90º Izquierda" value={measurements.mobility.hip_er_90_l} onChange={v => updateMeasurement('mobility', 'hip_er_90_l', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.hip_er_90?.description} />
                 </SectionGrid>
                 <SectionGrid title="Rodilla (Ext/Flex)">
-                  <InputField label="Extensión pasiva de rodilla Derecha" value={measurements.mobility.knee_ext_pass_r} onChange={v => updateMeasurement('mobility', 'knee_ext_pass_r', v)} unit="º" />
-                  <InputField label="Extensión pasiva de rodilla Izquierda" value={measurements.mobility.knee_ext_pass_l} onChange={v => updateMeasurement('mobility', 'knee_ext_pass_l', v)} unit="º" />
-                  <InputField label="Flexión activa de rodilla Derecha" value={measurements.mobility.knee_flex_act_r} onChange={v => updateMeasurement('mobility', 'knee_flex_act_r', v)} unit="º" />
-                  <InputField label="Flexión activa de rodilla Izquierda" value={measurements.mobility.knee_flex_act_l} onChange={v => updateMeasurement('mobility', 'knee_flex_act_l', v)} unit="º" />
-                  <InputField label="Flexión pasiva de rodilla Derecha" value={measurements.mobility.knee_flex_pass_r} onChange={v => updateMeasurement('mobility', 'knee_flex_pass_r', v)} unit="º" />
-                  <InputField label="Flexión pasiva de rodilla Izquierda" value={measurements.mobility.knee_flex_pass_l} onChange={v => updateMeasurement('mobility', 'knee_flex_pass_l', v)} unit="º" />
+                  <InputField label="Extensión pasiva de rodilla Derecha" value={measurements.mobility.knee_ext_pass_r} onChange={v => updateMeasurement('mobility', 'knee_ext_pass_r', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.knee_ext_pass?.description} />
+                  <InputField label="Extensión pasiva de rodilla Izquierda" value={measurements.mobility.knee_ext_pass_l} onChange={v => updateMeasurement('mobility', 'knee_ext_pass_l', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.knee_ext_pass?.description} />
+                  <InputField label="Flexión activa de rodilla Derecha" value={measurements.mobility.knee_flex_act_r} onChange={v => updateMeasurement('mobility', 'knee_flex_act_r', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.knee_flex_act?.description} />
+                  <InputField label="Flexión activa de rodilla Izquierda" value={measurements.mobility.knee_flex_act_l} onChange={v => updateMeasurement('mobility', 'knee_flex_act_l', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.knee_flex_act?.description} />
+                  <InputField label="Flexión pasiva de rodilla Derecha" value={measurements.mobility.knee_flex_pass_r} onChange={v => updateMeasurement('mobility', 'knee_flex_pass_r', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.knee_flex_pass?.description} />
+                  <InputField label="Flexión pasiva de rodilla Izquierda" value={measurements.mobility.knee_flex_pass_l} onChange={v => updateMeasurement('mobility', 'knee_flex_pass_l', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.knee_flex_pass?.description} />
                 </SectionGrid>
                 <SectionGrid title="Tobillo & Hombro">
-                  <InputField label="Flexión dorsal de tobillo Derecha" value={measurements.mobility.ankle_dorsiflex_r} onChange={v => updateMeasurement('mobility', 'ankle_dorsiflex_r', v)} unit="º" />
-                  <InputField label="Flexión dorsal de tobillo Izquierda" value={measurements.mobility.ankle_dorsiflex_l} onChange={v => updateMeasurement('mobility', 'ankle_dorsiflex_l', v)} unit="º" />
-                  <InputField label="Rotación interna de hombro Derecho" value={measurements.mobility.shoulder_ir_r} onChange={v => updateMeasurement('mobility', 'shoulder_ir_r', v)} unit="º" />
-                  <InputField label="Rotación interna de hombro Izquierdo" value={measurements.mobility.shoulder_ir_l} onChange={v => updateMeasurement('mobility', 'shoulder_ir_l', v)} unit="º" />
-                  <InputField label="Rotación externa de hombro Derecho" value={measurements.mobility.shoulder_er_r} onChange={v => updateMeasurement('mobility', 'shoulder_er_r', v)} unit="º" />
-                  <InputField label="Rotación externa de hombro Izquierdo" value={measurements.mobility.shoulder_er_l} onChange={v => updateMeasurement('mobility', 'shoulder_er_l', v)} unit="º" />
+                  <InputField label="Flexión dorsal de tobillo Derecha" value={measurements.mobility.ankle_dorsiflex_r} onChange={v => updateMeasurement('mobility', 'ankle_dorsiflex_r', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.ankle_dorsiflex?.description} />
+                  <InputField label="Flexión dorsal de tobillo Izquierda" value={measurements.mobility.ankle_dorsiflex_l} onChange={v => updateMeasurement('mobility', 'ankle_dorsiflex_l', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.ankle_dorsiflex?.description} />
+                  <InputField label="Rotación interna de hombro Derecho" value={measurements.mobility.shoulder_ir_r} onChange={v => updateMeasurement('mobility', 'shoulder_ir_r', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.shoulder_ir?.description} />
+                  <InputField label="Rotación interna de hombro Izquierdo" value={measurements.mobility.shoulder_ir_l} onChange={v => updateMeasurement('mobility', 'shoulder_ir_l', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.shoulder_ir?.description} />
+                  <InputField label="Rotación externa de hombro Derecho" value={measurements.mobility.shoulder_er_r} onChange={v => updateMeasurement('mobility', 'shoulder_er_r', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.shoulder_er?.description} />
+                  <InputField label="Rotación externa de hombro Izquierdo" value={measurements.mobility.shoulder_er_l} onChange={v => updateMeasurement('mobility', 'shoulder_er_l', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.shoulder_er?.description} />
                 </SectionGrid>
                 <SectionGrid title="Perímetros Musculares">
-                  <InputField label="Perímetro de muslo Derecho" value={measurements.perimetry?.thigh_r} onChange={v => updateMeasurement('perimetry', 'thigh_r', v)} unit="CM" />
-                  <InputField label="Perímetro de muslo Izquierdo" value={measurements.perimetry?.thigh_l} onChange={v => updateMeasurement('perimetry', 'thigh_l', v)} unit="CM" />
-                  <InputField label="Perímetro de pantorrilla Derecho" value={measurements.perimetry?.calf_r} onChange={v => updateMeasurement('perimetry', 'calf_r', v)} unit="CM" />
-                  <InputField label="Perímetro de pantorrilla Izquierdo" value={measurements.perimetry?.calf_l} onChange={v => updateMeasurement('perimetry', 'calf_l', v)} unit="CM" />
+                  <InputField label="Perímetro de muslo Derecho" value={measurements.perimetry?.thigh_r} onChange={v => updateMeasurement('perimetry', 'thigh_r', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.thigh?.description} />
+                  <InputField label="Perímetro de muslo Izquierdo" value={measurements.perimetry?.thigh_l} onChange={v => updateMeasurement('perimetry', 'thigh_l', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.thigh?.description} />
+                  <InputField label="Perímetro de pantorrilla Derecho" value={measurements.perimetry?.calf_r} onChange={v => updateMeasurement('perimetry', 'calf_r', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.calf?.description} />
+                  <InputField label="Perímetro de pantorrilla Izquierdo" value={measurements.perimetry?.calf_l} onChange={v => updateMeasurement('perimetry', 'calf_l', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.calf?.description} />
                 </SectionGrid>
               </div>
             )}
@@ -448,14 +475,14 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
                 </div>
 
                 <SectionGrid title="Tests Neuro-Ortopédicos">
-                  <InputField label="AKE Derecha" value={measurements.flexibility.hams_r} onChange={v => updateMeasurement('flexibility', 'hams_r', v)} unit="º" />
-                  <InputField label="AKE Izquierda" value={measurements.flexibility.hams_l} onChange={v => updateMeasurement('flexibility', 'hams_l', v)} unit="º" />
-                  <InputField label="Askling test Derecha" value={measurements.flexibility.askling_h_r} onChange={v => updateMeasurement('flexibility', 'askling_h_r', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                  <InputField label="Askling test Izquierda" value={measurements.flexibility.askling_h_l} onChange={v => updateMeasurement('flexibility', 'askling_h_l', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                  <InputField label="Slump test Derecha" value={measurements.flexibility.slump_test_r} onChange={v => updateMeasurement('flexibility', 'slump_test_r', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                  <InputField label="Slump test Izquierda" value={measurements.flexibility.slump_test_l} onChange={v => updateMeasurement('flexibility', 'slump_test_l', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                  <InputField label="BKFO test Derecha" value={measurements.flexibility.bkfo_r} onChange={v => updateMeasurement('flexibility', 'bkfo_r', v)} unit="CM" />
-                  <InputField label="BKFO test Izquierda" value={measurements.flexibility.bkfo_l} onChange={v => updateMeasurement('flexibility', 'bkfo_l', v)} unit="CM" />
+                  <InputField label="AKE Derecha" value={measurements.flexibility.hams_r} onChange={v => updateMeasurement('flexibility', 'hams_r', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.hams?.description} />
+                  <InputField label="AKE Izquierda" value={measurements.flexibility.hams_l} onChange={v => updateMeasurement('flexibility', 'hams_l', v)} unit="º" tooltip={EVALUATION_PROTOCOLS.hams?.description} />
+                  <InputField label="Askling test Derecha" value={measurements.flexibility.askling_h_r} onChange={v => updateMeasurement('flexibility', 'askling_h_r', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.askling_h?.description} />
+                  <InputField label="Askling test Izquierda" value={measurements.flexibility.askling_h_l} onChange={v => updateMeasurement('flexibility', 'askling_h_l', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.askling_h?.description} />
+                  <InputField label="Slump test Derecha" value={measurements.flexibility.slump_test_r} onChange={v => updateMeasurement('flexibility', 'slump_test_r', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.slump_test?.description} />
+                  <InputField label="Slump test Izquierda" value={measurements.flexibility.slump_test_l} onChange={v => updateMeasurement('flexibility', 'slump_test_l', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.slump_test?.description} />
+                  <InputField label="BKFO test Derecha" value={measurements.flexibility.bkfo_r} onChange={v => updateMeasurement('flexibility', 'bkfo_r', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.bkfo?.description} />
+                  <InputField label="BKFO test Izquierda" value={measurements.flexibility.bkfo_l} onChange={v => updateMeasurement('flexibility', 'bkfo_l', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.bkfo?.description} />
                 </SectionGrid>
               </div>
             )}
@@ -492,25 +519,25 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
             {activeTab === 'BALANCE' && (
               <div className="space-y-2">
                 <SectionGrid title="Y-Balance Test">
-                  <InputField label="Largo en cm del miembro inferior" value={measurements.balance.leg_length} onChange={v => updateMeasurement('balance', 'leg_length', v)} unit="CM" />
+                  <InputField label="Largo en cm del miembro inferior" value={measurements.balance.leg_length} onChange={v => updateMeasurement('balance', 'leg_length', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.y_balance?.description} />
                   <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-                      <InputField label="Y Balance derecha Anterior" value={measurements.balance.y_balance_ant_r} onChange={v => updateMeasurement('balance', 'y_balance_ant_r', v)} unit="CM" />
-                      <InputField label="Y Balance derecha Posteromedial" value={measurements.balance.y_balance_pm_r} onChange={v => updateMeasurement('balance', 'y_balance_pm_r', v)} unit="CM" />
-                      <InputField label="Y Balance derecha Posterolateral" value={measurements.balance.y_balance_pl_r} onChange={v => updateMeasurement('balance', 'y_balance_pl_r', v)} unit="CM" />
-                      <InputField label="Y Balance izquierda Anterior" value={measurements.balance.y_balance_ant_l} onChange={v => updateMeasurement('balance', 'y_balance_ant_l', v)} unit="CM" />
-                      <InputField label="Y Balance izquierda Posteromedial" value={measurements.balance.y_balance_pm_l} onChange={v => updateMeasurement('balance', 'y_balance_pm_l', v)} unit="CM" />
-                      <InputField label="Y Balance izquierda Posterolateral" value={measurements.balance.y_balance_pl_l} onChange={v => updateMeasurement('balance', 'y_balance_pl_l', v)} unit="CM" />
+                      <InputField label="Y Balance derecha Anterior" value={measurements.balance.y_balance_ant_r} onChange={v => updateMeasurement('balance', 'y_balance_ant_r', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.y_balance?.description} />
+                      <InputField label="Y Balance derecha Posteromedial" value={measurements.balance.y_balance_pm_r} onChange={v => updateMeasurement('balance', 'y_balance_pm_r', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.y_balance?.description} />
+                      <InputField label="Y Balance derecha Posterolateral" value={measurements.balance.y_balance_pl_r} onChange={v => updateMeasurement('balance', 'y_balance_pl_r', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.y_balance?.description} />
+                      <InputField label="Y Balance izquierda Anterior" value={measurements.balance.y_balance_ant_l} onChange={v => updateMeasurement('balance', 'y_balance_ant_l', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.y_balance?.description} />
+                      <InputField label="Y Balance izquierda Posteromedial" value={measurements.balance.y_balance_pm_l} onChange={v => updateMeasurement('balance', 'y_balance_pm_l', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.y_balance?.description} />
+                      <InputField label="Y Balance izquierda Posterolateral" value={measurements.balance.y_balance_pl_l} onChange={v => updateMeasurement('balance', 'y_balance_pl_l', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.y_balance?.description} />
                   </div>
                 </SectionGrid>
                 <SectionGrid title="Vestibular / Propiocepción">
-                  <InputField label="Prueba de balance: derecha Ojos abiertos" value={measurements.balance.eyes_open_r} onChange={v => updateMeasurement('balance', 'eyes_open_r', v)} unit="SEG" />
-                  <InputField label="Prueba de balance: derecha Ojos cerrados" value={measurements.balance.eyes_closed_r} onChange={v => updateMeasurement('balance', 'eyes_closed_r', v)} unit="SEG" />
-                  <InputField label="Prueba de balance: izquierda Ojos abiertos" value={measurements.balance.eyes_open_l} onChange={v => updateMeasurement('balance', 'eyes_open_l', v)} unit="SEG" />
-                  <InputField label="Prueba de balance: izquierda Ojos cerrados" value={measurements.balance.eyes_closed_l} onChange={v => updateMeasurement('balance', 'eyes_closed_l', v)} unit="SEG" />
-                  <InputField label="Prueba de balance vestibular: derecha Lado a lado" value={measurements.balance.vestibular_side_r} onChange={v => updateMeasurement('balance', 'vestibular_side_r', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                  <InputField label="Prueba de balance vestibular: izquierda Lado a lado" value={measurements.balance.vestibular_side_l} onChange={v => updateMeasurement('balance', 'vestibular_side_l', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                  <InputField label="Prueba de balance vestibular: derecha Arriba y abajo" value={measurements.balance.vestibular_up_r} onChange={v => updateMeasurement('balance', 'vestibular_up_r', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                  <InputField label="Prueba de balance vestibular: izquierda Arriba y abajo" value={measurements.balance.vestibular_up_l} onChange={v => updateMeasurement('balance', 'vestibular_up_l', v)} type="select" options={['No evaluado', 'OK', 'X']} />
+                  <InputField label="Prueba de balance: derecha Ojos abiertos" value={measurements.balance.eyes_open_r} onChange={v => updateMeasurement('balance', 'eyes_open_r', v)} unit="SEG" tooltip={EVALUATION_PROTOCOLS.eyes_open?.description} />
+                  <InputField label="Prueba de balance: derecha Ojos cerrados" value={measurements.balance.eyes_closed_r} onChange={v => updateMeasurement('balance', 'eyes_closed_r', v)} unit="SEG" tooltip={EVALUATION_PROTOCOLS.eyes_open?.description} />
+                  <InputField label="Prueba de balance: izquierda Ojos abiertos" value={measurements.balance.eyes_open_l} onChange={v => updateMeasurement('balance', 'eyes_open_l', v)} unit="SEG" tooltip={EVALUATION_PROTOCOLS.eyes_open?.description} />
+                  <InputField label="Prueba de balance: izquierda Ojos cerrados" value={measurements.balance.eyes_closed_l} onChange={v => updateMeasurement('balance', 'eyes_closed_l', v)} unit="SEG" tooltip={EVALUATION_PROTOCOLS.eyes_open?.description} />
+                  <InputField label="Prueba de balance vestibular: derecha Lado a lado" value={measurements.balance.vestibular_side_r} onChange={v => updateMeasurement('balance', 'vestibular_side_r', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.eyes_open?.description} />
+                  <InputField label="Prueba de balance vestibular: izquierda Lado a lado" value={measurements.balance.vestibular_side_l} onChange={v => updateMeasurement('balance', 'vestibular_side_l', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.eyes_open?.description} />
+                  <InputField label="Prueba de balance vestibular: derecha Arriba y abajo" value={measurements.balance.vestibular_up_r} onChange={v => updateMeasurement('balance', 'vestibular_up_r', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.vestibular_updown?.description} />
+                  <InputField label="Prueba de balance vestibular: izquierda Arriba y abajo" value={measurements.balance.vestibular_up_l} onChange={v => updateMeasurement('balance', 'vestibular_up_l', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.vestibular_updown?.description} />
                 </SectionGrid>
               </div>
             )}
@@ -519,24 +546,24 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
             {activeTab === 'STRENGTH' && (
               <div className="space-y-6">
                 <SectionGrid title="Dinamometría Isométrica (N)">
-                  <InputField label="Fuerza muscular: cuádriceps Derecha" value={measurements.strength.quads_r} onChange={v => updateMeasurement('strength', 'quads_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: cuádriceps Izquierda" value={measurements.strength.quads_l} onChange={v => updateMeasurement('strength', 'quads_l', v)} unit="N" />
+                  <InputField label="Fuerza muscular: cuádriceps Derecha" value={measurements.strength.quads_r} onChange={v => updateMeasurement('strength', 'quads_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.quads_strength?.description} />
+                  <InputField label="Fuerza muscular: cuádriceps Izquierda" value={measurements.strength.quads_l} onChange={v => updateMeasurement('strength', 'quads_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.quads_strength?.description} />
                   <InputField label="Fuerza muscular: isquiosurales Derecha" value={measurements.strength.hams_r} onChange={v => updateMeasurement('strength', 'hams_r', v)} unit="N" />
                   <InputField label="Fuerza muscular: isquiosurales Izquierda" value={measurements.strength.hams_l} onChange={v => updateMeasurement('strength', 'hams_l', v)} unit="N" />
-                  <InputField label="Fuerza muscular: aductores Derecha" value={measurements.strength.adductor_r} onChange={v => updateMeasurement('strength', 'adductor_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: aductores Izquierda" value={measurements.strength.adductor_l} onChange={v => updateMeasurement('strength', 'adductor_l', v)} unit="N" />
-                  <InputField label="Fuerza muscular: abductores Derecha" value={measurements.strength.abductor_r} onChange={v => updateMeasurement('strength', 'abductor_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: abductores Izquierda" value={measurements.strength.abductor_l} onChange={v => updateMeasurement('strength', 'abductor_l', v)} unit="N" />
+                  <InputField label="Fuerza muscular: aductores Derecha" value={measurements.strength.adductor_r} onChange={v => updateMeasurement('strength', 'adductor_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.adductors?.description} />
+                  <InputField label="Fuerza muscular: aductores Izquierda" value={measurements.strength.adductor_l} onChange={v => updateMeasurement('strength', 'adductor_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.adductors?.description} />
+                  <InputField label="Fuerza muscular: abductores Derecha" value={measurements.strength.abductor_r} onChange={v => updateMeasurement('strength', 'abductor_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.abductors?.description} />
+                  <InputField label="Fuerza muscular: abductores Izquierda" value={measurements.strength.abductor_l} onChange={v => updateMeasurement('strength', 'abductor_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.abductors?.description} />
                   <InputField label="Fuerza muscular: tríceps sural Derecha" value={measurements.strength.triceps_sural_r} onChange={v => updateMeasurement('strength', 'triceps_sural_r', v)} unit="N" />
                   <InputField label="Fuerza muscular: tríceps sural Izquierda" value={measurements.strength.triceps_sural_l} onChange={v => updateMeasurement('strength', 'triceps_sural_l', v)} unit="N" />
                 </SectionGrid>
 
                 <SectionGrid title="Flexores de Cadera & Squeeze Test">
-                  <InputField label="Fuerza muscular: flexores cadera 0-0º Derecha" value={measurements.strength.hip_flex_0_r} onChange={v => updateMeasurement('strength', 'hip_flex_0_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: flexores cadera 0-0º Izquierda" value={measurements.strength.hip_flex_0_l} onChange={v => updateMeasurement('strength', 'hip_flex_0_l', v)} unit="N" />
-                  <InputField label="Fuerza muscular: flexores cadera 0-90º Derecha" value={measurements.strength.hip_flex_90_r} onChange={v => updateMeasurement('strength', 'hip_flex_90_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: flexores cadera 0-90º Izquierda" value={measurements.strength.hip_flex_90_l} onChange={v => updateMeasurement('strength', 'hip_flex_90_l', v)} unit="N" />
-                  <InputField label="Squezze Test" value={measurements.strength.squeeze_test} onChange={v => updateMeasurement('strength', 'squeeze_test', v)} unit="N" />
+                  <InputField label="Fuerza muscular: flexores cadera 0-0º Derecha" value={measurements.strength.hip_flex_0_r} onChange={v => updateMeasurement('strength', 'hip_flex_0_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_0?.description} />
+                  <InputField label="Fuerza muscular: flexores cadera 0-0º Izquierda" value={measurements.strength.hip_flex_0_l} onChange={v => updateMeasurement('strength', 'hip_flex_0_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_0?.description} />
+                  <InputField label="Fuerza muscular: flexores cadera 0-90º Derecha" value={measurements.strength.hip_flex_90_r} onChange={v => updateMeasurement('strength', 'hip_flex_90_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_90?.description} />
+                  <InputField label="Fuerza muscular: flexores cadera 0-90º Izquierda" value={measurements.strength.hip_flex_90_l} onChange={v => updateMeasurement('strength', 'hip_flex_90_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_90?.description} />
+                  <InputField label="Squezze Test" value={measurements.strength.squeeze_test} onChange={v => updateMeasurement('strength', 'squeeze_test', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.squeeze_test?.description} />
                 </SectionGrid>
 
                 <SectionGrid title="Dinamometría de Tobillo">
@@ -642,15 +669,15 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
                 </SectionGrid>
 
                 <SectionGrid title="Drop Jump Bipodal">
-                  <InputField label="DJ a 2 p altura del salto" value={measurements.jumps_vertical.dj_2p_height} onChange={v => updateMeasurement('jumps_vertical', 'dj_2p_height', v)} unit="CM" />
+                  <InputField label="DJ a 2 p altura del salto" value={measurements.jumps_vertical.dj_2p_height} onChange={v => updateMeasurement('jumps_vertical', 'dj_2p_height', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.dj_height?.description} />
                   <InputField label="DJ a 2 p RSI" value={measurements.jumps_vertical.dj_2p_rsi} onChange={v => updateMeasurement('jumps_vertical', 'dj_2p_rsi', v)} step="any" />
                   <InputField label="DJ a 2 p: fuerza pico Derecha" value={measurements.jumps_vertical.dj_2p_peak_force_r} onChange={v => updateMeasurement('jumps_vertical', 'dj_2p_peak_force_r', v)} unit="N" />
                   <InputField label="DJ a 2 p: fuerza pico Izquierda" value={measurements.jumps_vertical.dj_2p_peak_force_l} onChange={v => updateMeasurement('jumps_vertical', 'dj_2p_peak_force_l', v)} unit="N" />
                 </SectionGrid>
 
                 <SectionGrid title="Drop Jump Unipodal">
-                  <InputField label="DJ a 1 p altura del salto Derecha" value={measurements.jumps_vertical.dj_1p_height_r} onChange={v => updateMeasurement('jumps_vertical', 'dj_1p_height_r', v)} unit="CM" />
-                  <InputField label="DJ a 1 p altura del salto Izquierda" value={measurements.jumps_vertical.dj_1p_height_l} onChange={v => updateMeasurement('jumps_vertical', 'dj_1p_height_l', v)} unit="CM" />
+                  <InputField label="DJ a 1 p altura del salto Derecha" value={measurements.jumps_vertical.dj_1p_height_r} onChange={v => updateMeasurement('jumps_vertical', 'dj_1p_height_r', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.dj_height?.description} />
+                  <InputField label="DJ a 1 p altura del salto Izquierda" value={measurements.jumps_vertical.dj_1p_height_l} onChange={v => updateMeasurement('jumps_vertical', 'dj_1p_height_l', v)} unit="CM" tooltip={EVALUATION_PROTOCOLS.dj_height?.description} />
                   <InputField label="DJ a 1 p: tiempo de contacto Derecha" value={measurements.jumps_vertical.dj_1p_contact_r} onChange={v => updateMeasurement('jumps_vertical', 'dj_1p_contact_r', v)} unit="MS" />
                   <InputField label="DJ a 1 p: tiempo de contacto Izquierda" value={measurements.jumps_vertical.dj_1p_contact_l} onChange={v => updateMeasurement('jumps_vertical', 'dj_1p_contact_l', v)} unit="MS" />
                   <InputField label="DJ a 1 p: RSI Derecha" value={measurements.jumps_vertical.dj_1p_rsi_r} onChange={v => updateMeasurement('jumps_vertical', 'dj_1p_rsi_r', v)} step="any" />
@@ -770,17 +797,17 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-3">
                           <p className="text-[9px] font-bold text-slate-400 uppercase text-center bg-slate-100 py-1 rounded">Derecha</p>
-                          <InputField label="Sentadilla a 1 pierna: vista frontal derecha Déficit de tronco" value={measurements.motor_control.sls_frontal_trunk_r} onChange={v => updateMeasurement('motor_control', 'sls_frontal_trunk_r', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                          <InputField label="Sentadilla a 1 pierna: vista frontal derecha Déficit de pelvis" value={measurements.motor_control.sls_frontal_pelvis_r} onChange={v => updateMeasurement('motor_control', 'sls_frontal_pelvis_r', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                          <InputField label="Sentadilla a 1 pierna: vista frontal derecha Déficit de cadera" value={measurements.motor_control.sls_frontal_hip_r} onChange={v => updateMeasurement('motor_control', 'sls_frontal_hip_r', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                          <InputField label="Sentadilla a 1 pierna: vista frontal derecha Déficit de rodilla" value={measurements.motor_control.sls_frontal_knee_r} onChange={v => updateMeasurement('motor_control', 'sls_frontal_knee_r', v)} type="select" options={['No evaluado', 'OK', 'X']} />
+                          <InputField label="Sentadilla a 1 pierna: vista frontal derecha Déficit de tronco" value={measurements.motor_control.sls_frontal_trunk_r} onChange={v => updateMeasurement('motor_control', 'sls_frontal_trunk_r', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.single_leg_squat?.description} />
+                          <InputField label="Sentadilla a 1 pierna: vista frontal derecha Déficit de pelvis" value={measurements.motor_control.sls_frontal_pelvis_r} onChange={v => updateMeasurement('motor_control', 'sls_frontal_pelvis_r', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.single_leg_squat?.description} />
+                          <InputField label="Sentadilla a 1 pierna: vista frontal derecha Déficit de cadera" value={measurements.motor_control.sls_frontal_hip_r} onChange={v => updateMeasurement('motor_control', 'sls_frontal_hip_r', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.single_leg_squat?.description} />
+                          <InputField label="Sentadilla a 1 pierna: vista frontal derecha Déficit de rodilla" value={measurements.motor_control.sls_frontal_knee_r} onChange={v => updateMeasurement('motor_control', 'sls_frontal_knee_r', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.single_leg_squat?.description} />
                         </div>
                         <div className="space-y-3">
                           <p className="text-[9px] font-bold text-slate-400 uppercase text-center bg-slate-100 py-1 rounded">Izquierda</p>
-                          <InputField label="Sentadilla a 1 pierna: vista frontal izquierda Déficit de tronco" value={measurements.motor_control.sls_frontal_trunk_l} onChange={v => updateMeasurement('motor_control', 'sls_frontal_trunk_l', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                          <InputField label="Sentadilla a 1 pierna: vista frontal izquierda Déficit de pelvis" value={measurements.motor_control.sls_frontal_pelvis_l} onChange={v => updateMeasurement('motor_control', 'sls_frontal_pelvis_l', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                          <InputField label="Sentadilla a 1 pierna: vista frontal izquierda Déficit de cadera" value={measurements.motor_control.sls_frontal_hip_l} onChange={v => updateMeasurement('motor_control', 'sls_frontal_hip_l', v)} type="select" options={['No evaluado', 'OK', 'X']} />
-                          <InputField label="Sentadilla a 1 pierna: vista frontal izquierda Déficit de rodilla" value={measurements.motor_control.sls_frontal_knee_l} onChange={v => updateMeasurement('motor_control', 'sls_frontal_knee_l', v)} type="select" options={['No evaluado', 'OK', 'X']} />
+                          <InputField label="Sentadilla a 1 pierna: vista frontal izquierda Déficit de tronco" value={measurements.motor_control.sls_frontal_trunk_l} onChange={v => updateMeasurement('motor_control', 'sls_frontal_trunk_l', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.single_leg_squat?.description} />
+                          <InputField label="Sentadilla a 1 pierna: vista frontal izquierda Déficit de pelvis" value={measurements.motor_control.sls_frontal_pelvis_l} onChange={v => updateMeasurement('motor_control', 'sls_frontal_pelvis_l', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.single_leg_squat?.description} />
+                          <InputField label="Sentadilla a 1 pierna: vista frontal izquierda Déficit de cadera" value={measurements.motor_control.sls_frontal_hip_l} onChange={v => updateMeasurement('motor_control', 'sls_frontal_hip_l', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.single_leg_squat?.description} />
+                          <InputField label="Sentadilla a 1 pierna: vista frontal izquierda Déficit de rodilla" value={measurements.motor_control.sls_frontal_knee_l} onChange={v => updateMeasurement('motor_control', 'sls_frontal_knee_l', v)} type="select" options={['No evaluado', 'OK', 'X']} tooltip={EVALUATION_PROTOCOLS.single_leg_squat?.description} />
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
@@ -840,24 +867,28 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
                       value={measurements.mcgill.lateral_bridge_r}
                       onChange={(v) => updateMeasurement('mcgill', 'lateral_bridge_r', v)}
                       unit="SEG"
+                      tooltip={EVALUATION_PROTOCOLS.mcgill?.description}
                     />
                     <InputField
                       label="Mc Gill Izquierda"
                       value={measurements.mcgill.lateral_bridge_l}
                       onChange={(v) => updateMeasurement('mcgill', 'lateral_bridge_l', v)}
                       unit="SEG"
+                      tooltip={EVALUATION_PROTOCOLS.mcgill?.description}
                     />
                     <InputField
                       label="Mc Gill Flexores"
                       value={measurements.mcgill.flexor_endurance}
                       onChange={(v) => updateMeasurement('mcgill', 'flexor_endurance', v)}
                       unit="SEG"
+                      tooltip={EVALUATION_PROTOCOLS.mcgill?.description}
                     />
                     <InputField
                       label="Mc Gill Extensores"
                       value={measurements.mcgill.extensor_endurance}
                       onChange={(v) => updateMeasurement('mcgill', 'extensor_endurance', v)}
                       unit="SEG"
+                      tooltip={EVALUATION_PROTOCOLS.mcgill?.description}
                     />
                   </div>
                 </SectionGrid>
