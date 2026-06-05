@@ -671,27 +671,36 @@ const App: React.FC = () => {
 
         {/* Mobile Bottom Navigation Bar */}
         {user.role === UserRole.KINE && (
-          <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-lg border-t border-slate-200/50 px-6 py-3 flex justify-around items-center pb-[calc(0.75rem+var(--sab))] shadow-lg">
-             <button 
-               onClick={() => { setView('HOME'); setSelectedPatientId(null); }}
-               className={`flex flex-col items-center gap-1 p-2 transition-all ${view === 'HOME' && !selectedPatientId ? 'text-primary-600 scale-105' : 'text-slate-400'}`}
-             >
-               <Home size={20} className="transition-transform active:scale-90" />
-               <span className="text-[9px] font-black uppercase tracking-wider">Inicio</span>
-             </button>
+          <div className="md:hidden fixed bottom-[calc(1rem+var(--sab))] left-5 right-5 z-40 bg-white/70 backdrop-blur-xl border border-white/20 px-4 py-2 flex justify-around items-center rounded-full shadow-[0_12px_40px_-5px_rgba(0,0,0,0.1),0_0_1px_rgba(0,0,0,0.2)] animate-in slide-in-from-bottom duration-500">
+             {(() => {
+               const isHomeActive = view === 'HOME' && !selectedPatientId;
+               return (
+                 <button 
+                   onClick={() => { setView('HOME'); setSelectedPatientId(null); }}
+                   className={`flex items-center gap-1.5 py-1.5 px-3.5 rounded-full transition-all duration-300 active:scale-95 ${
+                     isHomeActive 
+                       ? 'bg-primary-600 text-white shadow-md shadow-primary-500/20 font-black' 
+                       : 'text-slate-400 hover:text-slate-600 font-bold'
+                   }`}
+                 >
+                   <Home size={18} className="transition-transform active:scale-90" />
+                   {isHomeActive && <span className="text-[10px] uppercase tracking-wider leading-none">Inicio</span>}
+                 </button>
+               );
+             })()}
              <button 
                onClick={() => setShowExerciseLibrary(true)}
-               className="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-primary-600 active:scale-95"
+               className="flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-slate-400 hover:text-slate-600 active:scale-95 transition-all duration-300 font-bold"
              >
-               <Dumbbell size={20} className="transition-transform active:scale-90" />
-               <span className="text-[9px] font-black uppercase tracking-wider">Biblioteca</span>
+               <Dumbbell size={18} className="transition-transform active:scale-90" />
+               <span className="text-[10px] uppercase tracking-wider leading-none">Biblioteca</span>
              </button>
              <button 
                onClick={() => setShowSoundSettings(true)}
-               className="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-primary-600 active:scale-95"
+               className="flex items-center gap-1.5 py-1.5 px-3.5 rounded-full text-slate-400 hover:text-slate-600 active:scale-95 transition-all duration-300 font-bold"
              >
-               <Settings size={20} className="transition-transform active:scale-90" />
-               <span className="text-[9px] font-black uppercase tracking-wider">Ajustes</span>
+               <Settings size={18} className="transition-transform active:scale-90" />
+               <span className="text-[10px] uppercase tracking-wider leading-none">Ajustes</span>
              </button>
           </div>
         )}
