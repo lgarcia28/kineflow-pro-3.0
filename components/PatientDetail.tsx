@@ -624,8 +624,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                 const shortName = day.name.toLowerCase().includes('casa') 
                   ? 'Casa' 
                   : (day.name.match(/d[íi]a\s*(\d+)/i) 
-                    ? `D${day.name.match(/d[íi]a\s*(\d+)/i)![1]}` 
-                    : day.name.substring(0, 3));
+                    ? `Día ${day.name.match(/d[íi]a\s*(\d+)/i)![1]}` 
+                    : day.name.split(':')[0]);
                 return (
                   <button 
                     key={day.id} 
