@@ -613,93 +613,142 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
       )}
 
       {/* SUB-NAV CON BOTÓN DE CIERRE DE SEMANA */}
-      <div className="bg-white/70 backdrop-blur-md border-b border-slate-200/50 px-4 flex items-center justify-between shrink-0 relative z-10 shadow-sm md:py-0 w-full overflow-hidden">
-        {/* On mobile, this is a single horizontally scrollable bar. On desktop, it uses the standard flex layout. */}
-        <div className="flex w-full md:w-auto items-center overflow-x-auto no-scrollbar gap-2.5 py-2.5 md:py-0 md:h-20">
-          
-          {/* Days Selectors (Renders as compact pills on mobile, tabs on desktop) */}
-          <div className="flex items-center gap-1.5 shrink-0 h-full">
-            {(routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.map((day) => {
-              const isActive = activeDayId === day.id && viewMode === 'daily';
-              return (
-                <button 
-                  key={day.id} 
-                  onClick={() => {setActiveDayId(day.id); setViewMode('daily');}} 
-                  className={`px-3 md:px-6 py-1.5 md:h-full font-black text-xs uppercase tracking-wide transition-all shrink-0 md:border-t-2 md:border-x-2 md:rounded-t-3xl relative ${
-                    isActive 
-                      ? 'bg-primary-600 text-white md:bg-slate-50/80 md:border-slate-200/60 md:text-primary-600 rounded-full md:rounded-none shadow-md shadow-primary-500/10 md:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]' 
-                      : 'bg-slate-100 text-slate-500 md:bg-transparent md:border-transparent md:text-slate-400 hover:text-slate-600 hover:bg-slate-100/50 md:hover:bg-slate-50/50 rounded-full md:rounded-none'
-                  }`}
-                >
-                  {day.name}
-                  {isActive && <div className="hidden md:block absolute bottom-0 left-0 right-0 h-1 bg-primary-500 rounded-t-full"></div>}
-                </button>
-              );
-            })}
+      <div className="bg-white/70 backdrop-blur-md border-b border-slate-200/50 px-0 md:px-6 flex flex-col justify-between shrink-0 relative z-10 shadow-sm md:py-0 w-full overflow-hidden">
+        {/* Mobile View: Two ultra-compact rows, no scroll */}
+        <div className="flex flex-col w-full md:hidden">
+          {/* Row 1: Days and Clinic/Home Switch */}
+          <div className="flex justify-between items-center px-4 py-2 border-b border-slate-100 w-full">
+            <div className="flex gap-1.5 items-center">
+              {(routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.map((day) => {
+                const isActive = activeDayId === day.id && viewMode === 'daily';
+                const shortName = day.name.toLowerCase().includes('casa') 
+                  ? 'Casa' 
+                  : (day.name.match(/d[íi]a\s*(\d+)/i) 
+                    ? `D${day.name.match(/d[íi]a\s*(\d+)/i)![1]}` 
+                    : day.name.substring(0, 3));
+                return (
+                  <button 
+                    key={day.id} 
+                    onClick={() => {setActiveDayId(day.id); setViewMode('daily');}} 
+                    className={`px-2.5 py-1 font-black text-[10px] uppercase tracking-wide transition-all shrink-0 rounded-full ${
+                      isActive 
+                        ? 'bg-primary-600 text-white shadow-sm shadow-primary-500/10' 
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    {shortName}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div className="flex bg-slate-100 p-0.5 rounded-full shrink-0 border border-slate-200/40">
+              <button 
+                onClick={() => setRoutineType('CLINIC')}
+                className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase transition-all duration-300 ${routineType === 'CLINIC' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-400'}`}
+              >
+                Clínica
+              </button>
+              <button 
+                onClick={() => setRoutineType('HOME')}
+                className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase transition-all duration-300 ${routineType === 'HOME' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-400'}`}
+              >
+                Dom.
+              </button>
+            </div>
           </div>
 
-          <div className="w-px h-5 bg-slate-200 shrink-0 mx-0.5"></div>
+          {/* Row 2: Sub-modes and Finalizar button */}
+          <div className="flex justify-between items-center px-4 py-2 w-full bg-slate-50/50">
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={() => setViewMode('plan')} 
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[9px] font-bold uppercase transition-all ${
+                  viewMode === 'plan' ? 'bg-primary-600 border-primary-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500'
+                }`}
+                title="Proyección"
+              >
+                <Layers size={11} strokeWidth={2.5} />
+                <span>Plan</span>
+              </button>
+              <button 
+                onClick={() => setViewMode('stats')} 
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[9px] font-bold uppercase transition-all ${
+                  viewMode === 'stats' ? 'bg-slate-900 border-slate-900 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500'
+                }`}
+                title="Estadísticas"
+              >
+                <BarChart2 size={11} strokeWidth={2.5} />
+                <span>Stats</span>
+              </button>
+              <button 
+                onClick={() => setViewMode('evaluations')} 
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[9px] font-bold uppercase transition-all ${
+                  viewMode === 'evaluations' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500'
+                }`}
+                title="Evaluaciones"
+              >
+                <Award size={11} strokeWidth={2.5} />
+                <span>Eval</span>
+              </button>
+            </div>
 
-          {/* Clinic vs Home Switch */}
-          <div className="flex bg-slate-100 p-0.5 rounded-full shrink-0 border border-slate-200/40">
             <button 
-              onClick={() => setRoutineType('CLINIC')}
-              className={`px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase transition-all duration-300 ${routineType === 'CLINIC' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              onClick={handleStartNewWeek}
+              className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-full font-black text-[9px] uppercase tracking-wide shadow-md shadow-indigo-500/10 active:scale-95 transition-all"
             >
-              Clínica
-            </button>
-            <button 
-              onClick={() => setRoutineType('HOME')}
-              className={`px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase transition-all duration-300 ${routineType === 'HOME' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              Dom.
+              <ChevronRightCircle size={10} strokeWidth={2.5} />
+              Finalizar
             </button>
           </div>
-
-          <div className="w-px h-5 bg-slate-200 shrink-0 mx-0.5"></div>
-
-          {/* Mobile sub-mode icons (Plan, Stats, Eval) */}
-          <div className="flex items-center gap-1 shrink-0 md:hidden">
-            <button 
-              onClick={() => setViewMode('plan')} 
-              title="Proyección Mensual" 
-              className={`p-1.5 rounded-full transition-all border ${viewMode === 'plan' ? 'bg-primary-600 border-primary-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'}`}
-            >
-              <Layers size={14} strokeWidth={2.5} />
-            </button>
-            <button 
-              onClick={() => setViewMode('stats')} 
-              title="Estadísticas" 
-              className={`p-1.5 rounded-full transition-all border ${viewMode === 'stats' ? 'bg-slate-900 border-slate-900 text-white shadow-md' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'}`}
-            >
-              <BarChart2 size={14} strokeWidth={2.5} />
-            </button>
-            <button 
-              onClick={() => setViewMode('evaluations')} 
-              title="Evaluaciones Clínicas" 
-              className={`p-1.5 rounded-full transition-all border ${viewMode === 'evaluations' ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'}`}
-            >
-              <Award size={14} strokeWidth={2.5} />
-            </button>
-          </div>
-
-          <div className="w-px h-5 bg-slate-200 shrink-0 mx-0.5 md:hidden"></div>
-
-          {/* Finalzar Semana Action Button */}
-          <button 
-            onClick={handleStartNewWeek}
-            className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-full font-black text-[9px] uppercase tracking-wide shadow-md shadow-indigo-500/10 hover:-translate-y-0.5 hover:shadow-indigo-500/20 active:scale-95 transition-all shrink-0"
-          >
-            <ChevronRightCircle size={12} strokeWidth={2.5} />
-            Finalizar
-          </button>
         </div>
 
-        {/* Desktop icons */}
-        <div className="hidden md:flex items-center gap-2 border-l border-slate-300/50 pl-6 ml-2 shrink-0 h-20">
-          <button onClick={() => setViewMode('plan')} title="Proyección Mensual" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'plan' ? 'bg-primary-600 text-white shadow-primary-500/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><Layers size={20} strokeWidth={2.5} /></button>
-          <button onClick={() => setViewMode('stats')} title="Estadísticas" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'stats' ? 'bg-slate-900 text-white shadow-slate-900/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><BarChart2 size={20} strokeWidth={2.5} /></button>
-          <button onClick={() => setViewMode('evaluations')} title="Evaluaciones Clínicas" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'evaluations' ? 'bg-blue-600 text-white shadow-blue-500/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><Award size={20} strokeWidth={2.5} /></button>
+        {/* Desktop View: Standard tabs and switch layout */}
+        <div className="hidden md:flex w-full items-center justify-between h-20">
+          <div className="flex items-center gap-2.5">
+            {/* Desktop switch */}
+            <div className="bg-slate-200/50 p-1 rounded-2xl mr-6 shrink-0 shadow-inner flex">
+              <button 
+                onClick={() => setRoutineType('CLINIC')}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2 ${routineType === 'CLINIC' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Clínica
+              </button>
+              <button 
+                onClick={() => setRoutineType('HOME')}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2 ${routineType === 'HOME' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Domicilio
+              </button>
+            </div>
+
+            {/* Desktop Day Tabs */}
+            <div className="flex gap-2 items-center h-full pt-4">
+              {(routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.map((day) => (
+                <button key={day.id} onClick={() => {setActiveDayId(day.id); setViewMode('daily');}} className={`px-6 h-full rounded-t-3xl font-black text-xs uppercase tracking-wide transition-all border-t-2 border-x-2 shrink-0 ${activeDayId === day.id && viewMode === 'daily' ? 'bg-slate-50/80 border-slate-200/60 text-primary-600 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'} relative`}>
+                  {day.name}
+                  {activeDayId === day.id && viewMode === 'daily' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-500 rounded-t-full"></div>}
+                </button>
+              ))}
+            </div>
+            
+            <div className="w-px h-8 bg-slate-300/50 mx-4 shrink-0"></div>
+            
+            <button 
+                onClick={handleStartNewWeek}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-[1.25rem] font-black text-xs uppercase tracking-wide shadow-xl shadow-indigo-500/20 hover:-translate-y-0.5 hover:shadow-indigo-500/30 active:scale-95 transition-all shrink-0 mr-4"
+            >
+                <ChevronRightCircle size={16} strokeWidth={2.5} />
+                Finalizar Semana
+            </button>
+          </div>
+
+          {/* Desktop icons */}
+          <div className="flex items-center gap-2 border-l border-slate-300/50 pl-6 ml-2 shrink-0 h-full">
+              <button onClick={() => setViewMode('plan')} title="Proyección Mensual" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'plan' ? 'bg-primary-600 text-white shadow-primary-500/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><Layers size={20} strokeWidth={2.5} /></button>
+              <button onClick={() => setViewMode('stats')} title="Estadísticas" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'stats' ? 'bg-slate-900 text-white shadow-slate-900/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><BarChart2 size={20} strokeWidth={2.5} /></button>
+              <button onClick={() => setViewMode('evaluations')} title="Evaluaciones Clínicas" className={`p-3 rounded-2xl transition-all shadow-sm active:scale-95 ${viewMode === 'evaluations' ? 'bg-blue-600 text-white shadow-blue-500/20 shadow-lg' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}><Award size={20} strokeWidth={2.5} /></button>
+          </div>
         </div>
       </div>
 
