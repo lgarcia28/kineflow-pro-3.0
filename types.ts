@@ -263,16 +263,16 @@ export interface ClinicalEvaluation {
       glute_med_l: { palpation?: number };
       q_lumbar_r: { palpation?: number };
       q_lumbar_l: { palpation?: number };
-      hip_impingement_r: 'negativo' | 'positivo';
-      hip_impingement_l: 'negativo' | 'positivo';
-      hip_labrum_r: 'negativo' | 'positivo';
-      hip_labrum_l: 'negativo' | 'positivo';
+      hip_impingement_r?: 'negativo' | 'positivo' | 'No evaluado';
+      hip_impingement_l?: 'negativo' | 'positivo' | 'No evaluado';
+      hip_labrum_r?: 'negativo' | 'positivo' | 'No evaluado';
+      hip_labrum_l?: 'negativo' | 'positivo' | 'No evaluado';
       spine_flexion?: number;
       spine_extension?: number;
       spine_inc_r?: number;
       spine_inc_l?: number;
-      sacroiliac_r: 'negativo' | 'positivo';
-      sacroiliac_l: 'negativo' | 'positivo';
+      sacroiliac_r?: 'negativo' | 'positivo' | 'No evaluado';
+      sacroiliac_l?: 'negativo' | 'positivo' | 'No evaluado';
     };
     perimetry: {
       thigh_r?: number;
@@ -292,10 +292,10 @@ export interface ClinicalEvaluation {
       eyes_closed_r?: number;
       eyes_open_l?: number;
       eyes_closed_l?: number;
-      vestibular_side_r?: number;
-      vestibular_up_r?: number;
-      vestibular_side_l?: number;
-      vestibular_up_l?: number;
+      vestibular_side_r?: 'OK' | 'X' | 'No evaluado';
+      vestibular_up_r?: 'OK' | 'X' | 'No evaluado';
+      vestibular_side_l?: 'OK' | 'X' | 'No evaluado';
+      vestibular_up_l?: 'OK' | 'X' | 'No evaluado';
     };
     mcgill: {
       flexor_endurance?: number;
@@ -325,7 +325,7 @@ export interface ClinicalEvaluation {
       pull_ups_reps?: number;
       pull_ups_vas?: number;
       // Agregados del Excel
-      braking_test?: number;
+      braking_test?: 'OK' | 'X' | 'No evaluado';
       t_test?: number;
       edgren_side_step?: number;
       cmas_45_r?: number;
@@ -400,6 +400,14 @@ export interface ClinicalEvaluation {
       ash_t_vas_l?: number;
       handgrip_r?: number;
       handgrip_l?: number;
+      quads_r_eval1?: number;
+      quads_r_eval2?: number;
+      quads_l_eval1?: number;
+      quads_l_eval2?: number;
+      hams_r_eval1?: number;
+      hams_r_eval2?: number;
+      hams_l_eval1?: number;
+      hams_l_eval2?: number;
     };
     vbt: {
       squat_r?: number;
@@ -464,21 +472,24 @@ export interface ClinicalEvaluation {
       side_hop_l?: number;
     };
     motor_control: {
-      sls_frontal_trunk_r?: number;
-      sls_frontal_pelvis_r?: number;
-      sls_frontal_hip_r?: number;
-      sls_frontal_knee_r?: number;
-      sls_frontal_trunk_l?: number;
-      sls_frontal_pelvis_l?: number;
-      sls_frontal_hip_l?: number;
-      sls_frontal_knee_l?: number;
+      sls_frontal_trunk_r?: 'OK' | 'X' | 'No evaluado';
+      sls_frontal_pelvis_r?: 'OK' | 'X' | 'No evaluado';
+      sls_frontal_hip_r?: 'OK' | 'X' | 'No evaluado';
+      sls_frontal_knee_r?: 'OK' | 'X' | 'No evaluado';
+      sls_frontal_trunk_l?: 'OK' | 'X' | 'No evaluado';
+      sls_frontal_pelvis_l?: 'OK' | 'X' | 'No evaluado';
+      sls_frontal_hip_l?: 'OK' | 'X' | 'No evaluado';
+      sls_frontal_knee_l?: 'OK' | 'X' | 'No evaluado';
       sls_sagittal_r?: number;
       sls_sagittal_l?: number;
       bipodal_squat_r?: number;
       bipodal_squat_l?: number;
       hip_hinge_r?: number;
       hip_hinge_l?: number;
-      lunge_fms?: number;
+      lunge_fms_r?: number;
+      lunge_fms_l?: number;
+      hurdle_step_r?: number;
+      hurdle_step_l?: number;
     };
   };
 

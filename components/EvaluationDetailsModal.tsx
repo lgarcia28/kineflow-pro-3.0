@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Calendar, Award, CheckCircle2, AlertTriangle, Info, Download } from 'lucide-react';
 import { ClinicalEvaluation, Patient } from '../types';
 import { generateEvaluationPDF } from '../services/pdfService';
@@ -10,23 +11,24 @@ interface EvaluationDetailsModalProps {
 }
 
 export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ evaluation, patient, onClose }) => {
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
+      className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center sm:p-4 cursor-pointer"
+      style={{ zIndex: 99999 }}
       onClick={onClose}
     >
       <div 
-        className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 cursor-default"
+        className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-4xl sm:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 cursor-default"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-primary-600 text-white shrink-0">
+        <div className="px-6 py-4 sm:px-10 sm:py-8 border-b border-slate-50 flex items-center justify-between bg-primary-600 text-white shrink-0">
           <div className="flex items-center gap-4">
             <div className="bg-white/20 p-3 rounded-2xl">
               <Award size={24} />
             </div>
             <div>
-              <h2 className="text-2xl font-black tracking-tight">Reporte de Evaluación</h2>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight">Reporte de Evaluación</h2>
               <p className="text-white/80 font-bold text-sm mt-1 flex items-center gap-2">
                 <Calendar size={14} /> {new Date(evaluation.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
               </p>
@@ -51,7 +53,7 @@ export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ 
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-10 bg-white">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-10 bg-white">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column: Metrics */}
             <div className="lg:col-span-2 space-y-8">
@@ -144,16 +146,18 @@ export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ 
         </div>
 
         {/* Footer */}
-        <div className="px-10 py-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30 shrink-0">
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">KineFlow Pro Clinical System</p>
+        <div className="px-6 pt-4 pb-[calc(1rem+var(--sab))] sm:px-10 sm:py-6 border-t border-slate-50 flex items-center justify-between bg-slate-50/30 shrink-0">
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] hidden sm:block">KineFlow Pro Clinical System</p>
           <button 
             onClick={onClose}
-            className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10"
+            className="w-full sm:w-auto px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 text-center"
           >
             Cerrar Reporte
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
+
