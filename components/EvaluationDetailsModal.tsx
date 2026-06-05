@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, Calendar, Award, CheckCircle2, AlertTriangle, Info, Download } from 'lucide-react';
+import { X, Calendar, Award, CheckCircle2, Info, Download, Image as ImageIcon } from 'lucide-react';
 import { ClinicalEvaluation, Patient } from '../types';
 import { generateEvaluationPDF } from '../services/pdfService';
 
@@ -10,7 +10,119 @@ interface EvaluationDetailsModalProps {
   onClose: () => void;
 }
 
+// Helper para obtener valores absolutos derecha-izquierda de cada métrica
+const getRawValuesForMetric = (label: string, measurements: any): { r?: number; l?: number } | null => {
+  if (!measurements) return null;
+  const lbl = label.toLowerCase();
+  
+  if (lbl.includes('flexores cadera 0-0º')) return { r: measurements.strength?.hip_flex_0_r, l: measurements.strength?.hip_flex_0_l };
+  if (lbl.includes('flexores cadera 0-90º')) return { r: measurements.strength?.hip_flex_90_r, l: measurements.strength?.hip_flex_90_l };
+  if (lbl.includes('aductores') && !lbl.includes('tobillo')) return { r: measurements.strength?.adductor_r, l: measurements.strength?.adductor_l };
+  if (lbl.includes('abductores') && !lbl.includes('tobillo')) return { r: measurements.strength?.abductor_r, l: measurements.strength?.abductor_l };
+  if (lbl.includes('cuádriceps')) return { r: measurements.strength?.quads_r, l: measurements.strength?.quads_l };
+  if (lbl.includes('isquiotibiales')) return { r: measurements.strength?.hams_r, l: measurements.strength?.hams_l };
+  if (lbl.includes('tríceps sural')) return { r: measurements.strength?.triceps_sural_r, l: measurements.strength?.triceps_sural_l };
+  if (lbl.includes('abductores tobillo')) return { r: measurements.strength?.tobillo_abd_r, l: measurements.strength?.tobillo_abd_l };
+  if (lbl.includes('aductores tobillo')) return { r: measurements.strength?.tobillo_add_r, l: measurements.strength?.tobillo_add_l };
+  if (lbl.includes('imtp')) return { r: measurements.strength?.imtp_r, l: measurements.strength?.imtp_l };
+  if (lbl.includes('rotadores internos hombro')) return { r: measurements.strength?.shoulder_ir_r, l: measurements.strength?.shoulder_ir_l };
+  if (lbl.includes('rotadores externos hombro')) return { r: measurements.strength?.shoulder_er_r, l: measurements.strength?.shoulder_er_l };
+  if (lbl.includes('ash test i')) return { r: measurements.strength?.ash_i_r, l: measurements.strength?.ash_i_l };
+  if (lbl.includes('ash test y')) return { r: measurements.strength?.ash_y_r, l: measurements.strength?.ash_y_l };
+  if (lbl.includes('ash test t')) return { r: measurements.strength?.ash_t_r, l: measurements.strength?.ash_t_l };
+  if (lbl.includes('handgrip')) return { r: measurements.strength?.handgrip_r, l: measurements.strength?.handgrip_l };
+  
+  if (lbl.includes('simetría sentadilla')) return { r: measurements.vbt?.squat_r, l: measurements.vbt?.squat_l };
+  if (lbl.includes('simetría peso muerto')) return { r: measurements.vbt?.deadlift_r, l: measurements.vbt?.deadlift_l };
+  if (lbl.includes('simetría puente glúteo')) return { r: measurements.vbt?.glute_bridge_r, l: measurements.vbt?.glute_bridge_l };
+  if (lbl.includes('simetría sentadilla búlgara')) return { r: measurements.vbt?.bulgarian_r, l: measurements.vbt?.bulgarian_l };
+  
+  if (lbl.includes('cmj 1p altura')) return { r: measurements.jumps_vertical?.cmj_1p_height_r, l: measurements.jumps_vertical?.cmj_1p_height_l };
+  if (lbl.includes('cmj 1p frenado')) return { r: measurements.jumps_vertical?.cmj_1p_brake_r, l: measurements.jumps_vertical?.cmj_1p_brake_l };
+  if (lbl.includes('cmj 1p propulsión')) return { r: measurements.jumps_vertical?.cmj_1p_prop_r, l: measurements.jumps_vertical?.cmj_1p_prop_l };
+  if (lbl.includes('cmj 1p aterrizaje')) return { r: measurements.jumps_vertical?.cmj_1p_land_r, l: measurements.jumps_vertical?.cmj_1p_land_l };
+  
+  if (lbl.includes('dj 1p altura')) return { r: measurements.jumps_vertical?.dj_1p_height_r, l: measurements.jumps_vertical?.dj_1p_height_l };
+  if (lbl.includes('dj 1p contacto')) return { r: measurements.jumps_vertical?.dj_1p_contact_r, l: measurements.jumps_vertical?.dj_1p_contact_l };
+  
+  if (lbl.includes('single hop')) return { r: measurements.jumps_horizontal?.single_hop_r, l: measurements.jumps_horizontal?.single_hop_l };
+  if (lbl.includes('triple hop distancia')) return { r: measurements.jumps_horizontal?.triple_hop_dist_r, l: measurements.jumps_horizontal?.triple_hop_dist_l };
+  if (lbl.includes('triple hop contacto')) return { r: measurements.jumps_horizontal?.triple_hop_contact_r, l: measurements.jumps_horizontal?.triple_hop_contact_l };
+  if (lbl.includes('crossover hop distancia')) return { r: measurements.jumps_horizontal?.crossover_hop_dist_r, l: measurements.jumps_horizontal?.crossover_hop_dist_l };
+  if (lbl.includes('crossover hop contacto')) return { r: measurements.jumps_horizontal?.crossover_hop_contact_r, l: measurements.jumps_horizontal?.crossover_hop_contact_l };
+  if (lbl.includes('medial side triple hop')) return { r: measurements.jumps_horizontal?.medial_side_triple_hop_r, l: measurements.jumps_horizontal?.medial_side_triple_hop_l };
+  if (lbl.includes('medial rotation hop')) return { r: measurements.jumps_horizontal?.medial_rotation_hop_r, l: measurements.jumps_horizontal?.medial_rotation_hop_l };
+  if (lbl.includes('side hop')) return { r: measurements.jumps_horizontal?.side_hop_r, l: measurements.jumps_horizontal?.side_hop_l };
+  
+  return null;
+};
+
+// Componente gráfico para visualizar la simetría/balance
+const MetricSymmetryVisualizer = ({ metric, measurements }: { metric: any, measurements: any }) => {
+  const raw = getRawValuesForMetric(metric.label, measurements);
+  const isLsi = metric.unit === '%';
+  const lsiVal = Number(metric.value);
+  
+  if (!isLsi || isNaN(lsiVal)) return null;
+
+  // Calculamos la posición del marcador en un rango de 50% a 150% (100% en el centro)
+  const clampedVal = Math.max(50, Math.min(150, lsiVal));
+  const percentPosition = ((clampedVal - 50) / 100) * 100; // 0% a 100% de la barra
+
+  return (
+    <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+      {/* Valores absolutos Derecha vs Izquierda */}
+      {raw && raw.r !== undefined && raw.l !== undefined && (
+        <div className="flex items-center justify-between text-[9px] font-black text-slate-400 uppercase tracking-widest">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+            Der: {raw.r}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Izq: {raw.l}
+          </span>
+        </div>
+      )}
+      
+      {/* Pista de Balance */}
+      <div className="relative h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+        {/* Zona verde normal de simetría (90% a 110%) */}
+        <div 
+          className="absolute h-full bg-green-200/50"
+          style={{ left: '40%', right: '40%' }} // 90% es el 40% y 110% es el 60% en rango 50-150
+        />
+        {/* Marcador de valor actual */}
+        <div 
+          className={`absolute top-0 bottom-0 w-1.5 rounded-full shadow-sm ${
+            metric.interpretation === 'normal' ? 'bg-green-500' : 
+            metric.interpretation === 'warning' ? 'bg-orange-500' : 'bg-red-500'
+          }`}
+          style={{ left: `${percentPosition}%`, transform: 'translateX(-50%)' }}
+        />
+      </div>
+
+      {/* Etiquetas de Lados */}
+      <div className="flex justify-between text-[8px] font-black text-slate-300 uppercase tracking-widest px-0.5">
+        <span>Déficit Der (50%)</span>
+        <span className="text-slate-400">Sano / Simétrico (100%)</span>
+        <span>Déficit Izq (150%)</span>
+      </div>
+    </div>
+  );
+};
+
 export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ evaluation, patient, onClose }) => {
+  // Recopilar fotos clínicas cargadas
+  const clinicalImages = [
+    { label: 'Thomas Derecha', url: evaluation.measurements.flexibility?.thomas_r_image_url },
+    { label: 'Thomas Izquierda', url: evaluation.measurements.flexibility?.thomas_l_image_url },
+    { label: 'SLS Frontal Derecha', url: evaluation.measurements.motor_control?.sls_frontal_r_image_url },
+    { label: 'SLS Frontal Izquierda', url: evaluation.measurements.motor_control?.sls_frontal_l_image_url },
+    { label: 'SLS Sagital', url: evaluation.measurements.motor_control?.sls_sagital_image_url },
+    { label: 'Sentadilla Bipodal', url: evaluation.measurements.motor_control?.squat_bipodal_image_url },
+  ].filter(img => img.url);
+
   return createPortal(
     <div 
       className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center sm:p-4 cursor-pointer"
@@ -71,17 +183,22 @@ export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ 
                       <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">{category}</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {categoryMetrics.map((m: any, idx: number) => (
-                          <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
-                            <div>
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{m.label}</p>
-                              <p className="text-xl font-black text-slate-800">{m.value}{m.unit}</p>
+                          <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider leading-none mb-1">{m.label}</p>
+                                <p className="text-xl font-black text-slate-800">{m.value}{m.unit}</p>
+                              </div>
+                              <div className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase ${
+                                m.interpretation === 'normal' ? 'bg-green-100 text-green-600' : 
+                                m.interpretation === 'warning' ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'
+                              }`}>
+                                {m.interpretation}
+                              </div>
                             </div>
-                            <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${
-                              m.interpretation === 'normal' ? 'bg-green-100 text-green-600' : 
-                              m.interpretation === 'warning' ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'
-                            }`}>
-                              {m.interpretation}
-                            </div>
+                            
+                            {/* Gráfico/Indicador visual de simetría (LSI) */}
+                            <MetricSymmetryVisualizer metric={m} measurements={evaluation.measurements} />
                           </div>
                         ))}
                       </div>
@@ -110,7 +227,7 @@ export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ 
               </section>
             </div>
 
-            {/* Right Column: Measurements Summary */}
+            {/* Right Column: Measurements Summary & Photos */}
             <div className="space-y-8">
               <section className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
                 <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
@@ -141,6 +258,29 @@ export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ 
                   </div>
                 )}
               </section>
+
+              {/* Galería de Fotos Clínicas */}
+              {clinicalImages.length > 0 && (
+                <section className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                  <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                    <ImageIcon size={14} /> Fotos Clínicas
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {clinicalImages.map((img, idx) => (
+                      <div 
+                        key={idx} 
+                        className="group relative rounded-xl overflow-hidden border border-slate-200 aspect-square bg-white shadow-sm cursor-zoom-in"
+                        title={img.label}
+                      >
+                        <img src={img.url!} alt={img.label} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                          <p className="text-[8px] font-black text-white uppercase tracking-wider leading-tight w-full truncate">{img.label}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           </div>
         </div>
@@ -160,4 +300,3 @@ export const EvaluationDetailsModal: React.FC<EvaluationDetailsModalProps> = ({ 
     document.body
   );
 };
-

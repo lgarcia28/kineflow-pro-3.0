@@ -240,7 +240,8 @@ export interface ClinicalEvaluation {
       thomas_test_psoas_l?: 'OK' | 'X' | 'No evaluado';
       thomas_test_rectus_l?: 'OK' | 'X' | 'No evaluado';
       thomas_test_sartorius_l?: 'OK' | 'X' | 'No evaluado';
-      thomas_image_url?: string | null;
+      thomas_r_image_url?: string | null;
+      thomas_l_image_url?: string | null;
       hams_r?: number;
       hams_l?: number;
       askling_h_r?: 'OK' | 'X' | 'No evaluado';
@@ -490,6 +491,10 @@ export interface ClinicalEvaluation {
       lunge_fms_l?: number;
       hurdle_step_r?: number;
       hurdle_step_l?: number;
+      sls_frontal_r_image_url?: string | null;
+      sls_frontal_l_image_url?: string | null;
+      sls_sagital_image_url?: string | null;
+      squat_bipodal_image_url?: string | null;
     };
   };
 

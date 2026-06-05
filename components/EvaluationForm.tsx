@@ -96,6 +96,38 @@ const InputField = ({ label, value, onChange, type = 'number', options, unit, st
   );
 };
 
+const ImageUploadField = ({ label, imageUrl, onUpload, onClear }: { 
+  label: string, imageUrl: string | null, onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void, onClear: () => void 
+}) => {
+  return (
+    <div className="space-y-2">
+      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-normal block">{label}</span>
+      <div className="flex gap-4 items-center">
+        {!imageUrl ? (
+          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-primary-200 hover:border-primary-400 rounded-2xl cursor-pointer bg-slate-50 hover:bg-primary-50/30 transition-all group p-4">
+            <div className="flex flex-col items-center justify-center gap-1 text-center">
+              <svg className="w-6 h-6 text-primary-400 group-hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              <span className="text-[9px] font-black text-primary-500 uppercase tracking-widest">Subir foto</span>
+            </div>
+            <input type="file" accept="image/*" className="hidden" onChange={onUpload} />
+          </label>
+        ) : (
+          <div className="relative group w-full h-32 overflow-hidden rounded-2xl border-2 border-slate-100 shadow-sm">
+            <img src={imageUrl} alt={label} className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={onClear}
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // --- Main Form Component ---
 
 interface EvaluationFormProps {
@@ -110,7 +142,12 @@ type TabType = 'BASICS' | 'MOBILITY' | 'FLEXIBILITY' | 'PALPATION' | 'BALANCE' |
 export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave, onCancel, initialData }) => {
   const [activeTab, setActiveTab] = useState<TabType>('BASICS');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [thomasImageUrl, setThomasImageUrl] = useState<string | null>(initialData?.measurements?.flexibility?.thomas_image_url || null);
+  const [thomasRImageUrl, setThomasRImageUrl] = useState<string | null>(initialData?.measurements?.flexibility?.thomas_r_image_url || null);
+  const [thomasLImageUrl, setThomasLImageUrl] = useState<string | null>(initialData?.measurements?.flexibility?.thomas_l_image_url || null);
+  const [slsFrontalRImageUrl, setSlsFrontalRImageUrl] = useState<string | null>(initialData?.measurements?.motor_control?.sls_frontal_r_image_url || null);
+  const [slsFrontalLImageUrl, setSlsFrontalLImageUrl] = useState<string | null>(initialData?.measurements?.motor_control?.sls_frontal_l_image_url || null);
+  const [slsSagitalImageUrl, setSlsSagitalImageUrl] = useState<string | null>(initialData?.measurements?.motor_control?.sls_sagital_image_url || null);
+  const [squatBipodalImageUrl, setSquatBipodalImageUrl] = useState<string | null>(initialData?.measurements?.motor_control?.squat_bipodal_image_url || null);
   const [measurements, setMeasurements] = useState<any>(() => {
     const defaultState: any = {
       basic: { 
@@ -179,14 +216,14 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
     return defaultState;
   });
 
-  const handleThomasImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (section: string, field: string, setLocalState: (val: string | null) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUrl = reader.result as string;
-        setThomasImageUrl(dataUrl);
-        updateMeasurement('flexibility', 'thomas_image_url', dataUrl);
+        setLocalState(dataUrl);
+        updateMeasurement(section, field, dataUrl);
       };
       reader.readAsDataURL(file);
     }
@@ -391,29 +428,22 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
                 {/* Thomas Test Image Upload */}
                 <div className="mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="flex items-center gap-3 mb-4">
-                    <h3 className="text-[11px] font-black text-primary-600 uppercase tracking-[0.2em] whitespace-nowrap">Imagen Thomas Test</h3>
+                    <h3 className="text-[11px] font-black text-primary-600 uppercase tracking-[0.2em] whitespace-nowrap">Fotos del Test de Thomas</h3>
                     <div className="h-px w-full bg-slate-100"></div>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-6 items-start">
-                    <label className="flex flex-col items-center justify-center w-full sm:w-64 h-36 border-2 border-dashed border-primary-300 rounded-2xl cursor-pointer bg-primary-50 hover:bg-primary-100 transition-all group">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <svg className="w-8 h-8 text-primary-400 group-hover:text-primary-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest">Subir imagen</span>
-                        <span className="text-[9px] font-bold text-slate-400">PNG, JPG hasta 10MB</span>
-                      </div>
-                      <input type="file" accept="image/*" className="hidden" onChange={handleThomasImageUpload} />
-                    </label>
-                    {thomasImageUrl && (
-                      <div className="relative group">
-                        <img src={thomasImageUrl} alt="Thomas Test" className="h-36 rounded-2xl object-cover border-2 border-slate-200 shadow-md" />
-                        <button
-                          onClick={() => { setThomasImageUrl(null); updateMeasurement('flexibility', 'thomas_image_url', null); }}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      </div>
-                    )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <ImageUploadField
+                      label="Imagen Thomas Derecha"
+                      imageUrl={thomasRImageUrl}
+                      onUpload={handleImageUpload('flexibility', 'thomas_r_image_url', setThomasRImageUrl)}
+                      onClear={() => { setThomasRImageUrl(null); updateMeasurement('flexibility', 'thomas_r_image_url', null); }}
+                    />
+                    <ImageUploadField
+                      label="Imagen Thomas Izquierda"
+                      imageUrl={thomasLImageUrl}
+                      onUpload={handleImageUpload('flexibility', 'thomas_l_image_url', setThomasLImageUrl)}
+                      onClear={() => { setThomasLImageUrl(null); updateMeasurement('flexibility', 'thomas_l_image_url', null); }}
+                    />
                   </div>
                 </div>
 
@@ -719,13 +749,21 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
             {/* CONTROL */}
             {activeTab === 'CONTROL' && (
               <div className="space-y-4">
-                <SectionGrid title="Sentadilla Bipodal & Bisagra">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <SectionGrid title="Sentadilla Bipodal & Bisagra" cols={1}>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest border-l-4 border-primary-500 pl-3">Sentadilla Bipodal</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <VASSelector label="Sentadilla bipodal Derecha" value={measurements.motor_control.bipodal_squat_r} onChange={v => updateMeasurement('motor_control', 'bipodal_squat_r', v)} />
                         <VASSelector label="Sentadilla bipodal Izquierda" value={measurements.motor_control.bipodal_squat_l} onChange={v => updateMeasurement('motor_control', 'bipodal_squat_l', v)} />
+                      </div>
+                      <div className="mt-3">
+                        <ImageUploadField
+                          label="Foto Sentadilla Bipodal"
+                          imageUrl={squatBipodalImageUrl}
+                          onUpload={handleImageUpload('motor_control', 'squat_bipodal_image_url', setSquatBipodalImageUrl)}
+                          onClear={() => { setSquatBipodalImageUrl(null); updateMeasurement('motor_control', 'squat_bipodal_image_url', null); }}
+                        />
                       </div>
                       
                       <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest border-l-4 border-primary-500 pl-3">Sentadilla Unipodal (Frontal)</h4>
@@ -745,6 +783,20 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
                           <InputField label="Sentadilla a 1 pierna: vista frontal izquierda Déficit de rodilla" value={measurements.motor_control.sls_frontal_knee_l} onChange={v => updateMeasurement('motor_control', 'sls_frontal_knee_l', v)} type="select" options={['No evaluado', 'OK', 'X']} />
                         </div>
                       </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
+                        <ImageUploadField
+                          label="Foto SLS Frontal Derecha"
+                          imageUrl={slsFrontalRImageUrl}
+                          onUpload={handleImageUpload('motor_control', 'sls_frontal_r_image_url', setSlsFrontalRImageUrl)}
+                          onClear={() => { setSlsFrontalRImageUrl(null); updateMeasurement('motor_control', 'sls_frontal_r_image_url', null); }}
+                        />
+                        <ImageUploadField
+                          label="Foto SLS Frontal Izquierda"
+                          imageUrl={slsFrontalLImageUrl}
+                          onUpload={handleImageUpload('motor_control', 'sls_frontal_l_image_url', setSlsFrontalLImageUrl)}
+                          onClear={() => { setSlsFrontalLImageUrl(null); updateMeasurement('motor_control', 'sls_frontal_l_image_url', null); }}
+                        />
+                      </div>
                     </div>
      
                     <div className="space-y-6">
@@ -752,6 +804,14 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <VASSelector label="Sentadilla a 1 pierna: vista sagital Derecha" value={measurements.motor_control.sls_sagittal_r} onChange={v => updateMeasurement('motor_control', 'sls_sagittal_r', v)} />
                         <VASSelector label="Sentadilla a 1 pierna: vista sagital Izquierda" value={measurements.motor_control.sls_sagittal_l} onChange={v => updateMeasurement('motor_control', 'sls_sagittal_l', v)} />
+                      </div>
+                      <div className="mt-3 mb-6">
+                        <ImageUploadField
+                          label="Foto SLS Sagital"
+                          imageUrl={slsSagitalImageUrl}
+                          onUpload={handleImageUpload('motor_control', 'sls_sagital_image_url', setSlsSagitalImageUrl)}
+                          onClear={() => { setSlsSagitalImageUrl(null); updateMeasurement('motor_control', 'sls_sagital_image_url', null); }}
+                        />
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <VASSelector label="Bisagra de cadera Derecha" value={measurements.motor_control.hip_hinge_r} onChange={v => updateMeasurement('motor_control', 'hip_hinge_r', v)} />

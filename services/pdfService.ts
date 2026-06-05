@@ -243,42 +243,79 @@ export const generateEvaluationPDF = async (evaluation: ClinicalEvaluation, pati
     }
   });
 
-  // --- 5. FOOTER ---
-  const totalPages = (doc as any).internal.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.text('KineFlow Pro - Reporte generado automáticamente para uso clínico profesional.', pageWidth / 2, pageHeight - 7, { align: 'center' });
-  }
+  // --- 6. GALERÍA DE IMÁGENES CLÍNICAS (if available) ---
+  const imagesToRender = [
+    { label: 'TEST DE THOMAS (DERECHA)', url: evaluation.measurements.flexibility?.thomas_r_image_url },
+    { label: 'TEST DE THOMAS (IZQUIERDA)', url: evaluation.measurements.flexibility?.thomas_l_image_url },
+    { label: 'SENTADILLA UNIPODAL FRONTAL (DERECHA)', url: evaluation.measurements.motor_control?.sls_frontal_r_image_url },
+    { label: 'SENTADILLA UNIPODAL FRONTAL (IZQUIERDA)', url: evaluation.measurements.motor_control?.sls_frontal_l_image_url },
+    { label: 'SENTADILLA UNIPODAL SAGITAL', url: evaluation.measurements.motor_control?.sls_sagital_image_url },
+    { label: 'SENTADILLA BIPODAL', url: evaluation.measurements.motor_control?.squat_bipodal_image_url },
+  ].filter(img => img.url);
 
-  // --- 6. THOMAS TEST IMAGE (if available) ---
-  const thomasImageUrl = evaluation.measurements.flexibility?.thomas_image_url;
-  if (thomasImageUrl) {
+  if (imagesToRender.length > 0) {
     doc.addPage();
+    
     // Left border accent
     doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
     doc.rect(0, 0, 5, pageHeight, 'F');
     
-    doc.setFontSize(12);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text('IMAGEN - THOMAS TEST:', 20, 20);
+    doc.text('GALERÍA DE IMÁGENES CLÍNICAS', 15, 20);
     
-    try {
-      // Image is base64 data URL
-      const format = thomasImageUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-      const imgData = thomasImageUrl.split(',')[1] || thomasImageUrl;
-      doc.addImage(imgData, format, 20, 30, pageWidth - 40, 0);
-    } catch(e) {
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'italic');
-      doc.text('(No se pudo procesar la imagen adjunta)', 20, 30);
+    let yPos = 30;
+    let col = 0;
+    
+    for (let i = 0; i < imagesToRender.length; i++) {
+      const img = imagesToRender[i];
+      if (!img.url) continue;
+
+      // Draw two columns of images
+      // Column width: 85, Column gap: 10, left margin: 15
+      const xPos = col === 0 ? 15 : 110;
+      
+      // Title above image
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text(img.label, xPos, yPos);
+      
+      try {
+        const format = img.url.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+        const imgData = img.url.split(',')[1] || img.url;
+        
+        doc.addImage(imgData, format, xPos, yPos + 3, 85, 60);
+      } catch(e) {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.text('(Error al procesar la imagen)', xPos, yPos + 10);
+      }
+      
+      if (col === 0) {
+        col = 1;
+      } else {
+        col = 0;
+        yPos += 75; // increment Y position after each row of 2 images
+        
+        if (yPos > pageHeight - 90 && i < imagesToRender.length - 1) {
+          doc.addPage();
+          
+          doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+          doc.rect(0, 0, 5, pageHeight, 'F');
+          
+          yPos = 20;
+          col = 0;
+        }
+      }
     }
-    
-    // Re-add footer on this page
+  }
+
+  // --- 7. FOOTER (para todas las páginas) ---
+  const totalPages = (doc as any).internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
     doc.setTextColor(255, 255, 255);
