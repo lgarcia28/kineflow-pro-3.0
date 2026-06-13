@@ -1,21 +1,4 @@
-import { app, aiApp } from '../firebase';
-import { getAI, getGenerativeModel, GoogleAIBackend } from 'firebase/ai';
 import { ExerciseDefinition, RoutineDay, RoutineExercise, WeeklyTarget } from '../types';
-
-let aiInstance: any = null;
-
-const getAIInstance = () => {
-  const targetApp = aiApp || app;
-  if (!aiInstance && targetApp) {
-    try {
-      aiInstance = getAI(targetApp, { backend: new GoogleAIBackend() });
-      console.log("firebase/ai initialized successfully.");
-    } catch (e) {
-      console.error("Error initializing firebase/ai:", e);
-    }
-  }
-  return aiInstance;
-};
 
 interface AIExerciseOutput {
   definitionId: string;
@@ -37,9 +20,9 @@ export const generateAIPortion = async (
   objectives: string,
   progressionStyle: string
 ): Promise<RoutineDay[]> => {
-  const ai = getAIInstance();
-  if (!ai) {
-    throw new Error("El servicio de IA no está disponible o Firebase no está configurado.");
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("El servicio de IA no está disponible o la clave de API de Gemini no está configurada.");
   }
 
   // Filtrar los ejercicios de la biblioteca para el prompt
@@ -108,17 +91,43 @@ No incluyas texto explicativo, solo el JSON formateado.
 `;
 
   try {
-    const model = getGenerativeModel(ai, {
-      model: "gemini-2.5-flash-lite",
-      generationConfig: {
-        responseMimeType: "application/json",
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: systemInstruction
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: "application/json",
+          }
+        }),
       }
-    });
+    );
 
-    const result = await model.generateContent(systemInstruction);
-    const responseText = await result.response.text();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Gemini API Error details:", errorData);
+      throw new Error(`Error de la API de Gemini: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!responseText) {
+      throw new Error("La respuesta de la IA está vacía.");
+    }
+
     console.log("Raw AI Response received:", responseText);
-
     const parsedDays: AIDayOutput[] = JSON.parse(responseText);
 
     // Mapear los datos de IA a la estructura de la aplicación
