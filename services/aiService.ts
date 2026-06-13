@@ -1,13 +1,14 @@
-import { app } from '../firebase';
+import { app, aiApp } from '../firebase';
 import { getAI, getGenerativeModel, GoogleAIBackend } from 'firebase/ai';
 import { ExerciseDefinition, RoutineDay, RoutineExercise, WeeklyTarget } from '../types';
 
 let aiInstance: any = null;
 
 const getAIInstance = () => {
-  if (!aiInstance && app) {
+  const targetApp = aiApp || app;
+  if (!aiInstance && targetApp) {
     try {
-      aiInstance = getAI(app, { backend: new GoogleAIBackend() });
+      aiInstance = getAI(targetApp, { backend: new GoogleAIBackend() });
       console.log("firebase/ai initialized successfully.");
     } catch (e) {
       console.error("Error initializing firebase/ai:", e);

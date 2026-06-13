@@ -26,6 +26,7 @@ const isConfigValid = !isPlaceholder(firebaseConfig.apiKey) && !isPlaceholder(fi
 
 let app: FirebaseApp | undefined;
 let secondaryApp: FirebaseApp | undefined;
+let aiApp: FirebaseApp | undefined;
 let db: Firestore | null = null;
 let analytics: Analytics | null = null;
 let storage: FirebaseStorage | null = null;
@@ -53,6 +54,13 @@ if (isConfigValid) {
     secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
     secondaryAuth = getAuth(secondaryApp);
 
+    // App secundaria para la IA con la clave de API vinculada a la cuenta de servicio
+    const aiConfig = {
+      ...firebaseConfig,
+      apiKey: import.meta.env.VITE_GEMINI_API_KEY || firebaseConfig.apiKey
+    };
+    aiApp = initializeApp(aiConfig, "AIApp");
+
     isSupported().then((yes: boolean) => {
         if (yes && app) analytics = getAnalytics(app);
     }).catch(() => {});
@@ -63,4 +71,4 @@ if (isConfigValid) {
   console.warn("Firebase config is invalid or using placeholders. Firestore will be disabled.");
 }
 
-export { app, db, analytics, storage, auth, secondaryAuth, isConfigValid };
+export { app, db, analytics, storage, auth, secondaryAuth, aiApp, isConfigValid };
