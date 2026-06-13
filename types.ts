@@ -62,6 +62,13 @@ export interface ExerciseLog {
 
 export type MetricType = 'kg' | 'time' | 'tension';
 
+export interface WeeklyTarget {
+  week: number;
+  sets: number;
+  reps: number;
+  load: number;
+}
+
 export interface ExerciseDefinition {
   id: string;
   tenantId?: string; // Para aislamiento multi-tenant
@@ -69,6 +76,7 @@ export interface ExerciseDefinition {
   category: string;
   videoUrl?: string;
   metricType: MetricType;
+  difficulty?: number; // Nivel de dificultad del ejercicio (1-5)
 }
 
 export interface RoutineExercise {
@@ -84,6 +92,7 @@ export interface RoutineExercise {
   isDone: boolean;
   history: ExerciseLog[];
   supersetGroup?: string; // ID de grupo para biserie/triserie
+  weeklyTargets?: WeeklyTarget[]; // Proyección de progresión de la carga semana a semana
 }
 
 export interface RoutineDay {

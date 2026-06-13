@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Patient, RoutineExercise, Stage, UserRole, RoutineDay, ExerciseLog, ExerciseDefinition, CheckInStatus, PlanType, ClinicalEvaluation } from '../types';
 import { EvaluationDashboard } from './EvaluationDashboard';
 import { ExerciseCard } from './ExerciseCard';
+import { generateAIPortion } from '../services/aiService';
 import { ProgressChart } from './ProgressChart';
 import { parseMediaUrl } from '../utils/mediaUrl';
 import { 
@@ -9,7 +10,7 @@ import {
 } from 'recharts';
 import { 
     FileText, Plus, Search, X, Calendar, Trash2, Edit2, Save,
-    Activity, Minus, Layers, TrendingUp, CheckSquare, Square, BarChart2, CheckCircle2, History, ChevronRightCircle, Timer, Dumbbell, Maximize2, Award, Link2, Unlink, GripVertical
+    Activity, Minus, Layers, TrendingUp, CheckSquare, Square, BarChart2, CheckCircle2, History, ChevronRightCircle, Timer, Dumbbell, Maximize2, Award, Link2, Unlink, GripVertical, Sparkles
 } from 'lucide-react';
 import { Reorder, motion, useDragControls } from 'framer-motion';
 
@@ -234,6 +235,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
   // --- Estados para Biserie/Triserie en el editor ---
   const [editorSelectedExIds, setEditorSelectedExIds] = useState<string[]>([]);
 
+  // --- Estados para Planificación IA y Mesociclos ---
+  const [selectedMesocycle, setSelectedMesocycle] = useState<number>(1);
+  const [showAIPlannerModal, setShowAIPlannerModal] = useState(false);
+  const [aiObjectives, setAiObjectives] = useState('Fuerza y Control Motor');
+  const [aiProgressionStyle, setAiProgressionStyle] = useState('Lineal');
+  const [aiSessionsPerWeek, setAiSessionsPerWeek] = useState(patient.sessionsPerWeek || 3);
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+
   const isKine = role === UserRole.KINE;
   
   // IMPORTANTE: Obtenemos el número de semana siempre de la prop patient
@@ -248,6 +257,67 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
   }, [patient.routine.days, patient.homeRoutine?.days, activeDayId, routineType]);
 
   const activeDay = (routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.find(d => d.id === activeDayId);
+
+  const resolvedActiveDay = useMemo(() => {
+    if (!activeDay) return null;
+    const routineKey = routineType === 'CLINIC' ? 'routine' : 'homeRoutine';
+    const currentWeekNum = patient[routineKey]?.currentWeek || 1;
+    
+    return {
+      ...activeDay,
+      exercises: activeDay.exercises.map(ex => {
+        if (ex.weeklyTargets) {
+          const target = ex.weeklyTargets.find(t => t.week === currentWeekNum);
+          if (target) {
+            return {
+              ...ex,
+              targetSets: target.sets,
+              targetReps: target.reps,
+              targetLoad: target.load,
+            };
+          }
+        }
+        return ex;
+      })
+    };
+  }, [activeDay, patient, routineType]);
+
+  const handleGenerateAIPlan = async () => {
+    setIsAiGenerating(true);
+    try {
+      const generatedDays = await generateAIPortion(
+        patient.condition || "Rehabilitación general",
+        aiSessionsPerWeek,
+        exercises, // librería global de ejercicios
+        aiObjectives,
+        aiProgressionStyle
+      );
+
+      const routineKey = routineType === 'CLINIC' ? 'routine' : 'homeRoutine';
+      const currentRoutine = patient[routineKey] || { days: [] };
+
+      // Actualizar la rutina en el paciente
+      const updatedPatient: Patient = {
+        ...patient,
+        sessionsPerWeek: aiSessionsPerWeek,
+        [routineKey]: {
+          ...currentRoutine,
+          currentWeek: 1, // Reiniciar a la semana 1 al crear un nuevo macrociclo
+          days: generatedDays
+        }
+      };
+
+      await onUpdatePatient(updatedPatient);
+      setShowAIPlannerModal(false);
+      setSelectedMesocycle(1);
+      alert("¡Rutina planificada y proyecciones de 6 meses cargadas con éxito!");
+    } catch (error) {
+      console.error(error);
+      alert("Hubo un error al generar la planificación con IA. Por favor, intenta de nuevo.");
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
 
   // LOGICA PARA OBTENER SEMANAS UNICAS DE HISTORIAL (ORDEN ASCENDENTE 1, 2, 3...)
   const historyWeeksAscending = useMemo(() => {
@@ -270,6 +340,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
     if (!window.confirm(confirmText)) return;
 
     const today = new Date().toISOString().split('T')[0];
+    const nextWeekNum = currentWeek + 1;
     
     // Clonamos y reseteamos profundamente
     const resetDays = patient.routine.days.map(day => ({
@@ -289,11 +360,28 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
           });
         }
 
+        // Resolviendo targets para la siguiente semana desde weeklyTargets si existen
+        let nextTargetSets = ex.targetSets;
+        let nextTargetReps = ex.targetReps;
+        let nextTargetLoad = ex.targetLoad;
+
+        if (ex.weeklyTargets) {
+          const target = ex.weeklyTargets.find(t => t.week === nextWeekNum);
+          if (target) {
+            nextTargetSets = target.sets;
+            nextTargetReps = target.reps;
+            nextTargetLoad = target.load;
+          }
+        }
+
         return {
           ...ex,
           isDone: false,        // DESTILDAR (RESET)
           currentRpe: 0,        // RESET A 0
           currentPain: 0,       // RESET DOLOR A 0
+          targetSets: nextTargetSets,
+          targetReps: nextTargetReps,
+          targetLoad: nextTargetLoad,
           history: newHistory
         };
       })
@@ -320,10 +408,35 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
   const handleExerciseUpdate = (exerciseId: string, updates: Partial<RoutineExercise>) => {
     const routineKey = routineType === 'CLINIC' ? 'routine' : 'homeRoutine';
     const currentRoutine = patient[routineKey] || { days: [] };
+    const currentWeekNum = currentRoutine.currentWeek || 1;
     
     const newDays = currentRoutine.days.map(day => ({
         ...day,
-        exercises: day.exercises.map(ex => ex.id === exerciseId ? { ...ex, ...updates } : ex)
+        exercises: day.exercises.map(ex => {
+          if (ex.id === exerciseId) {
+            let updatedWeeklyTargets = ex.weeklyTargets ? [...ex.weeklyTargets] : undefined;
+            if (updatedWeeklyTargets) {
+              const idx = updatedWeeklyTargets.findIndex(t => t.week === currentWeekNum);
+              if (idx !== -1) {
+                updatedWeeklyTargets[idx] = {
+                  ...updatedWeeklyTargets[idx],
+                  sets: updates.targetSets !== undefined ? updates.targetSets : updatedWeeklyTargets[idx].sets,
+                  reps: updates.targetReps !== undefined ? updates.targetReps : updatedWeeklyTargets[idx].reps,
+                  load: updates.targetLoad !== undefined ? updates.targetLoad : updatedWeeklyTargets[idx].load,
+                };
+              } else {
+                updatedWeeklyTargets.push({
+                  week: currentWeekNum,
+                  sets: updates.targetSets !== undefined ? updates.targetSets : ex.targetSets,
+                  reps: updates.targetReps !== undefined ? updates.targetReps : ex.targetReps,
+                  load: updates.targetLoad !== undefined ? updates.targetLoad : ex.targetLoad,
+                });
+              }
+            }
+            return { ...ex, ...updates, weeklyTargets: updatedWeeklyTargets };
+          }
+          return ex;
+        })
     }));
     
     onUpdatePatient({ 
@@ -755,21 +868,21 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
       <main className="flex-1 overflow-y-auto p-4 md:p-8 scroll-container relative z-10">
         <div className="max-w-5xl mx-auto h-full">
           {/* VISTA DIARIA */}
-          {viewMode === 'daily' && activeDay ? (
+          {viewMode === 'daily' && resolvedActiveDay ? (
               <div className="space-y-6 max-w-2xl mx-auto pb-24 animate-fade-in">
                   <div className="flex justify-between items-end px-2 mb-4 bg-white/50 backdrop-blur py-4 rounded-2xl shadow-sm border border-slate-200/50">
                       <div className="flex flex-col px-4">
                         <span className="text-[10px] font-black text-primary-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><Calendar size={12}/> Plan del Día</span>
-                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{activeDay.name}</h3>
+                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{resolvedActiveDay.name}</h3>
                       </div>
                       <div className="px-4">
                         <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">Ciclo Semana {currentWeek}</span>
                       </div>
                   </div>
                   {(() => {
-                      const supersetInfo = getSupersetInfo(activeDay.exercises);
+                      const supersetInfo = getSupersetInfo(resolvedActiveDay.exercises);
                       const blocks: { isGroup: boolean; groupId?: string; exercises: RoutineExercise[] }[] = [];
-                      activeDay.exercises.forEach(ex => {
+                      resolvedActiveDay.exercises.forEach(ex => {
                         if (ex.supersetGroup) {
                           if (blocks.length > 0 && blocks[blocks.length - 1].groupId === ex.supersetGroup) {
                             blocks[blocks.length - 1].exercises.push(ex);
@@ -808,7 +921,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                         </div>
                       ));
                   })()}
-                  {activeDay.exercises.length === 0 && (
+                  {resolvedActiveDay.exercises.length === 0 && (
                     <div className="py-24 text-center glass-panel rounded-[2rem] border-dashed">
                         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
                             <Activity className="text-slate-400" size={32} />
@@ -819,50 +932,131 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
               </div>
 
           ) : viewMode === 'plan' ? (
-              /* PLAN MENSUAL (PROYECCIÓN FUTURA) */
-              <div className="space-y-12 pb-24 max-w-5xl mx-auto animate-slide-up">
-                  <div className="text-center space-y-3 mb-10">
-                      <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Proyección Mensual</h3>
-                      <p className="text-sm font-bold text-slate-500">Vista anticipada de las próximas semanas de entrenamiento</p>
+              /* PLAN DE 6 MESES (PROYECCIÓN FUTURA CON IA) */
+              <div className="space-y-10 pb-24 max-w-5xl mx-auto animate-slide-up">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-slate-200/50 shadow-sm">
+                      <div className="space-y-2">
+                          <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
+                            Proyección de 6 Meses
+                            <span className="bg-amber-100 text-amber-700 text-[10px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider">Macrociclo Clínico</span>
+                          </h3>
+                          <p className="text-sm font-bold text-slate-500">Planifica con IA y proyecta el progreso de sets, repeticiones y cargas a largo plazo.</p>
+                      </div>
+                      {isKine && (
+                        <button
+                            onClick={() => setShowAIPlannerModal(true)}
+                            className="bg-slate-900 text-white flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 shrink-0"
+                        >
+                            <Sparkles size={16} className="text-amber-400 animate-pulse" />
+                            Planificar con IA
+                        </button>
+                      )}
                   </div>
 
-                  {/* Mostramos 4 semanas: actual y 3 siguientes */}
-                  <div className="space-y-8">
-                  {[0, 1, 2, 3].map((offset) => {
-                      const weekNum = currentWeek + offset;
-                      const isCurrent = offset === 0;
+                  {/* Selector de Mesociclo */}
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 p-1.5 bg-slate-200/40 rounded-[2rem] border border-slate-200/30">
+                    {[1, 2, 3, 4, 5, 6].map((num) => {
+                      const isActive = selectedMesocycle === num;
+                      const weeksText = `Semanas ${((num - 1) * 4) + 1}-${num * 4}`;
+                      return (
+                        <button
+                          key={num}
+                          onClick={() => setSelectedMesocycle(num)}
+                          className={`flex-1 min-w-[120px] py-3 px-4 rounded-[1.5rem] text-xs font-black uppercase tracking-wide transition-all duration-300 ${
+                            isActive
+                              ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/20'
+                              : 'text-slate-500 hover:text-slate-800 hover:bg-white/30'
+                          }`}
+                        >
+                          <span className="block text-[9px] opacity-75">Mesociclo {num}</span>
+                          <span className="block text-[11px] mt-0.5">{weeksText}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Renderizado de las 4 semanas del Mesociclo seleccionado */}
+                  <div className="grid grid-cols-1 gap-8">
+                  {(() => {
+                    const startWeekNum = (selectedMesocycle - 1) * 4 + 1;
+                    const weeksArray = [startWeekNum, startWeekNum + 1, startWeekNum + 2, startWeekNum + 3];
+                    const activeRoutine = routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] });
+                    
+                    if (activeRoutine.days.length === 0 || activeRoutine.days.every(d => d.exercises.length === 0)) {
+                      return (
+                        <div className="py-20 text-center glass-panel rounded-[2.5rem] border-dashed border-2 border-slate-200">
+                          <Activity className="mx-auto text-slate-300 mb-4 animate-pulse" size={48} />
+                          <h4 className="text-slate-700 font-black uppercase text-sm tracking-widest">Sin Planificación Activa</h4>
+                          <p className="text-slate-400 text-xs mt-2 max-w-sm mx-auto font-medium">Usa la biblioteca de ejercicios o haz click en "Planificar con IA" para diseñar la progresión del paciente.</p>
+                        </div>
+                      );
+                    }
+
+                    return weeksArray.map((weekNum) => {
+                      const isCurrent = currentWeek === weekNum;
                       return (
                         <div key={weekNum} className={`glass-card overflow-hidden transition-all duration-300 ${isCurrent ? 'border-primary-200 ring-4 ring-primary-100 shadow-xl scale-[1.01] z-10' : 'border-slate-200/60 opacity-90 hover:opacity-100'}`}>
-                            <div className={`px-8 py-6 flex justify-between items-center bg-white border-b border-slate-100 ${isCurrent ? 'bg-primary-50/50' : ''}`}>
+                            <div className={`px-8 py-5 flex justify-between items-center bg-white border-b border-slate-100 ${isCurrent ? 'bg-primary-50/50' : ''}`}>
                                 <div className="flex items-center gap-4">
                                     <h4 className={`font-black text-lg uppercase tracking-wide ${isCurrent ? 'text-primary-700' : 'text-slate-800'}`}>Semana {weekNum}</h4>
-                                    {isCurrent && <span className="bg-primary-600 text-white px-3 py-1 rounded-[1rem] text-[10px] font-black uppercase shadow-sm">SEMANA ACTUAL</span>}
+                                    {isCurrent && <span className="bg-primary-600 text-white px-3 py-1 rounded-[1rem] text-[9px] font-black uppercase shadow-sm tracking-wider">SEMANA ACTUAL</span>}
                                 </div>
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${isCurrent ? 'text-primary-400' : 'text-slate-400'}`}>Proyección</span>
+                                <span className={`text-[9px] font-black uppercase tracking-widest ${isCurrent ? 'text-primary-400' : 'text-slate-400'}`}>Mesociclo {selectedMesocycle}</span>
                             </div>
-                            <div className="p-8 overflow-x-auto no-scrollbar bg-slate-50/30">
-                                <div className="flex gap-6 min-w-max pb-4">
-                                    {patient.routine.days.map((day, idx) => (
-                                        <div key={`${weekNum}-${day.id}`} className="w-64 shrink-0 bg-white rounded-[2rem] p-6 shadow-sm border border-slate-200/60 transition-transform hover:-translate-y-1 duration-300">
-                                            <p className="text-xs font-black text-slate-500 uppercase mb-4 pb-3 border-b border-slate-100 flex items-center justify-between">
+                            
+                            <div className="p-6 overflow-x-auto no-scrollbar bg-slate-50/20">
+                                <div className="flex gap-6 min-w-max pb-2">
+                                    {activeRoutine.days.map((day, idx) => (
+                                        <div key={`${weekNum}-${day.id}`} className="w-72 shrink-0 bg-white rounded-[2rem] p-6 shadow-sm border border-slate-200/50 hover:shadow-md transition-shadow duration-300">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase mb-4 pb-3 border-b border-slate-100 flex items-center justify-between">
                                                 <span>Día {idx+1}</span>
-                                                <span className="text-[10px] opacity-50 bg-slate-100 px-2 py-0.5 rounded-md">{day.name}</span>
+                                                <span className="text-[9px] opacity-75 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{day.name.split(':')[0]}</span>
                                             </p>
+                                            
                                             <div className="space-y-4">
-                                                {day.exercises.map(ex => (
+                                                {day.exercises.map(ex => {
+                                                  // Buscar target para esta semana en weeklyTargets
+                                                  let wSets = ex.targetSets;
+                                                  let wReps = ex.targetReps;
+                                                  let wLoad = ex.targetLoad;
+                                                  let hasTarget = false;
+
+                                                  if (ex.weeklyTargets) {
+                                                    const target = ex.weeklyTargets.find(t => t.week === weekNum);
+                                                    if (target) {
+                                                      wSets = target.sets;
+                                                      wReps = target.reps;
+                                                      wLoad = target.load;
+                                                      hasTarget = true;
+                                                    }
+                                                  }
+
+                                                  const isTime = ex.definition.metricType === 'time';
+                                                  const isTension = ex.definition.metricType === 'tension';
+
+                                                  return (
                                                     <div key={`${weekNum}-${ex.id}`} className="flex flex-col gap-2 relative">
-                                                        <span className="text-[11px] font-extrabold text-slate-800 leading-tight">{ex.definition.name}</span>
-                                                        <div className="flex justify-between items-center">
-                                                          <span className="text-[11px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-md">{ex.targetSets}x{ex.targetReps}</span>
-                                                          <span className={`text-[12px] font-black ${ex.definition.metricType === 'tension' ? 'text-purple-600' : 'text-primary-600'}`}>
-                                                            {ex.definition.metricType === 'time' ? `${ex.targetLoad}s` : 
-                                                             ex.definition.metricType === 'tension' ? (ex.targetLoad === 1 ? 'Baja' : ex.targetLoad === 2 ? 'Media' : 'Alta') : 
-                                                             `${ex.targetLoad}kg`}
+                                                        <div className="flex items-start justify-between gap-2">
+                                                          <span className="text-xs font-black text-slate-800 leading-tight truncate w-[80%]">{ex.definition.name}</span>
+                                                          {ex.definition.difficulty && (
+                                                            <span className="text-[8px] bg-amber-50 text-amber-700 px-1 py-0.2 rounded font-black tracking-tighter shrink-0 border border-amber-100">D{ex.definition.difficulty}</span>
+                                                          )}
+                                                        </div>
+                                                        
+                                                        <div className="flex justify-between items-center mt-1">
+                                                          <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${hasTarget ? 'bg-indigo-50/70 text-indigo-600 border border-indigo-100/30' : 'bg-slate-50 text-slate-500'}`}>
+                                                            {wSets}x{isTime ? `${wLoad}s` : wReps}
+                                                          </span>
+                                                          <span className={`text-[11px] font-black ${isTension ? 'text-purple-600' : 'text-primary-600'}`}>
+                                                            {isTime ? 'Isometrico' : 
+                                                             isTension ? (wLoad === 1 ? 'Banda Baja' : wLoad === 2 ? 'Banda Media' : 'Banda Alta') : 
+                                                             `${wLoad}kg`}
                                                           </span>
                                                         </div>
-                                                        <div className="h-px bg-slate-100 mt-2"></div>
+                                                        <div className="h-[0.5px] bg-slate-100 mt-2"></div>
                                                     </div>
-                                                ))}
+                                                  );
+                                                })}
                                             </div>
                                         </div>
                                     ))}
@@ -870,7 +1064,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                             </div>
                         </div>
                       );
-                  })}
+                    });
+                  })()}
                   </div>
               </div>
           ) : viewMode === 'stats' ? (
@@ -1240,6 +1435,123 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
               <h2 className="text-2xl font-black text-slate-900 tracking-tight">{zoomedImage.name}</h2>
               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Biblioteca de Ejercicios</p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Planner Modal */}
+      {showAIPlannerModal && (
+        <div className="fixed inset-0 z-[300] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <header className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Sparkles className="text-amber-500" size={20} />
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Planificador IA</h3>
+              </div>
+              <button 
+                onClick={() => setShowAIPlannerModal(false)} 
+                className="p-2 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 transition-colors"
+                disabled={isAiGenerating}
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div className="p-8 space-y-6 overflow-y-auto max-h-[70vh]">
+              {isAiGenerating ? (
+                <div className="py-12 flex flex-col items-center justify-center text-center space-y-6">
+                  <div className="relative">
+                    <div className="w-20 h-20 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin"></div>
+                    <Sparkles className="text-amber-500 absolute inset-0 m-auto animate-pulse" size={24} />
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight">Generando Planificación...</h4>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest animate-pulse">Analizando biblioteca y estructurando progresión de 6 meses</p>
+                  </div>
+                  <div className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left space-y-3">
+                    <div className="flex items-center gap-2.5 text-xs text-slate-600 font-bold">
+                      <span className="text-emerald-500 font-black">✓</span> Evaluando condición: <span className="text-slate-800">{patient.condition || 'General'}</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-slate-600 font-bold">
+                      <span className="text-emerald-500 font-black">✓</span> Escaneando biblioteca de ejercicios
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-slate-600 font-bold">
+                      <span className="text-primary-600 animate-spin">⟳</span> Proyectando progresiones de 24 semanas
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-slate-400 font-bold">
+                      <span>○</span> Ordenando ejercicios por nivel de dificultad
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Condición Clínica del Paciente</label>
+                    <div className="p-4 bg-slate-50 rounded-2xl text-slate-700 text-sm font-bold border border-slate-100">
+                      {patient.condition || "No especificada"}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Objetivos del Macrociclo (6 meses)</label>
+                    <input 
+                      className="w-full p-4 bg-slate-50 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all" 
+                      value={aiObjectives} 
+                      onChange={e => setAiObjectives(e.target.value)} 
+                      placeholder="Ej: Aumentar fuerza, hipertrofia muscular, estabilidad lateral..." 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Estilo de Progresión</label>
+                    <select
+                      className="w-full p-4 bg-slate-50 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none cursor-pointer"
+                      value={aiProgressionStyle}
+                      onChange={e => setAiProgressionStyle(e.target.value)}
+                    >
+                      <option value="Lineal">Progresión Lineal (Aumento constante y descargas periódicas)</option>
+                      <option value="Step">En Escalón (Salto mensual en intensidad y descarga)</option>
+                      <option value="Ondulante">Progresión Ondulante (Intensidad y volumen variables semana a semana)</option>
+                      <option value="Conservadora">Progresión Conservadora (Lenta y enfocada en control motor)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Frecuencia Semanal (Días de rutina)</label>
+                    <div className="flex gap-2 p-1 bg-slate-50 rounded-2xl">
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setAiSessionsPerWeek(num)}
+                          className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${aiSessionsPerWeek === num ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+                        >
+                          {num} Día{num !== 1 ? 's' : ''}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {!isAiGenerating && (
+              <div className="p-6 bg-white border-t border-slate-100 flex gap-3">
+                <button 
+                  onClick={() => setShowAIPlannerModal(false)} 
+                  className="flex-1 py-4 text-xs font-black uppercase text-slate-400 hover:bg-slate-50 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleGenerateAIPlan}
+                  className="flex-[2] py-4 bg-slate-900 text-white rounded-xl text-xs font-black uppercase shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Sparkles size={16} className="text-amber-400" />
+                  Generar Planificación
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

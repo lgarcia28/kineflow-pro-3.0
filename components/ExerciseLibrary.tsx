@@ -29,7 +29,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
 
   // Estado del formulario (para crear o editar)
   const [formData, setFormData] = useState<Partial<ExerciseDefinition>>({
-    name: '', category: '', videoUrl: '', metricType: 'kg'
+    name: '', category: '', videoUrl: '', metricType: 'kg', difficulty: 1
   });
 
   const filtered = exercises.filter(ex => 
@@ -38,7 +38,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
   );
 
   const startCreating = () => {
-    setFormData({ name: '', category: '', videoUrl: '', metricType: 'kg' });
+    setFormData({ name: '', category: '', videoUrl: '', metricType: 'kg', difficulty: 1 });
     setIsCreating(true);
     setEditingId(null);
   };
@@ -103,7 +103,8 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
         name: formData.name,
         category: formData.category,
         videoUrl: formData.videoUrl || '',
-        metricType: formData.metricType as MetricType
+        metricType: formData.metricType as MetricType,
+        difficulty: formData.difficulty || 1
       };
       onAddExercise(newEx);
       setIsCreating(false);
@@ -112,7 +113,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
       setEditingId(null);
     }
     // Reset
-    setFormData({ name: '', category: '', videoUrl: '', metricType: 'kg' });
+    setFormData({ name: '', category: '', videoUrl: '', metricType: 'kg', difficulty: 1 });
   };
 
   return (
@@ -173,6 +174,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                         <span className="text-[10px] font-bold text-slate-400">{ex.category}</span>
                         {ex.metricType === 'time' && <span className="text-[8px] bg-blue-50 text-blue-600 px-1.5 rounded uppercase font-bold">Tiempo</span>}
                         {ex.metricType === 'tension' && <span className="text-[8px] bg-purple-50 text-purple-600 px-1.5 rounded uppercase font-bold">Tensión</span>}
+                        <span className="text-[8px] bg-amber-50 text-amber-600 px-1.5 rounded uppercase font-bold">Dif: {ex.difficulty || 1}</span>
                       </div>
                    </div>
                    <button onClick={() => startEditing(ex)} className="p-2 text-slate-300 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"><Edit2 size={16}/></button>
@@ -210,6 +212,22 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                        <button onClick={() => setFormData({...formData, metricType: 'tension'})} className={`w-full py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${formData.metricType === 'tension' ? 'bg-white text-purple-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
                           <Activity size={16}/> Tensión (Banda)
                        </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Dificultad (1-5)</label>
+                    <div className="flex gap-2 p-1 bg-slate-50 rounded-2xl">
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setFormData({...formData, difficulty: num})}
+                          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${formData.difficulty === num ? 'bg-amber-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+                        >
+                          {num}
+                        </button>
+                      ))}
                     </div>
                   </div>
 

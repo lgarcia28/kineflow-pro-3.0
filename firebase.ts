@@ -63,4 +63,4 @@ if (isConfigValid) {
   console.warn("Firebase config is invalid or using placeholders. Firestore will be disabled.");
 }
 
-export { db, analytics, storage, auth, secondaryAuth, isConfigValid };
+export { app, db, analytics, storage, auth, secondaryAuth, isConfigValid };

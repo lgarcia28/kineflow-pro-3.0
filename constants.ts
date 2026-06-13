@@ -2,18 +2,18 @@
 import { Patient, Stage, ExerciseDefinition, PlanType, CheckInStatus, Product } from './types';
 
 export const EXERCISES: ExerciseDefinition[] = [
-  { id: 'ex1', name: 'Sentadilla en cajón', category: 'Pierna', videoUrl: 'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=200&h=200&fit=crop', metricType: 'kg' },
-  { id: 'ex2', name: 'Puente de glúteos unipodal', category: 'Cadera', videoUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&h=200&fit=crop', metricType: 'kg' },
-  { id: 'ex3', name: 'Press Paloff', category: 'Core', videoUrl: 'https://images.unsplash.com/photo-1534258936925-c58bed479fcb?w=200&h=200&fit=crop', metricType: 'kg' },
-  { id: 'ex4', name: 'Estocadas con mancuerna', category: 'Pierna', videoUrl: 'https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=200&h=200&fit=crop', metricType: 'kg' },
-  { id: 'ex5', name: 'Movilidad de tobillo', category: 'Movilidad', videoUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=200&h=200&fit=crop', metricType: 'time' },
-  { id: 'ex6', name: 'Remo TRX', category: 'Espalda', videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a05?w=200&h=200&fit=crop', metricType: 'kg' },
-  { id: 'ex7', name: 'Plancha Frontal', category: 'Core', videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop', metricType: 'time' },
-  { id: 'ex8', name: 'Bicho Muerto (Deadbug)', category: 'Core', videoUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=200&h=200&fit=crop', metricType: 'kg' },
-  { id: 'ex9', name: 'Monster Walk', category: 'Cadera', videoUrl: 'https://images.unsplash.com/photo-1542766788-a2f588f447ee?w=200&h=200&fit=crop', metricType: 'kg' },
-  { id: 'ex10', name: 'Vuelos Laterales', category: 'Hombro', videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200&h=200&fit=crop', metricType: 'kg' },
-  { id: 'ex11', name: 'Rotación externa con banda', category: 'Hombro', videoUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=200&h=200&fit=crop', metricType: 'tension' },
-  { id: 'ex12', name: 'Monster Walk con banda loop', category: 'Cadera', videoUrl: 'https://images.unsplash.com/photo-1542766788-a2f588f447ee?w=200&h=200&fit=crop', metricType: 'tension' },
+  { id: 'ex1', name: 'Sentadilla en cajón', category: 'Pierna', videoUrl: 'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=200&h=200&fit=crop', metricType: 'kg', difficulty: 1 },
+  { id: 'ex2', name: 'Puente de glúteos unipodal', category: 'Cadera', videoUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&h=200&fit=crop', metricType: 'kg', difficulty: 2 },
+  { id: 'ex3', name: 'Press Paloff', category: 'Core', videoUrl: 'https://images.unsplash.com/photo-1534258936925-c58bed479fcb?w=200&h=200&fit=crop', metricType: 'kg', difficulty: 2 },
+  { id: 'ex4', name: 'Estocadas con mancuerna', category: 'Pierna', videoUrl: 'https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=200&h=200&fit=crop', metricType: 'kg', difficulty: 3 },
+  { id: 'ex5', name: 'Movilidad de tobillo', category: 'Movilidad', videoUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=200&h=200&fit=crop', metricType: 'time', difficulty: 1 },
+  { id: 'ex6', name: 'Remo TRX', category: 'Espalda', videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a05?w=200&h=200&fit=crop', metricType: 'kg', difficulty: 2 },
+  { id: 'ex7', name: 'Plancha Frontal', category: 'Core', videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop', metricType: 'time', difficulty: 2 },
+  { id: 'ex8', name: 'Bicho Muerto (Deadbug)', category: 'Core', videoUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=200&h=200&fit=crop', metricType: 'kg', difficulty: 1 },
+  { id: 'ex9', name: 'Monster Walk', category: 'Cadera', videoUrl: 'https://images.unsplash.com/photo-1542766788-a2f588f447ee?w=200&h=200&fit=crop', metricType: 'kg', difficulty: 1 },
+  { id: 'ex10', name: 'Vuelos Laterales', category: 'Hombro', videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200&h=200&fit=crop', metricType: 'kg', difficulty: 2 },
+  { id: 'ex11', name: 'Rotación externa con banda', category: 'Hombro', videoUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=200&h=200&fit=crop', metricType: 'tension', difficulty: 1 },
+  { id: 'ex12', name: 'Monster Walk con banda loop', category: 'Cadera', videoUrl: 'https://images.unsplash.com/photo-1542766788-a2f588f447ee?w=200&h=200&fit=crop', metricType: 'tension', difficulty: 2 },
 ];
 
 const generateHistory = (baseLoad: number): any[] => {
