@@ -323,12 +323,12 @@ export const EVALUATION_PROTOCOLS: Record<string, ProtocolDefinition> = {
     description: "Colgado de barra, pasar el mentón por encima de la barra de tracción sin balanceo."
   },
   hip_flex_0: {
-    name: "Fuerza muscular: flexores cadera 0-0º",
+    name: "Flexores cadera 0-0º",
     category: "Dinamometría",
     description: "Cadena gancho suelo."
   },
   hip_flex_90: {
-    name: "Fuerza muscular: flexores cadera 0-90º",
+    name: "Flexores cadera 0-90º",
     category: "Dinamometría",
     description: "Cadena gancho suelo."
   },
@@ -338,17 +338,17 @@ export const EVALUATION_PROTOCOLS: Record<string, ProtocolDefinition> = {
     description: "Palanca corta para fuerza, decúbito supino, cadera 45°, rodilla 90°. Para hacer palanca larga ya tenemos el unilateral, pero nos interesa hacer palanca larga en el caso de que tenga molestia o dolor para estratificar cuánto puede hacer."
   },
   adductors: {
-    name: "Fuerza muscular: aductores",
+    name: "Aductores",
     category: "Dinamometría",
     description: "Palanca larga PIC (decúbito lateral, por presión)."
   },
   abductors: {
-    name: "Fuerza muscular: abductores",
+    name: "Abductores",
     category: "Dinamometría",
     description: "Cadena gancho suelo en camilla decúbito lateral, por tracción, cuidar extensión de cadera."
   },
   quads_strength: {
-    name: "Fuerza muscular: cuádriceps",
+    name: "Cuádriceps",
     category: "Dinamometría",
     description: "90° cadera, 70° rodilla, dirección perpendicular de la cadena, agarrado con las manos o 90°90°."
   },

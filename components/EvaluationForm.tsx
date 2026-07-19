@@ -546,38 +546,38 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
             {activeTab === 'STRENGTH' && (
               <div className="space-y-6">
                 <SectionGrid title="Dinamometría Isométrica (N)">
-                  <InputField label="Fuerza muscular: cuádriceps Derecha" value={measurements.strength.quads_r} onChange={v => updateMeasurement('strength', 'quads_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.quads_strength?.description} />
-                  <InputField label="Fuerza muscular: cuádriceps Izquierda" value={measurements.strength.quads_l} onChange={v => updateMeasurement('strength', 'quads_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.quads_strength?.description} />
-                  <InputField label="Fuerza muscular: isquiosurales Derecha" value={measurements.strength.hams_r} onChange={v => updateMeasurement('strength', 'hams_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: isquiosurales Izquierda" value={measurements.strength.hams_l} onChange={v => updateMeasurement('strength', 'hams_l', v)} unit="N" />
-                  <InputField label="Fuerza muscular: aductores Derecha" value={measurements.strength.adductor_r} onChange={v => updateMeasurement('strength', 'adductor_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.adductors?.description} />
-                  <InputField label="Fuerza muscular: aductores Izquierda" value={measurements.strength.adductor_l} onChange={v => updateMeasurement('strength', 'adductor_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.adductors?.description} />
-                  <InputField label="Fuerza muscular: abductores Derecha" value={measurements.strength.abductor_r} onChange={v => updateMeasurement('strength', 'abductor_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.abductors?.description} />
-                  <InputField label="Fuerza muscular: abductores Izquierda" value={measurements.strength.abductor_l} onChange={v => updateMeasurement('strength', 'abductor_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.abductors?.description} />
-                  <InputField label="Fuerza muscular: tríceps sural Derecha" value={measurements.strength.triceps_sural_r} onChange={v => updateMeasurement('strength', 'triceps_sural_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: tríceps sural Izquierda" value={measurements.strength.triceps_sural_l} onChange={v => updateMeasurement('strength', 'triceps_sural_l', v)} unit="N" />
+                  <InputField label="Cuádriceps Derecha" value={measurements.strength.quads_r} onChange={v => updateMeasurement('strength', 'quads_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.quads_strength?.description} />
+                  <InputField label="Cuádriceps Izquierda" value={measurements.strength.quads_l} onChange={v => updateMeasurement('strength', 'quads_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.quads_strength?.description} />
+                  <InputField label="Isquiosurales Derecha" value={measurements.strength.hams_r} onChange={v => updateMeasurement('strength', 'hams_r', v)} unit="N" />
+                  <InputField label="Isquiosurales Izquierda" value={measurements.strength.hams_l} onChange={v => updateMeasurement('strength', 'hams_l', v)} unit="N" />
+                  <InputField label="Aductores Derecha" value={measurements.strength.adductor_r} onChange={v => updateMeasurement('strength', 'adductor_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.adductors?.description} />
+                  <InputField label="Aductores Izquierda" value={measurements.strength.adductor_l} onChange={v => updateMeasurement('strength', 'adductor_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.adductors?.description} />
+                  <InputField label="Abductores Derecha" value={measurements.strength.abductor_r} onChange={v => updateMeasurement('strength', 'abductor_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.abductors?.description} />
+                  <InputField label="Abductores Izquierda" value={measurements.strength.abductor_l} onChange={v => updateMeasurement('strength', 'abductor_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.abductors?.description} />
+                  <InputField label="Tríceps sural Derecha" value={measurements.strength.triceps_sural_r} onChange={v => updateMeasurement('strength', 'triceps_sural_r', v)} unit="N" />
+                  <InputField label="Tríceps sural Izquierda" value={measurements.strength.triceps_sural_l} onChange={v => updateMeasurement('strength', 'triceps_sural_l', v)} unit="N" />
                 </SectionGrid>
 
                 <SectionGrid title="Flexores de Cadera & Squeeze Test">
-                  <InputField label="Fuerza muscular: flexores cadera 0-0º Derecha" value={measurements.strength.hip_flex_0_r} onChange={v => updateMeasurement('strength', 'hip_flex_0_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_0?.description} />
-                  <InputField label="Fuerza muscular: flexores cadera 0-0º Izquierda" value={measurements.strength.hip_flex_0_l} onChange={v => updateMeasurement('strength', 'hip_flex_0_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_0?.description} />
-                  <InputField label="Fuerza muscular: flexores cadera 0-90º Derecha" value={measurements.strength.hip_flex_90_r} onChange={v => updateMeasurement('strength', 'hip_flex_90_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_90?.description} />
-                  <InputField label="Fuerza muscular: flexores cadera 0-90º Izquierda" value={measurements.strength.hip_flex_90_l} onChange={v => updateMeasurement('strength', 'hip_flex_90_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_90?.description} />
+                  <InputField label="Flexores cadera 0-0º Derecha" value={measurements.strength.hip_flex_0_r} onChange={v => updateMeasurement('strength', 'hip_flex_0_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_0?.description} />
+                  <InputField label="Flexores cadera 0-0º Izquierda" value={measurements.strength.hip_flex_0_l} onChange={v => updateMeasurement('strength', 'hip_flex_0_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_0?.description} />
+                  <InputField label="Flexores cadera 0-90º Derecha" value={measurements.strength.hip_flex_90_r} onChange={v => updateMeasurement('strength', 'hip_flex_90_r', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_90?.description} />
+                  <InputField label="Flexores cadera 0-90º Izquierda" value={measurements.strength.hip_flex_90_l} onChange={v => updateMeasurement('strength', 'hip_flex_90_l', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.hip_flex_90?.description} />
                   <InputField label="Squezze Test" value={measurements.strength.squeeze_test} onChange={v => updateMeasurement('strength', 'squeeze_test', v)} unit="N" tooltip={EVALUATION_PROTOCOLS.squeeze_test?.description} />
                 </SectionGrid>
 
                 <SectionGrid title="Dinamometría de Tobillo">
-                  <InputField label="Fuerza muscular: abductores tobillo Derecha" value={measurements.strength.tobillo_abd_r} onChange={v => updateMeasurement('strength', 'tobillo_abd_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: abductores tobillo Izquierda" value={measurements.strength.tobillo_abd_l} onChange={v => updateMeasurement('strength', 'tobillo_abd_l', v)} unit="N" />
-                  <InputField label="Fuerza muscular: aductores tobillo Derecha" value={measurements.strength.tobillo_add_r} onChange={v => updateMeasurement('strength', 'tobillo_add_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: aductores tobillo Izquierda" value={measurements.strength.tobillo_add_l} onChange={v => updateMeasurement('strength', 'tobillo_add_l', v)} unit="N" />
+                  <InputField label="Abductores tobillo Derecha" value={measurements.strength.tobillo_abd_r} onChange={v => updateMeasurement('strength', 'tobillo_abd_r', v)} unit="N" />
+                  <InputField label="Abductores tobillo Izquierda" value={measurements.strength.tobillo_abd_l} onChange={v => updateMeasurement('strength', 'tobillo_abd_l', v)} unit="N" />
+                  <InputField label="Aductores tobillo Derecha" value={measurements.strength.tobillo_add_r} onChange={v => updateMeasurement('strength', 'tobillo_add_r', v)} unit="N" />
+                  <InputField label="Aductores tobillo Izquierda" value={measurements.strength.tobillo_add_l} onChange={v => updateMeasurement('strength', 'tobillo_add_l', v)} unit="N" />
                 </SectionGrid>
 
                 <SectionGrid title="Hombro & Ash Test (N)">
-                  <InputField label="Fuerza muscular: rotación interna hombro Derecha" value={measurements.strength.shoulder_ri_r} onChange={v => updateMeasurement('strength', 'shoulder_ri_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: rotación interna hombro Izquierda" value={measurements.strength.shoulder_ri_l} onChange={v => updateMeasurement('strength', 'shoulder_ri_l', v)} unit="N" />
-                  <InputField label="Fuerza muscular: rotación externa hombro Derecha" value={measurements.strength.shoulder_re_r} onChange={v => updateMeasurement('strength', 'shoulder_re_r', v)} unit="N" />
-                  <InputField label="Fuerza muscular: rotación externa hombro Izquierda" value={measurements.strength.shoulder_re_l} onChange={v => updateMeasurement('strength', 'shoulder_re_l', v)} unit="N" />
+                  <InputField label="Rotación interna hombro Derecha" value={measurements.strength.shoulder_ri_r} onChange={v => updateMeasurement('strength', 'shoulder_ri_r', v)} unit="N" />
+                  <InputField label="Rotación interna hombro Izquierda" value={measurements.strength.shoulder_ri_l} onChange={v => updateMeasurement('strength', 'shoulder_ri_l', v)} unit="N" />
+                  <InputField label="Rotación externa hombro Derecha" value={measurements.strength.shoulder_re_r} onChange={v => updateMeasurement('strength', 'shoulder_re_r', v)} unit="N" />
+                  <InputField label="Rotación externa hombro Izquierda" value={measurements.strength.shoulder_re_l} onChange={v => updateMeasurement('strength', 'shoulder_re_l', v)} unit="N" />
                   <InputField label="Ash I Derecha" value={measurements.strength.ash_i_r} onChange={v => updateMeasurement('strength', 'ash_i_r', v)} unit="N" />
                   <InputField label="Ash I Izquierda" value={measurements.strength.ash_i_l} onChange={v => updateMeasurement('strength', 'ash_i_l', v)} unit="N" />
                   <InputField label="Ash Y Derecha" value={measurements.strength.ash_y_r} onChange={v => updateMeasurement('strength', 'ash_y_r', v)} unit="N" />
