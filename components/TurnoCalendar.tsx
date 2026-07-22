@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   format, 
   addDays, 
@@ -31,7 +31,9 @@ import {
   Trash2,
   CheckCircle2,
   XCircle,
-  Repeat
+  Repeat,
+  Search,
+  X
 } from 'lucide-react';
 import { Patient, Appointment, RecurringSlot, StaffMember, UserRole, STAFF_COLORS, CLINICAL_ACTIVITIES } from '../types';
 import { clsx, type ClassValue } from 'clsx';
@@ -275,7 +277,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
             >
               <option value="">Paciente...</option>
               {patients.map(p => (
-                <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>
+                <option key={p.id} value={p.id}>{p.firstName} {p.lastName} {p.dni ? `(${p.dni})` : ''}</option>
               ))}
             </select>
 
@@ -564,8 +566,31 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
   const [notes, setNotes] = useState(initialAppointment?.notes || '');
   const [weeksToGenerate, setWeeksToGenerate] = useState(4);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [patientSearch, setPatientSearch] = useState('');
+  const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsPatientDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const selectedPatient = useMemo(() => patients.find(p => p.id === patientId), [patients, patientId]);
+
+  const filteredPatientsForAppointment = useMemo(() => {
+    if (!patientSearch.trim()) return patients;
+    const term = patientSearch.toLowerCase().trim();
+    return patients.filter(p => {
+      const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+      const dni = (p.dni || '').toLowerCase();
+      return fullName.includes(term) || dni.includes(term);
+    });
+  }, [patients, patientSearch]);
 
   useEffect(() => {
     if (selectedPatient) {
@@ -664,19 +689,104 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
         </div>
         <div className="flex-1 overflow-y-auto p-8 scroll-container relative">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Paciente</label>
-              <select 
-                className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold"
+            <div className="space-y-1 relative" ref={dropdownRef}>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Paciente (Buscar por Nombre o DNI)</label>
+              
+              {selectedPatient ? (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-primary-100 text-primary-700 rounded-lg flex items-center justify-center font-black text-sm">
+                      {selectedPatient.firstName?.[0]}{selectedPatient.lastName?.[0]}
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-slate-900 leading-tight">
+                        {selectedPatient.firstName} {selectedPatient.lastName}
+                      </p>
+                      {selectedPatient.dni ? (
+                        <p className="text-xs text-slate-500 font-medium">
+                          DNI: {selectedPatient.dni}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic">Sin DNI registrado</p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPatientId('');
+                      setPatientSearch('');
+                      setIsPatientDropdownOpen(true);
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-lg transition-colors"
+                    title="Cambiar Paciente"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="relative flex items-center">
+                    <Search size={18} className="absolute left-4 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all text-sm"
+                      placeholder="Buscar paciente por nombre o DNI..."
+                      value={patientSearch}
+                      onChange={(e) => {
+                        setPatientSearch(e.target.value);
+                        setIsPatientDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsPatientDropdownOpen(true)}
+                    />
+                  </div>
+
+                  {isPatientDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 animate-in fade-in slide-in-from-top-2">
+                      {filteredPatientsForAppointment.length > 0 ? (
+                        filteredPatientsForAppointment.map(p => (
+                          <button
+                            type="button"
+                            key={p.id}
+                            onClick={() => {
+                              setPatientId(p.id);
+                              setIsPatientDropdownOpen(false);
+                              setPatientSearch('');
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-primary-50 transition-colors flex items-center justify-between group"
+                          >
+                            <div>
+                              <p className="font-bold text-sm text-slate-900 group-hover:text-primary-700">
+                                {p.firstName} {p.lastName}
+                              </p>
+                              {p.dni ? (
+                                <p className="text-xs text-slate-500 font-medium">DNI: {p.dni}</p>
+                              ) : (
+                                <p className="text-xs text-slate-400 italic">Sin DNI registrado</p>
+                              )}
+                            </div>
+                            <span className="text-xs font-bold text-slate-400 group-hover:text-primary-600 group-hover:bg-primary-100/60 px-2.5 py-1 rounded-lg transition-colors">
+                              Seleccionar
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-xs font-bold text-slate-400">
+                          No se encontraron pacientes para "{patientSearch}"
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <input
+                type="text"
                 value={patientId}
-                onChange={e => setPatientId(e.target.value)}
                 required
-              >
-                <option value="">Seleccionar Paciente...</option>
-                {patients.map(p => (
-                  <option key={p.id} value={p.id}>{p.firstName} {p.lastName} ({p.dni})</option>
-                ))}
-              </select>
+                onChange={() => {}}
+                className="sr-only opacity-0 w-0 h-0 pointer-events-none"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">

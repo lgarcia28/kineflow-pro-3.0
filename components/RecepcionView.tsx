@@ -75,8 +75,8 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
 
   // Payment states
   const [paymentPatient, setPaymentPatient] = useState<Patient | null>(null);
-  const [paymentTypeState, setPaymentTypeState] = useState<'SINGLE' | 'PACK' | 'MONTH'>('PACK');
-  const [paymentValue, setPaymentValue] = useState<number>(10);
+  const [paymentTypeState, setPaymentTypeState] = useState<'SINGLE' | 'PACK' | 'MONTH'>('MONTH');
+  const [paymentValue, setPaymentValue] = useState<number>(1);
   const [tenantSettings, setTenantSettings] = useState<TenantSettings>({
     priceSingleSession: 10000,
     pricePack10: 80000,
@@ -613,7 +613,20 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                               <CalendarDays size={20} />
                             </button>
                             <button 
-                              onClick={(e) => { e.stopPropagation(); setPaymentPatient(patient); setPaymentTypeState('PACK'); setPaymentValue(10); }}
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                setPaymentPatient(patient); 
+                                if (patient.planType === PlanType.MONTHLY) {
+                                  setPaymentTypeState('MONTH');
+                                  setPaymentValue(1);
+                                } else if (patient.planType === PlanType.SINGLE_SESSION) {
+                                  setPaymentTypeState('SINGLE');
+                                  setPaymentValue(1);
+                                } else {
+                                  setPaymentTypeState('PACK');
+                                  setPaymentValue(10);
+                                }
+                              }}
                               className={`w-full md:w-auto px-4 py-3.5 rounded-[1.25rem] font-bold text-sm flex items-center justify-center transition-all shadow-sm hover:-translate-y-0.5 active:scale-95 ${status.label === 'Vencido' || status.label === 'Próximo a vencer' ? 'bg-orange-500 text-white border-transparent hover:bg-orange-600 shadow-orange-500/20' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
                               title="Registrar Pago"
                             >
@@ -1133,9 +1146,9 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               <div className="space-y-3">
                 <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Tipo de Abono</label>
                 <div className="grid grid-cols-3 gap-2">
-                  <button onClick={() => setPaymentTypeState('SINGLE')} className={`py-3 rounded-xl font-bold text-xs transition-all border ${paymentTypeState === 'SINGLE' ? 'bg-primary-50 border-primary-200 text-primary-700 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>1 Sesión</button>
-                  <button onClick={() => setPaymentTypeState('PACK')} className={`py-3 rounded-xl font-bold text-xs transition-all border ${paymentTypeState === 'PACK' ? 'bg-primary-50 border-primary-200 text-primary-700 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>Paquete</button>
-                  <button onClick={() => setPaymentTypeState('MONTH')} className={`py-3 rounded-xl font-bold text-xs transition-all border ${paymentTypeState === 'MONTH' ? 'bg-primary-50 border-primary-200 text-primary-700 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>Mensual</button>
+                  <button onClick={() => { setPaymentTypeState('SINGLE'); setPaymentValue(1); }} className={`py-3 rounded-xl font-bold text-xs transition-all border ${paymentTypeState === 'SINGLE' ? 'bg-primary-50 border-primary-200 text-primary-700 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>1 Sesión</button>
+                  <button onClick={() => { setPaymentTypeState('PACK'); setPaymentValue(10); }} className={`py-3 rounded-xl font-bold text-xs transition-all border ${paymentTypeState === 'PACK' ? 'bg-primary-50 border-primary-200 text-primary-700 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>Paquete</button>
+                  <button onClick={() => { setPaymentTypeState('MONTH'); setPaymentValue(1); }} className={`py-3 rounded-xl font-bold text-xs transition-all border ${paymentTypeState === 'MONTH' ? 'bg-primary-50 border-primary-200 text-primary-700 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>Mensual</button>
                 </div>
               </div>
 
