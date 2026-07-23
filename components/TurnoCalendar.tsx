@@ -77,6 +77,34 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
   const [multiBookingPatientId, setMultiBookingPatientId] = useState('');
   const [multiBookingKineId, setMultiBookingKineId] = useState('');
   const [multiBookingActivityId, setMultiBookingActivityId] = useState('');
+  const [multiBookingSearch, setMultiBookingSearch] = useState('');
+  const [isMultiBookingDropdownOpen, setIsMultiBookingDropdownOpen] = useState(false);
+  const multiBookingDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (multiBookingDropdownRef.current && !multiBookingDropdownRef.current.contains(e.target as Node)) {
+        setIsMultiBookingDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedMultiBookingPatient = useMemo(
+    () => patients.find(p => p.id === multiBookingPatientId),
+    [patients, multiBookingPatientId]
+  );
+
+  const filteredMultiBookingPatients = useMemo(() => {
+    if (!multiBookingSearch.trim()) return patients;
+    const term = multiBookingSearch.toLowerCase().trim();
+    return patients.filter(p => {
+      const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+      const dni = (p.dni || '').toLowerCase();
+      return fullName.includes(term) || dni.includes(term);
+    });
+  }, [patients, multiBookingSearch]);
 
   // Use effect to auto-open modal if autoSchedulePatientId is provided
   useEffect(() => {
@@ -270,16 +298,94 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
           </div>
           
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <select 
-              className="w-full sm:w-48 bg-white border border-primary-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all pointer-events-auto"
-              value={multiBookingPatientId}
-              onChange={(e) => setMultiBookingPatientId(e.target.value)}
-            >
-              <option value="">Paciente...</option>
-              {patients.map(p => (
-                <option key={p.id} value={p.id}>{p.firstName} {p.lastName} {p.dni ? `(${p.dni})` : ''}</option>
-              ))}
-            </select>
+            {/* Patient Searchable Selector for Modo Ráfaga */}
+            {selectedMultiBookingPatient ? (
+              <div className="relative w-full sm:w-60 pointer-events-auto" ref={multiBookingDropdownRef}>
+                <div className="bg-white border border-primary-300 rounded-xl px-3 py-2 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-2 truncate">
+                    <div className="w-6 h-6 bg-primary-100 text-primary-700 rounded-md flex items-center justify-center font-black text-xs shrink-0">
+                      {selectedMultiBookingPatient.firstName?.[0]}{selectedMultiBookingPatient.lastName?.[0]}
+                    </div>
+                    <div className="truncate">
+                      <p className="font-bold text-xs text-slate-900 leading-tight truncate">
+                        {selectedMultiBookingPatient.firstName} {selectedMultiBookingPatient.lastName}
+                      </p>
+                      {selectedMultiBookingPatient.dni && (
+                        <p className="text-[10px] text-slate-500 font-medium leading-none">
+                          DNI: {selectedMultiBookingPatient.dni}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMultiBookingPatientId('');
+                      setMultiBookingSearch('');
+                      setIsMultiBookingDropdownOpen(true);
+                    }}
+                    className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors shrink-0 ml-1"
+                    title="Cambiar paciente"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="relative w-full sm:w-60 pointer-events-auto" ref={multiBookingDropdownRef}>
+                <div className="relative flex items-center">
+                  <Search size={16} className="absolute left-3 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    className="w-full bg-white border border-primary-200 rounded-xl py-2 pl-9 pr-3 text-xs font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all"
+                    placeholder="Buscar paciente (nombre / DNI)..."
+                    value={multiBookingSearch}
+                    onChange={(e) => {
+                      setMultiBookingSearch(e.target.value);
+                      setIsMultiBookingDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsMultiBookingDropdownOpen(true)}
+                  />
+                </div>
+
+                {isMultiBookingDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in slide-in-from-top-2">
+                    {filteredMultiBookingPatients.length > 0 ? (
+                      filteredMultiBookingPatients.map(p => (
+                        <button
+                          type="button"
+                          key={p.id}
+                          onClick={() => {
+                            setMultiBookingPatientId(p.id);
+                            setIsMultiBookingDropdownOpen(false);
+                            setMultiBookingSearch('');
+                          }}
+                          className="w-full text-left px-3.5 py-2.5 hover:bg-primary-50 transition-colors flex items-center justify-between group"
+                        >
+                          <div>
+                            <p className="font-bold text-xs text-slate-900 group-hover:text-primary-700">
+                              {p.firstName} {p.lastName}
+                            </p>
+                            {p.dni ? (
+                              <p className="text-[10px] text-slate-500 font-medium">DNI: {p.dni}</p>
+                            ) : (
+                              <p className="text-[10px] text-slate-400 italic">Sin DNI</p>
+                            )}
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-400 group-hover:text-primary-600 group-hover:bg-primary-100/60 px-2 py-0.5 rounded transition-colors">
+                            Elegir
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-3 text-center text-xs font-bold text-slate-400">
+                        Sin resultados para "{multiBookingSearch}"
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <select 
               className="w-full sm:w-40 bg-white border border-primary-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all pointer-events-auto"
