@@ -152,6 +152,20 @@ export const ImportPatientsModal: React.FC<ImportPatientsModalProps> = ({
     reader.readAsBinaryString(file);
   };
 
+  // Helper to extract values from row matching key regexes or trimmed names
+  const extractRowValue = (row: Record<string, any>, pattern: RegExp): string => {
+    for (const key of Object.keys(row)) {
+      const cleanKey = key.trim();
+      if (pattern.test(cleanKey) || pattern.test(key)) {
+        const val = row[key];
+        if (val !== undefined && val !== null && String(val).trim() !== '') {
+          return String(val).trim();
+        }
+      }
+    }
+    return '';
+  };
+
   // Generate Patients from Mapped Rows
   const handleProceedToPreview = () => {
     if (!fieldMapping.firstName && !fieldMapping.lastName) {
@@ -160,10 +174,26 @@ export const ImportPatientsModal: React.FC<ImportPatientsModalProps> = ({
     }
 
     const generated: (Patient & { isDuplicate?: boolean; selected?: boolean })[] = rawRows.map((row, index) => {
-      const firstName = String(row[fieldMapping.firstName] || '').trim() || `Paciente ${index + 1}`;
-      const lastName = String(row[fieldMapping.lastName] || '').trim();
-      const dni = String(row[fieldMapping.dni] || '').trim();
-      const condition = String(row[fieldMapping.condition] || '').trim() || 'Ingreso desde Excel';
+      let firstName = String(row[fieldMapping.firstName] || '').trim();
+      let lastName = String(row[fieldMapping.lastName] || '').trim();
+
+      // If full name is in firstName and lastName is empty, split intelligently
+      if (firstName && !lastName) {
+        const parts = firstName.split(' ').filter(Boolean);
+        if (parts.length > 1) {
+          firstName = parts[0];
+          lastName = parts.slice(1).join(' ');
+        }
+      }
+
+      if (!firstName) firstName = `Paciente ${index + 1}`;
+
+      const dni = String(row[fieldMapping.dni] || extractRowValue(row, /^dni/i)).trim();
+      
+      const condition = String(
+        row[fieldMapping.condition] || 
+        extractRowValue(row, /motivo.*rehabilitac|diagnostico|condici/i)
+      ).trim() || 'Ingreso Ficha RTP';
       
       const rawSessions = Number(row[fieldMapping.sessionsPerWeek]);
       const sessionsPerWeek = !isNaN(rawSessions) && rawSessions > 0 ? rawSessions : 2;
@@ -175,7 +205,7 @@ export const ImportPatientsModal: React.FC<ImportPatientsModalProps> = ({
       }
 
       const rawNotes = String(row[fieldMapping.notes] || '').trim();
-      const history = rawNotes ? [rawNotes] : ['Paciente importado desde Excel/CSV'];
+      const history = rawNotes ? [rawNotes] : ['Paciente importado desde Ficha de Ingreso RTP'];
 
       const todayStr = new Date().toISOString().split('T')[0];
       const paymentDate = row[fieldMapping.paymentDate] 
@@ -183,6 +213,41 @@ export const ImportPatientsModal: React.FC<ImportPatientsModalProps> = ({
             ? row[fieldMapping.paymentDate].toISOString().split('T')[0] 
             : String(row[fieldMapping.paymentDate]))
         : todayStr;
+
+      // Extract specific intake fields from Ficha de Ingreso RTP
+      const birthDateRaw = extractRowValue(row, /fecha.*nacimiento/i);
+      let birthDate = '';
+      if (birthDateRaw) {
+        if (birthDateRaw.includes('-') || birthDateRaw.includes('/')) {
+          birthDate = birthDateRaw;
+        }
+      }
+
+      const ageRaw = Number(extractRowValue(row, /^edad/i));
+      const age = !isNaN(ageRaw) && ageRaw > 0 ? ageRaw : undefined;
+
+      const gender = extractRowValue(row, /^sexo/i);
+      const address = extractRowValue(row, /^direcci/i);
+      const phone = extractRowValue(row, /teléfono.*contacto|telefono.*contacto|celular/i);
+      const email = extractRowValue(row, /correo.*electrónico|correo|email/i);
+      const instagram = extractRowValue(row, /instagram/i);
+      
+      const healthInsurance = extractRowValue(row, /^obra.*social|^prepaga|^mutual|^nombre$/i);
+      const affiliateNumber = extractRowValue(row, /número.*socio|numero.*socio|afiliado/i);
+      
+      const emergencyContactName = extractRowValue(row, /contacto.*emergencia/i);
+      const emergencyContactPhone = extractRowValue(row, /teléfono.*contacto.*2|tel.*emergencia/i);
+      
+      const diseaseCardiovascular = extractRowValue(row, /cardiovascular/i);
+      const diseaseDiabetes = extractRowValue(row, /diabetes/i);
+      const diseaseHypertension = extractRowValue(row, /hipertensi/i);
+      const diseaseOther = extractRowValue(row, /otra$/i);
+      
+      const surgeriesHistory = extractRowValue(row, /quirúrgic|cirug/i);
+      const allergies = extractRowValue(row, /alergia/i);
+      const currentMedication = extractRowValue(row, /medicaci/i);
+      const hasFitnessCertificate = extractRowValue(row, /certificado.*aptitud|aptitud.*física/i);
+      const referralSource = extractRowValue(row, /conoci.*clínica|referencia/i);
 
       // Check duplicates against existing patients
       const isDuplicate = existingPatients.some(ep => {
@@ -212,6 +277,29 @@ export const ImportPatientsModal: React.FC<ImportPatientsModalProps> = ({
         photoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}+${encodeURIComponent(lastName)}&background=0D9488&color=fff`,
         lastVisit: todayStr,
         history,
+
+        // Ficha de Ingreso RTP Fields
+        birthDate,
+        age,
+        gender,
+        address,
+        phone,
+        email,
+        instagram,
+        healthInsurance,
+        affiliateNumber,
+        emergencyContactName,
+        emergencyContactPhone,
+        diseaseCardiovascular,
+        diseaseDiabetes,
+        diseaseHypertension,
+        diseaseOther,
+        surgeriesHistory,
+        allergies,
+        currentMedication,
+        hasFitnessCertificate,
+        referralSource,
+
         routine: {
           id: `rot_${Date.now()}_${index}`,
           stage: Stage.KINESIOLOGY,

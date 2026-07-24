@@ -156,6 +156,28 @@ export interface Patient {
   homeRoutine?: Routine; // Rutina domiciliaria
   history: string[];
   recurringSlots?: RecurringSlot[]; // Horarios fijos del paciente
+
+  // --- Campos Ficha de Ingreso RTP ---
+  birthDate?: string; // Fecha de nacimiento
+  age?: number; // Edad
+  gender?: string; // Sexo
+  address?: string; // Dirección
+  phone?: string; // Teléfono de contacto
+  email?: string; // Correo electrónico
+  instagram?: string; // Instagram
+  healthInsurance?: string; // Obra Social / Prepaga / Mutual
+  affiliateNumber?: string; // Número de socio
+  emergencyContactName?: string; // Nombre del contacto de emergencia
+  emergencyContactPhone?: string; // Teléfono de contacto 2 / emergencia
+  diseaseCardiovascular?: string; // Enfermedades cardiovasculares
+  diseaseDiabetes?: string; // Diabetes
+  diseaseHypertension?: string; // Hipertensión
+  diseaseOther?: string; // Otra enfermedad
+  surgeriesHistory?: string; // Intervenciones quirúrgicas previas
+  allergies?: string; // Alergias conocidas
+  currentMedication?: string; // Medicación actual
+  hasFitnessCertificate?: string; // ¿Posee Certificado de Aptitud Física?
+  referralSource?: string; // ¿Cómo conoció la clínica?
 }
 
 export interface Product {

@@ -673,37 +673,119 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
       {showHistory && (
           <div className="bg-white/80 backdrop-blur-md text-slate-900 p-4 shadow-xl z-20 border-b border-slate-200 animate-in slide-in-from-top-2 duration-300 relative max-h-96 flex flex-col">
               <div className="max-w-4xl mx-auto w-full flex flex-col gap-4">
-                  {/* DETALLE CLINICO */}
-                  <div className="bg-blue-50/50 border border-blue-100 rounded-[1.25rem] p-4 flex flex-col gap-2 shrink-0">
-                    <h4 className="text-xs font-black text-blue-800 uppercase tracking-widest flex items-center gap-2"><FileText size={14} /> Información de Ingreso</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-1">
+                  {/* DETALLE CLINICO Y FICHA DE INGRESO */}
+                  <div className="bg-blue-50/50 border border-blue-100 rounded-[1.25rem] p-4 flex flex-col gap-3 shrink-0">
+                    <h4 className="text-xs font-black text-blue-800 uppercase tracking-widest flex items-center gap-2"><FileText size={14} /> Ficha de Ingreso y Anamnesis</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs mt-1">
                        <div>
-                         <span className="block text-[10px] font-bold text-slate-400 uppercase">Condición / Lesión</span>
-                         <span className="font-bold text-slate-700">{patient.condition || 'No especificada'}</span>
+                         <span className="block text-[10px] font-bold text-slate-400 uppercase">Motivo / Condición</span>
+                         <span className="font-bold text-slate-800">{patient.condition || 'No especificada'}</span>
                        </div>
                        <div>
-                         <span className="block text-[10px] font-bold text-slate-400 uppercase">Fecha de Ingreso</span>
-                         <span className="font-bold text-slate-700">
-                           {patient.paymentDate ? new Date(patient.paymentDate).toLocaleDateString('es-AR', {timeZone: 'UTC'}) : 'No registrada'}
+                         <span className="block text-[10px] font-bold text-slate-400 uppercase">Nacimiento / Edad / Sexo</span>
+                         <span className="font-bold text-slate-800">
+                           {patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('es-AR', {timeZone: 'UTC'}) : 'S/D'} 
+                           {patient.age ? ` (${patient.age} años)` : ''} 
+                           {patient.gender ? ` • ${patient.gender}` : ''}
                          </span>
                        </div>
                        <div>
+                         <span className="block text-[10px] font-bold text-slate-400 uppercase">Contacto</span>
+                         <span className="font-bold text-slate-800 block">{patient.phone || 'Sin tel.'}</span>
+                         {patient.email && <span className="text-[10px] text-slate-500 font-medium">{patient.email}</span>}
+                       </div>
+                       <div>
+                         <span className="block text-[10px] font-bold text-slate-400 uppercase">Obra Social / Socio</span>
+                         <span className="font-bold text-slate-800">
+                           {patient.healthInsurance || 'Particular'} {patient.affiliateNumber ? `(Nº ${patient.affiliateNumber})` : ''}
+                         </span>
+                       </div>
+
+                       {patient.address && (
+                         <div>
+                           <span className="block text-[10px] font-bold text-slate-400 uppercase">Dirección</span>
+                           <span className="font-bold text-slate-800">{patient.address}</span>
+                         </div>
+                       )}
+
+                       {patient.instagram && (
+                         <div>
+                           <span className="block text-[10px] font-bold text-slate-400 uppercase">Instagram</span>
+                           <span className="font-bold text-slate-800">{patient.instagram}</span>
+                         </div>
+                       )}
+
+                       {(patient.emergencyContactName || patient.emergencyContactPhone) && (
+                         <div>
+                           <span className="block text-[10px] font-bold text-slate-400 uppercase">Contacto Emergencia</span>
+                           <span className="font-bold text-slate-800">{patient.emergencyContactName || 'Registrado'}</span>
+                           {patient.emergencyContactPhone && <span className="text-[10px] text-slate-500 block font-medium">Tel: {patient.emergencyContactPhone}</span>}
+                         </div>
+                       )}
+
+                       <div>
                          <span className="block text-[10px] font-bold text-slate-400 uppercase">Fecha de Lesión</span>
-                         <span className="font-bold text-slate-700">
+                         <span className="font-bold text-slate-800">
                            {patient.injuryDate ? new Date(patient.injuryDate).toLocaleDateString('es-AR', {timeZone: 'UTC'}) : 'No registrada'}
                          </span>
                        </div>
+
                        <div>
                          <span className="block text-[10px] font-bold text-slate-400 uppercase">¿Se operó?</span>
                          {patient.surgeryDate ? (
                            <div>
-                             <span className="font-bold text-slate-700 block">Sí ({new Date(patient.surgeryDate).toLocaleDateString('es-AR', {timeZone: 'UTC'})})</span>
-                             {patient.surgeryType && <span className="text-xs font-medium text-slate-500">{patient.surgeryType}</span>}
+                             <span className="font-bold text-slate-800 block">Sí ({new Date(patient.surgeryDate).toLocaleDateString('es-AR', {timeZone: 'UTC'})})</span>
+                             {patient.surgeryType && <span className="text-[10px] font-medium text-slate-500">{patient.surgeryType}</span>}
                            </div>
                          ) : (
-                           <span className="font-bold text-slate-700">No</span>
+                           <span className="font-bold text-slate-800">No</span>
                          )}
                        </div>
+
+                       {(patient.diseaseCardiovascular || patient.diseaseDiabetes || patient.diseaseHypertension || patient.diseaseOther) && (
+                         <div className="col-span-2">
+                           <span className="block text-[10px] font-bold text-slate-400 uppercase">Enfermedades Previas</span>
+                           <span className="font-bold text-slate-800">
+                             Cardio: {patient.diseaseCardiovascular || 'NO'} | Diabetes: {patient.diseaseDiabetes || 'NO'} | Hipertensión: {patient.diseaseHypertension || 'NO'}
+                             {patient.diseaseOther && patient.diseaseOther !== 'NO' && ` | Otra: ${patient.diseaseOther}`}
+                           </span>
+                         </div>
+                       )}
+
+                       {patient.surgeriesHistory && (
+                         <div className="col-span-2">
+                           <span className="block text-[10px] font-bold text-slate-400 uppercase">Cirugías Previas</span>
+                           <span className="font-bold text-slate-800">{patient.surgeriesHistory}</span>
+                         </div>
+                       )}
+
+                       {patient.allergies && (
+                         <div>
+                           <span className="block text-[10px] font-bold text-slate-400 uppercase">Alergias</span>
+                           <span className="font-bold text-slate-800">{patient.allergies}</span>
+                         </div>
+                       )}
+
+                       {patient.currentMedication && (
+                         <div>
+                           <span className="block text-[10px] font-bold text-slate-400 uppercase">Medicación Actual</span>
+                           <span className="font-bold text-slate-800">{patient.currentMedication}</span>
+                         </div>
+                       )}
+
+                       {patient.hasFitnessCertificate && (
+                         <div>
+                           <span className="block text-[10px] font-bold text-slate-400 uppercase">Aptitud Física</span>
+                           <span className="font-bold text-slate-800">{patient.hasFitnessCertificate}</span>
+                         </div>
+                       )}
+
+                       {patient.referralSource && (
+                         <div>
+                           <span className="block text-[10px] font-bold text-slate-400 uppercase">¿Cómo conoció la clínica?</span>
+                           <span className="font-bold text-slate-800">{patient.referralSource}</span>
+                         </div>
+                       )}
                     </div>
                   </div>
 

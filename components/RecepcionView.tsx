@@ -780,187 +780,441 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                   </div>
                 )}
 
-                <form id="patient-form" onSubmit={handlePatientSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Nombre</label>
-                    <input 
-                      placeholder="Nombre del paciente" 
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
-                      value={patientForm.firstName}
-                      onChange={e => setPatientForm({...patientForm, firstName: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Apellido</label>
-                    <input 
-                      placeholder="Apellido del paciente" 
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
-                      value={patientForm.lastName}
-                      onChange={e => setPatientForm({...patientForm, lastName: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Documento (DNI)</label>
-                    <input 
-                      placeholder="Número de DNI" 
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
-                      value={patientForm.dni}
-                      onChange={e => setPatientForm({...patientForm, dni: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Diagnóstico / Condición</label>
-                    <input 
-                      placeholder="Ej: Post-op LCA" 
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
-                      value={patientForm.condition}
-                      onChange={e => setPatientForm({...patientForm, condition: e.target.value})}
-                      required
-                    />
-                  </div>
-
-                  <div className="col-span-full">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-3 block">Área / Etapa</label>
-                    <div className="flex bg-slate-100 p-1 rounded-2xl">
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          setFormStage(Stage.KINESIOLOGY);
-                          if (!editingPatient) setPatientForm({...patientForm, planType: PlanType.SESSIONS});
-                        }}
-                        className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${formStage === Stage.KINESIOLOGY ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
-                      >
-                        Kinesiología
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          setFormStage(Stage.GYM);
-                          if (!editingPatient) {
-                            const oneMonthLater = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-                            setPatientForm({
-                              ...patientForm, 
-                              planType: PlanType.TIME,
-                              expirationDate: oneMonthLater,
-                              totalSessionsPaid: 0,
-                              remainingSessions: 0
-                            });
-                          }
-                        }}
-                        className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${formStage === Stage.GYM ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
-                      >
-                        Gimnasio
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="col-span-full h-px bg-slate-100 my-2"></div>
-                  
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Fecha de Lesión</label>
-                    <input 
-                      type="date"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
-                      value={patientForm.injuryDate}
-                      onChange={e => setPatientForm({...patientForm, injuryDate: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Fecha de Cirugía <span className="normal-case font-medium opacity-50">(opc.)</span></label>
-                    <input 
-                      type="date"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
-                      value={patientForm.surgeryDate}
-                      onChange={e => setPatientForm({...patientForm, surgeryDate: e.target.value})}
-                    />
-                  </div>
-                  {patientForm.surgeryDate && (
-                    <div className="col-span-full space-y-1.5 animate-in fade-in slide-in-from-top-2">
-                      <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Tipo de Cirugía</label>
-                      <input 
-                        placeholder="Ej: Plástica HTH, Meniscectomía..."
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
-                        value={patientForm.surgeryType || ''}
-                        onChange={e => setPatientForm({...patientForm, surgeryType: e.target.value})}
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="col-span-full h-px bg-slate-100 my-2"></div>
-
-                  <div className="col-span-full">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-3 block">Estilo de Planificación</label>
-                    <div className="flex bg-slate-100 p-1 rounded-2xl">
-                      <button 
-                        type="button"
-                        onClick={() => setPatientForm({...patientForm, planType: PlanType.SESSIONS})}
-                        className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${patientForm.planType === PlanType.SESSIONS ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
-                      >
-                        Paquete de Sesiones
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          const oneMonthLater = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-                          setPatientForm({
-                            ...patientForm, 
-                            planType: PlanType.TIME,
-                            expirationDate: oneMonthLater,
-                            totalSessionsPaid: 0,
-                            remainingSessions: 0
-                          });
-                        }}
-                        className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${patientForm.planType === PlanType.TIME ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
-                      >
-                        Plan Mensual (Tiempo)
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Frecuencia (Semanal)</label>
-                    <input 
-                      type="number"
-                      min="1" max="7"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
-                      value={patientForm.sessionsPerWeek}
-                      onChange={e => setPatientForm({...patientForm, sessionsPerWeek: Number(e.target.value)})}
-                    />
-                  </div>
-
-                  {patientForm.planType === PlanType.SESSIONS && (
-                    <div className="space-y-1.5 animate-fade-in">
-                      <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Cant. Sesiones (Abonadas)</label>
-                      <input 
-                        type="number"
-                        min="1"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
-                        value={patientForm.totalSessionsPaid}
-                        onChange={e => setPatientForm({...patientForm, totalSessionsPaid: Number(e.target.value), remainingSessions: Number(e.target.value)})}
-                      />
-                    </div>
-                  )}
-
-                  <div className="col-span-full">
-                     <label className="cursor-pointer flex items-center gap-4 p-5 bg-indigo-50 border border-indigo-100 rounded-[1.5rem] hover:bg-indigo-100/50 transition-colors">
-                      <div className="relative flex items-center">
+                <form id="patient-form" onSubmit={handlePatientSubmit} className="space-y-6">
+                  {/* SECCIÓN 1: DATOS PERSONALES Y CONTACTO */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-black text-primary-600 uppercase tracking-widest border-b border-slate-100 pb-2">
+                      1. Datos Personales y Contacto
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Nombre <span className="text-red-500">*</span></label>
                         <input 
-                          type="checkbox"
-                          checked={patientForm.hasHomePlan}
-                          onChange={e => setPatientForm({...patientForm, hasHomePlan: e.target.checked})}
-                          className="peer sr-only"
+                          placeholder="Nombre del paciente" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.firstName || ''}
+                          onChange={e => setPatientForm({...patientForm, firstName: e.target.value})}
+                          required
                         />
-                        <div className="w-12 h-6 bg-slate-300 rounded-full peer-checked:bg-primary-500 transition-colors shadow-inner"></div>
-                        <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-6 shadow-sm"></div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">Activar "Plan para Casa"</p>
-                        <p className="text-xs text-slate-500 font-medium mt-0.5">Permite asignar rutinas extra-consultorio visibles para el paciente.</p>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Apellido <span className="text-red-500">*</span></label>
+                        <input 
+                          placeholder="Apellido del paciente" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.lastName || ''}
+                          onChange={e => setPatientForm({...patientForm, lastName: e.target.value})}
+                          required
+                        />
                       </div>
-                    </label>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Documento (DNI) <span className="text-red-500">*</span></label>
+                        <input 
+                          placeholder="Número de DNI" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.dni || ''}
+                          onChange={e => setPatientForm({...patientForm, dni: e.target.value})}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Fecha de Nacimiento</label>
+                        <input 
+                          type="date"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.birthDate || ''}
+                          onChange={e => {
+                            const bdate = e.target.value;
+                            let calcAge = patientForm.age;
+                            if (bdate) {
+                              const birth = new Date(bdate);
+                              const now = new Date();
+                              calcAge = now.getFullYear() - birth.getFullYear();
+                            }
+                            setPatientForm({...patientForm, birthDate: bdate, age: calcAge});
+                          }}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Edad</label>
+                        <input 
+                          type="number"
+                          placeholder="Ej: 35"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.age || ''}
+                          onChange={e => setPatientForm({...patientForm, age: Number(e.target.value)})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Sexo</label>
+                        <select 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.gender || ''}
+                          onChange={e => setPatientForm({...patientForm, gender: e.target.value})}
+                        >
+                          <option value="">Seleccionar...</option>
+                          <option value="Masc">Masculino</option>
+                          <option value="Fem">Femenino</option>
+                          <option value="Otro">Otro</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Teléfono</label>
+                        <input 
+                          placeholder="Ej: 341 6100000" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.phone || ''}
+                          onChange={e => setPatientForm({...patientForm, phone: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Correo Electrónico</label>
+                        <input 
+                          type="email"
+                          placeholder="ejemplo@correo.com" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.email || ''}
+                          onChange={e => setPatientForm({...patientForm, email: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Dirección</label>
+                        <input 
+                          placeholder="Calle y altura" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.address || ''}
+                          onChange={e => setPatientForm({...patientForm, address: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-3">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Instagram</label>
+                        <input 
+                          placeholder="@usuario" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.instagram || ''}
+                          onChange={e => setPatientForm({...patientForm, instagram: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECCIÓN 2: COBERTURA Y EMERGENCIA */}
+                  <div className="space-y-3 pt-2">
+                    <h3 className="text-xs font-black text-primary-600 uppercase tracking-widest border-b border-slate-100 pb-2">
+                      2. Obra Social y Contacto de Emergencia
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Obra Social / Prepaga / Mutual</label>
+                        <input 
+                          placeholder="Ej: OSDE, Swiss Medical, Ospac..." 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.healthInsurance || ''}
+                          onChange={e => setPatientForm({...patientForm, healthInsurance: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Número de Socio / Afiliado</label>
+                        <input 
+                          placeholder="Nº de Credencial" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.affiliateNumber || ''}
+                          onChange={e => setPatientForm({...patientForm, affiliateNumber: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Contacto de Emergencia (Nombre)</label>
+                        <input 
+                          placeholder="Nombre y relación" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.emergencyContactName || ''}
+                          onChange={e => setPatientForm({...patientForm, emergencyContactName: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Teléfono de Emergencia</label>
+                        <input 
+                          placeholder="Teléfono del contacto" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.emergencyContactPhone || ''}
+                          onChange={e => setPatientForm({...patientForm, emergencyContactPhone: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECCIÓN 3: FICHA MÉDICA Y ANAMNESIS */}
+                  <div className="space-y-3 pt-2">
+                    <h3 className="text-xs font-black text-primary-600 uppercase tracking-widest border-b border-slate-100 pb-2">
+                      3. Ficha Médica y Anamnesis
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Motivo de Rehabilitación / Diagnóstico <span className="text-red-500">*</span></label>
+                        <input 
+                          placeholder="Ej: Lumbalgia, Post-op LCA, Esguince de tobillo..." 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.condition || ''}
+                          onChange={e => setPatientForm({...patientForm, condition: e.target.value})}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Enfermedad Cardiovascular</label>
+                        <select 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.diseaseCardiovascular || 'NO'}
+                          onChange={e => setPatientForm({...patientForm, diseaseCardiovascular: e.target.value})}
+                        >
+                          <option value="NO">No</option>
+                          <option value="SI">Sí</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Diabetes</label>
+                        <select 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.diseaseDiabetes || 'NO'}
+                          onChange={e => setPatientForm({...patientForm, diseaseDiabetes: e.target.value})}
+                        >
+                          <option value="NO">No</option>
+                          <option value="SI">Sí</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Hipertensión</label>
+                        <select 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.diseaseHypertension || 'NO'}
+                          onChange={e => setPatientForm({...patientForm, diseaseHypertension: e.target.value})}
+                        >
+                          <option value="NO">No</option>
+                          <option value="SI">Sí</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Otras Enfermedades</label>
+                        <input 
+                          placeholder="Especificar si aplica" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.diseaseOther || ''}
+                          onChange={e => setPatientForm({...patientForm, diseaseOther: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Intervenciones Quirúrgicas Previas</label>
+                        <input 
+                          placeholder="Detallar cirugías previas" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.surgeriesHistory || ''}
+                          onChange={e => setPatientForm({...patientForm, surgeriesHistory: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Alergias Conocidas</label>
+                        <input 
+                          placeholder="Alergias a medicamentos o materiales" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.allergies || ''}
+                          onChange={e => setPatientForm({...patientForm, allergies: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Medicación Actual</label>
+                        <input 
+                          placeholder="Fármacos que consume" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.currentMedication || ''}
+                          onChange={e => setPatientForm({...patientForm, currentMedication: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">¿Certificado Aptitud Física?</label>
+                        <select 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.hasFitnessCertificate || 'NO'}
+                          onChange={e => setPatientForm({...patientForm, hasFitnessCertificate: e.target.value})}
+                        >
+                          <option value="NO">No posee</option>
+                          <option value="SI">Sí posee</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">¿Cómo conoció la clínica?</label>
+                        <input 
+                          placeholder="Ej: Recomendación, Google, Instagram..." 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.referralSource || ''}
+                          onChange={e => setPatientForm({...patientForm, referralSource: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECCIÓN 4: ÁREA Y PLANIFICACIÓN */}
+                  <div className="space-y-3 pt-2">
+                    <h3 className="text-xs font-black text-primary-600 uppercase tracking-widest border-b border-slate-100 pb-2">
+                      4. Área y Plan de Membresía
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="col-span-full">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Área / Etapa</label>
+                        <div className="flex bg-slate-100 p-1 rounded-2xl">
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setFormStage(Stage.KINESIOLOGY);
+                              if (!editingPatient) setPatientForm({...patientForm, planType: PlanType.SESSIONS});
+                            }}
+                            className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${formStage === Stage.KINESIOLOGY ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                          >
+                            Kinesiología
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setFormStage(Stage.GYM);
+                              if (!editingPatient) {
+                                const oneMonthLater = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+                                setPatientForm({
+                                  ...patientForm, 
+                                  planType: PlanType.TIME,
+                                  expirationDate: oneMonthLater,
+                                  totalSessionsPaid: 0,
+                                  remainingSessions: 0
+                                });
+                              }
+                            }}
+                            className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${formStage === Stage.GYM ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                          >
+                            Gimnasio
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Fecha de Lesión</label>
+                        <input 
+                          type="date"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.injuryDate || ''}
+                          onChange={e => setPatientForm({...patientForm, injuryDate: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Fecha de Cirugía <span className="normal-case font-medium opacity-50">(opc.)</span></label>
+                        <input 
+                          type="date"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.surgeryDate || ''}
+                          onChange={e => setPatientForm({...patientForm, surgeryDate: e.target.value})}
+                        />
+                      </div>
+
+                      {patientForm.surgeryDate && (
+                        <div className="col-span-full space-y-1.5 animate-in fade-in slide-in-from-top-2">
+                          <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Tipo de Cirugía</label>
+                          <input 
+                            placeholder="Ej: Plástica HTH, Meniscectomía..."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                            value={patientForm.surgeryType || ''}
+                            onChange={e => setPatientForm({...patientForm, surgeryType: e.target.value})}
+                          />
+                        </div>
+                      )}
+
+                      <div className="col-span-full">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Estilo de Planificación</label>
+                        <div className="flex bg-slate-100 p-1 rounded-2xl">
+                          <button 
+                            type="button"
+                            onClick={() => setPatientForm({...patientForm, planType: PlanType.SESSIONS})}
+                            className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${patientForm.planType === PlanType.SESSIONS ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                          >
+                            Paquete de Sesiones
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const oneMonthLater = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+                              setPatientForm({
+                                ...patientForm, 
+                                planType: PlanType.TIME,
+                                expirationDate: oneMonthLater,
+                                totalSessionsPaid: 0,
+                                remainingSessions: 0
+                              });
+                            }}
+                            className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm ${patientForm.planType === PlanType.TIME ? 'bg-white text-primary-600 ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                          >
+                            Plan Mensual (Tiempo)
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Frecuencia (Semanal)</label>
+                        <input 
+                          type="number"
+                          min="1" max="7"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                          value={patientForm.sessionsPerWeek || 3}
+                          onChange={e => setPatientForm({...patientForm, sessionsPerWeek: Number(e.target.value)})}
+                        />
+                      </div>
+
+                      {patientForm.planType === PlanType.SESSIONS && (
+                        <div className="space-y-1.5 animate-fade-in">
+                          <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Cant. Sesiones (Abonadas)</label>
+                          <input 
+                            type="number"
+                            min="1"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
+                            value={patientForm.totalSessionsPaid || 12}
+                            onChange={e => setPatientForm({...patientForm, totalSessionsPaid: Number(e.target.value), remainingSessions: Number(e.target.value)})}
+                          />
+                        </div>
+                      )}
+
+                      <div className="col-span-full">
+                        <label className="cursor-pointer flex items-center gap-4 p-5 bg-indigo-50 border border-indigo-100 rounded-[1.5rem] hover:bg-indigo-100/50 transition-colors">
+                          <div className="relative flex items-center">
+                            <input 
+                              type="checkbox"
+                              checked={patientForm.hasHomePlan || false}
+                              onChange={e => setPatientForm({...patientForm, hasHomePlan: e.target.checked})}
+                              className="peer sr-only"
+                            />
+                            <div className="w-12 h-6 bg-slate-300 rounded-full peer-checked:bg-primary-500 transition-colors shadow-inner"></div>
+                            <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-6 shadow-sm"></div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">Activar "Plan para Casa"</p>
+                            <p className="text-xs text-slate-500 font-medium mt-0.5">Permite asignar rutinas extra-consultorio visibles para el paciente.</p>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </form>
             </div>
