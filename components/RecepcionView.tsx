@@ -24,13 +24,16 @@ import {
   Trash2,
   CalendarDays,
   CreditCard,
-  X
+  X,
+  FileSpreadsheet
 } from 'lucide-react';
 import { TurnoCalendar } from './TurnoCalendar';
+import { ImportPatientsModal } from './ImportPatientsModal';
 
 interface RecepcionViewProps {
   patients: Patient[];
   onAddPatient: (patient: Patient) => void;
+  onBulkAddPatients?: (patients: Patient[]) => Promise<void> | void;
   onUpdatePatient: (patient: Patient) => void;
   onDeletePatient: (id: string) => void;
   onClearWaitingRoom: () => void;
@@ -48,6 +51,7 @@ interface RecepcionViewProps {
 export const RecepcionView: React.FC<RecepcionViewProps> = ({ 
   patients, 
   onAddPatient, 
+  onBulkAddPatients,
   onUpdatePatient,
   onDeletePatient,
   onClearWaitingRoom,
@@ -65,6 +69,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR'>('PATIENTS');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -488,12 +493,22 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                   className="w-full bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-[1.5rem] py-4 pl-12 pr-4 shadow-sm text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm md:text-base"
                 />
               </div>
-              <button 
-                onClick={() => { resetForm(); setShowAddModal(true); }}
-                className="bg-primary-600 text-white px-8 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-primary-500/20 flex items-center justify-center gap-2 hover:bg-primary-700 hover:-translate-y-0.5 active:scale-95 transition-all w-full md:w-auto shrink-0"
-              >
-                <UserPlus size={20} strokeWidth={2.5} /> Nuevo Ingreso
-              </button>
+              <div className="flex gap-2 w-full md:w-auto shrink-0">
+                <button 
+                  onClick={() => setShowImportModal(true)}
+                  className="bg-emerald-600 text-white px-6 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 transition-all flex-1 md:flex-initial"
+                  title="Importar pacientes desde Excel o CSV"
+                >
+                  <FileSpreadsheet size={20} strokeWidth={2.5} /> <span className="hidden sm:inline">Importar Excel / CSV</span><span className="sm:hidden">Importar</span>
+                </button>
+
+                <button 
+                  onClick={() => { resetForm(); setShowAddModal(true); }}
+                  className="bg-primary-600 text-white px-8 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-primary-500/20 flex items-center justify-center gap-2 hover:bg-primary-700 hover:-translate-y-0.5 active:scale-95 transition-all flex-1 md:flex-initial"
+                >
+                  <UserPlus size={20} strokeWidth={2.5} /> Nuevo Ingreso
+                </button>
+              </div>
             </div>
 
             {/* Turnos de Hoy Section */}
@@ -1181,6 +1196,23 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
         </div>
         );
       })()}
+
+      {/* Import Patients Modal */}
+      {showImportModal && (
+        <ImportPatientsModal 
+          existingPatients={patients}
+          onClose={() => setShowImportModal(false)}
+          onImport={async (importedPatients) => {
+            if (onBulkAddPatients) {
+              await onBulkAddPatients(importedPatients);
+            } else {
+              for (const p of importedPatients) {
+                onAddPatient(p);
+              }
+            }
+          }}
+        />
+      )}
 
     </div>
   );

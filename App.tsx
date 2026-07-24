@@ -364,6 +364,26 @@ const App: React.FC = () => {
     }
   };
 
+  const handleBulkAddPatients = async (newPatients: Patient[]) => {
+    const safeDataList = newPatients.map(p => sanitizeForFirestore({ ...p, tenantId: user?.tenantId || 'default_tenant' }));
+    console.log(`Bulk adding ${safeDataList.length} patients`);
+    setPatients(prev => [...prev, ...safeDataList]);
+    if (isConfigValid && db) {
+      try {
+        const promises = safeDataList.map(p => setDoc(doc(db, 'patients', p.id), p));
+        await Promise.all(promises);
+        console.log("Bulk patients saved to Firestore successfully");
+      } catch (e: any) { 
+        console.error("Error bulk saving patients to Firestore:", e);
+        if (e.code === 'permission-denied') {
+          alert("Error de Permisos: La base de datos está bloqueada. Asegúrese de haber configurado las Reglas de Firestore en el Firebase Console.");
+        } else {
+          alert("Error al guardar algunos pacientes en la base de datos.");
+        }
+      }
+    }
+  };
+
   const handleUpdatePatient = async (updatedPatient: Patient) => {
     console.log("Updating patient:", updatedPatient.firstName, updatedPatient.lastName);
     setPatients(prev => prev.map(p => p.id === updatedPatient.id ? updatedPatient : p));
@@ -623,6 +643,7 @@ const App: React.FC = () => {
             <RecepcionView 
               patients={patients}
               onAddPatient={handleAddPatient}
+              onBulkAddPatients={handleBulkAddPatients}
               onUpdatePatient={handleUpdatePatient}
               onDeletePatient={handleDeletePatient}
               onClearWaitingRoom={handleClearWaitingRoom}
