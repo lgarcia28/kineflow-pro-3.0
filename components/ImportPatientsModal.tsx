@@ -152,6 +152,24 @@ export const ImportPatientsModal: React.FC<ImportPatientsModalProps> = ({
     reader.readAsBinaryString(file);
   };
 
+  // Helper to parse Excel dates (serial numbers or string dates)
+  const parseAnyExcelDate = (val: any): string => {
+    if (!val) return '';
+    if (typeof val === 'number') {
+      const date = new Date(Math.round((val - 25569) * 86400 * 1000));
+      return date.toISOString().split('T')[0];
+    }
+    const str = String(val).trim();
+    const num = Number(str);
+    if (!isNaN(num) && num > 1000) {
+      const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+      return date.toISOString().split('T')[0];
+    }
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+    return str;
+  };
+
   // Helper to extract values from row matching key regexes or trimmed names
   const extractRowValue = (row: Record<string, any>, pattern: RegExp): string => {
     for (const key of Object.keys(row)) {
@@ -159,7 +177,7 @@ export const ImportPatientsModal: React.FC<ImportPatientsModalProps> = ({
       if (pattern.test(cleanKey) || pattern.test(key)) {
         const val = row[key];
         if (val !== undefined && val !== null && String(val).trim() !== '') {
-          return String(val).trim();
+          return val;
         }
       }
     }
@@ -208,20 +226,18 @@ export const ImportPatientsModal: React.FC<ImportPatientsModalProps> = ({
       const history = rawNotes ? [rawNotes] : ['Paciente importado desde Ficha de Ingreso RTP'];
 
       const todayStr = new Date().toISOString().split('T')[0];
+      const rawTimestamp = extractRowValue(row, /marca.*temporal|fecha.*lesi|fecha.*ingreso/i);
+      const parsedDate = parseAnyExcelDate(rawTimestamp);
+
       const paymentDate = row[fieldMapping.paymentDate] 
-        ? (row[fieldMapping.paymentDate] instanceof Date 
-            ? row[fieldMapping.paymentDate].toISOString().split('T')[0] 
-            : String(row[fieldMapping.paymentDate]))
-        : todayStr;
+        ? parseAnyExcelDate(row[fieldMapping.paymentDate])
+        : (parsedDate || todayStr);
+
+      const injuryDate = parsedDate || paymentDate || todayStr;
 
       // Extract specific intake fields from Ficha de Ingreso RTP
       const birthDateRaw = extractRowValue(row, /fecha.*nacimiento/i);
-      let birthDate = '';
-      if (birthDateRaw) {
-        if (birthDateRaw.includes('-') || birthDateRaw.includes('/')) {
-          birthDate = birthDateRaw;
-        }
-      }
+      const birthDate = parseAnyExcelDate(birthDateRaw);
 
       const ageRaw = Number(extractRowValue(row, /^edad/i));
       const age = !isNaN(ageRaw) && ageRaw > 0 ? ageRaw : undefined;
@@ -265,7 +281,7 @@ export const ImportPatientsModal: React.FC<ImportPatientsModalProps> = ({
         lastName,
         dni,
         condition,
-        injuryDate: todayStr,
+        injuryDate: injuryDate || todayStr,
         sessionsPerWeek,
         planType,
         totalSessionsPaid: planType === PlanType.SESSIONS ? 10 : 0,
