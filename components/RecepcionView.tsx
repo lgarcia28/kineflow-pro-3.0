@@ -73,6 +73,14 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR'>('PATIENTS');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [schedulePromptPatient, setSchedulePromptPatient] = useState<Patient | null>(null);
+  const [autoSchedulePatientId, setAutoSchedulePatientId] = useState<string | null>(null);
+  const [formStage, setFormStage] = useState<Stage>(Stage.KINESIOLOGY);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   const getExportData = () => {
@@ -725,11 +733,8 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                               onClick={(e) => { 
                                 e.stopPropagation(); 
                                 setPaymentPatient(patient); 
-                                if (patient.planType === PlanType.MONTHLY) {
+                                if (patient.planType === PlanType.TIME) {
                                   setPaymentTypeState('MONTH');
-                                  setPaymentValue(1);
-                                } else if (patient.planType === PlanType.SINGLE_SESSION) {
-                                  setPaymentTypeState('SINGLE');
                                   setPaymentValue(1);
                                 } else {
                                   setPaymentTypeState('PACK');
