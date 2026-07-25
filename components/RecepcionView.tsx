@@ -25,8 +25,10 @@ import {
   CalendarDays,
   CreditCard,
   X,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Download
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { TurnoCalendar } from './TurnoCalendar';
 import { ImportPatientsModal } from './ImportPatientsModal';
 
@@ -231,6 +233,54 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     }
     setShowProductModal(false);
     resetProductForm();
+  };
+
+  const handleExportPatients = () => {
+    if (!patients || patients.length === 0) {
+      alert('No hay pacientes disponibles para exportar.');
+      return;
+    }
+
+    const exportData = patients.map(p => ({
+      'DNI': p.dni || '',
+      'Nombre': p.firstName || '',
+      'Apellido': p.lastName || '',
+      'Fecha de Nacimiento': p.birthDate || '',
+      'Edad': p.age || '',
+      'Sexo': p.gender || '',
+      'Teléfono': p.phone || '',
+      'Correo Electrónico': p.email || '',
+      'Dirección': p.address || '',
+      'Instagram': p.instagram || '',
+      'Obra Social / Prepaga': p.healthInsurance || '',
+      'Número de Socio': p.affiliateNumber || '',
+      'Contacto de Emergencia': p.emergencyContactName || '',
+      'Teléfono de Emergencia': p.emergencyContactPhone || '',
+      'Motivo / Condición': p.condition || '',
+      'Fecha de Lesión': p.injuryDate || '',
+      'Fecha de Cirugía': p.surgeryDate || '',
+      'Tipo de Cirugía': p.surgeryType || '',
+      'Cardiovasculares': p.diseaseCardiovascular || 'NO',
+      'Diabetes': p.diseaseDiabetes || 'NO',
+      'Hipertensión': p.diseaseHypertension || 'NO',
+      'Otras Enfermedades': p.diseaseOther || '',
+      'Cirugías Previas': p.surgeriesHistory || '',
+      'Alergias': p.allergies || '',
+      'Medicación Actual': p.currentMedication || '',
+      'Aptitud Física': p.hasFitnessCertificate || 'NO',
+      '¿Cómo conoció la clínica?': p.referralSource || '',
+      'Frecuencia Semanal': p.sessionsPerWeek || 2,
+      'Tipo de Plan': p.planType === PlanType.SESSIONS ? 'Paquete de Sesiones' : 'Plan Mensual',
+      'Fecha de Pago / Ingreso': p.paymentDate || '',
+      'Fecha de Vencimiento': p.expirationDate || '',
+      'Plan para Casa': p.hasHomePlan ? 'Sí' : 'No'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pacientes');
+    const filename = `Exportacion_Pacientes_Kineflow_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, filename);
   };
 
   const handlePatientSubmit = async (e: React.FormEvent) => {
@@ -493,20 +543,28 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                   className="w-full bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-[1.5rem] py-4 pl-12 pr-4 shadow-sm text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm md:text-base"
                 />
               </div>
-              <div className="flex gap-2 w-full md:w-auto shrink-0">
+              <div className="flex gap-2 w-full md:w-auto shrink-0 flex-wrap sm:flex-nowrap">
                 <button 
                   onClick={() => setShowImportModal(true)}
-                  className="bg-emerald-600 text-white px-6 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 transition-all flex-1 md:flex-initial"
+                  className="bg-emerald-600 text-white px-5 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 transition-all flex-1 md:flex-initial text-sm"
                   title="Importar pacientes desde Excel o CSV"
                 >
-                  <FileSpreadsheet size={20} strokeWidth={2.5} /> <span className="hidden sm:inline">Importar Excel / CSV</span><span className="sm:hidden">Importar</span>
+                  <FileSpreadsheet size={18} strokeWidth={2.5} /> <span className="hidden sm:inline">Importar</span>
+                </button>
+
+                <button 
+                  onClick={handleExportPatients}
+                  className="bg-teal-700 text-white px-5 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-teal-700/20 flex items-center justify-center gap-2 hover:bg-teal-800 hover:-translate-y-0.5 active:scale-95 transition-all flex-1 md:flex-initial text-sm"
+                  title="Exportar base de pacientes a Excel (.xlsx)"
+                >
+                  <Download size={18} strokeWidth={2.5} /> <span className="hidden sm:inline">Exportar Excel</span><span className="sm:hidden">Exportar</span>
                 </button>
 
                 <button 
                   onClick={() => { resetForm(); setShowAddModal(true); }}
-                  className="bg-primary-600 text-white px-8 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-primary-500/20 flex items-center justify-center gap-2 hover:bg-primary-700 hover:-translate-y-0.5 active:scale-95 transition-all flex-1 md:flex-initial"
+                  className="bg-primary-600 text-white px-6 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-primary-500/20 flex items-center justify-center gap-2 hover:bg-primary-700 hover:-translate-y-0.5 active:scale-95 transition-all flex-1 md:flex-initial text-sm"
                 >
-                  <UserPlus size={20} strokeWidth={2.5} /> Nuevo Ingreso
+                  <UserPlus size={18} strokeWidth={2.5} /> Nuevo Ingreso
                 </button>
               </div>
             </div>
