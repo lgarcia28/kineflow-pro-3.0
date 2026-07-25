@@ -26,7 +26,9 @@ import {
   CreditCard,
   X,
   FileSpreadsheet,
-  Download
+  Download,
+  ChevronDown,
+  FileText
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TurnoCalendar } from './TurnoCalendar';
@@ -71,16 +73,79 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR'>('PATIENTS');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [schedulePromptPatient, setSchedulePromptPatient] = useState<Patient | null>(null);
-  const [autoSchedulePatientId, setAutoSchedulePatientId] = useState<string | null>(null);
-  const [formStage, setFormStage] = useState<Stage>(Stage.KINESIOLOGY);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
-  // Payment states
+  const getExportData = () => {
+    return patients.map(p => ({
+      'DNI': p.dni || '',
+      'Nombre': p.firstName || '',
+      'Apellido': p.lastName || '',
+      'Fecha de Nacimiento': p.birthDate || '',
+      'Edad': p.age || '',
+      'Sexo': p.gender || '',
+      'Teléfono': p.phone || '',
+      'Correo Electrónico': p.email || '',
+      'Dirección': p.address || '',
+      'Instagram': p.instagram || '',
+      'Obra Social / Prepaga': p.healthInsurance || '',
+      'Número de Socio': p.affiliateNumber || '',
+      'Contacto de Emergencia': p.emergencyContactName || '',
+      'Teléfono de Emergencia': p.emergencyContactPhone || '',
+      'Motivo / Condición': p.condition || '',
+      'Fecha de Lesión': p.injuryDate || '',
+      'Fecha de Cirugía': p.surgeryDate || '',
+      'Tipo de Cirugía': p.surgeryType || '',
+      'Cardiovasculares': p.diseaseCardiovascular || 'NO',
+      'Diabetes': p.diseaseDiabetes || 'NO',
+      'Hipertensión': p.diseaseHypertension || 'NO',
+      'Otras Enfermedades': p.diseaseOther || '',
+      'Cirugías Previas': p.surgeriesHistory || '',
+      'Alergias': p.allergies || '',
+      'Medicación Actual': p.currentMedication || '',
+      'Aptitud Física': p.hasFitnessCertificate || 'NO',
+      '¿Cómo conoció la clínica?': p.referralSource || '',
+      'Frecuencia Semanal': p.sessionsPerWeek || 2,
+      'Tipo de Plan': p.planType === PlanType.SESSIONS ? 'Paquete de Sesiones' : 'Plan Mensual',
+      'Fecha de Pago / Ingreso': p.paymentDate || '',
+      'Fecha de Vencimiento': p.expirationDate || '',
+      'Plan para Casa': p.hasHomePlan ? 'Sí' : 'No'
+    }));
+  };
+
+  const handleExportPatientsExcel = () => {
+    setShowExportMenu(false);
+    if (!patients || patients.length === 0) {
+      alert('No hay pacientes disponibles para exportar.');
+      return;
+    }
+    const exportData = getExportData();
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pacientes');
+    const filename = `Exportacion_Pacientes_Kineflow_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+  };
+
+  const handleExportPatientsCSV = () => {
+    setShowExportMenu(false);
+    if (!patients || patients.length === 0) {
+      alert('No hay pacientes disponibles para exportar.');
+      return;
+    }
+    const exportData = getExportData();
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const csvContent = XLSX.utils.sheet_to_csv(worksheet);
+    
+    // Add UTF-8 BOM for Excel/CSV compatibility with Spanish characters
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Exportacion_Pacientes_Kineflow_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   const [paymentPatient, setPaymentPatient] = useState<Patient | null>(null);
   const [paymentTypeState, setPaymentTypeState] = useState<'SINGLE' | 'PACK' | 'MONTH'>('MONTH');
   const [paymentValue, setPaymentValue] = useState<number>(1);
@@ -233,54 +298,6 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     }
     setShowProductModal(false);
     resetProductForm();
-  };
-
-  const handleExportPatients = () => {
-    if (!patients || patients.length === 0) {
-      alert('No hay pacientes disponibles para exportar.');
-      return;
-    }
-
-    const exportData = patients.map(p => ({
-      'DNI': p.dni || '',
-      'Nombre': p.firstName || '',
-      'Apellido': p.lastName || '',
-      'Fecha de Nacimiento': p.birthDate || '',
-      'Edad': p.age || '',
-      'Sexo': p.gender || '',
-      'Teléfono': p.phone || '',
-      'Correo Electrónico': p.email || '',
-      'Dirección': p.address || '',
-      'Instagram': p.instagram || '',
-      'Obra Social / Prepaga': p.healthInsurance || '',
-      'Número de Socio': p.affiliateNumber || '',
-      'Contacto de Emergencia': p.emergencyContactName || '',
-      'Teléfono de Emergencia': p.emergencyContactPhone || '',
-      'Motivo / Condición': p.condition || '',
-      'Fecha de Lesión': p.injuryDate || '',
-      'Fecha de Cirugía': p.surgeryDate || '',
-      'Tipo de Cirugía': p.surgeryType || '',
-      'Cardiovasculares': p.diseaseCardiovascular || 'NO',
-      'Diabetes': p.diseaseDiabetes || 'NO',
-      'Hipertensión': p.diseaseHypertension || 'NO',
-      'Otras Enfermedades': p.diseaseOther || '',
-      'Cirugías Previas': p.surgeriesHistory || '',
-      'Alergias': p.allergies || '',
-      'Medicación Actual': p.currentMedication || '',
-      'Aptitud Física': p.hasFitnessCertificate || 'NO',
-      '¿Cómo conoció la clínica?': p.referralSource || '',
-      'Frecuencia Semanal': p.sessionsPerWeek || 2,
-      'Tipo de Plan': p.planType === PlanType.SESSIONS ? 'Paquete de Sesiones' : 'Plan Mensual',
-      'Fecha de Pago / Ingreso': p.paymentDate || '',
-      'Fecha de Vencimiento': p.expirationDate || '',
-      'Plan para Casa': p.hasHomePlan ? 'Sí' : 'No'
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pacientes');
-    const filename = `Exportacion_Pacientes_Kineflow_${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(workbook, filename);
   };
 
   const handlePatientSubmit = async (e: React.FormEvent) => {
@@ -552,13 +569,32 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                   <FileSpreadsheet size={18} strokeWidth={2.5} /> <span className="hidden sm:inline">Importar</span>
                 </button>
 
-                <button 
-                  onClick={handleExportPatients}
-                  className="bg-teal-700 text-white px-5 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-teal-700/20 flex items-center justify-center gap-2 hover:bg-teal-800 hover:-translate-y-0.5 active:scale-95 transition-all flex-1 md:flex-initial text-sm"
-                  title="Exportar base de pacientes a Excel (.xlsx)"
-                >
-                  <Download size={18} strokeWidth={2.5} /> <span className="hidden sm:inline">Exportar Excel</span><span className="sm:hidden">Exportar</span>
-                </button>
+                <div className="relative flex-1 md:flex-initial">
+                  <button 
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    className="w-full bg-teal-700 text-white px-5 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-teal-700/20 flex items-center justify-center gap-2 hover:bg-teal-800 hover:-translate-y-0.5 active:scale-95 transition-all text-sm"
+                    title="Exportar base de pacientes"
+                  >
+                    <Download size={18} strokeWidth={2.5} /> <span>Exportar</span> <ChevronDown size={16} />
+                  </button>
+
+                  {showExportMenu && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-50 animate-in fade-in slide-in-from-top-2">
+                      <button 
+                        onClick={handleExportPatientsExcel}
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl flex items-center gap-3 font-bold text-slate-700 text-sm transition-colors"
+                      >
+                        <FileSpreadsheet size={18} className="text-emerald-600 shrink-0" /> Excel (.xlsx)
+                      </button>
+                      <button 
+                        onClick={handleExportPatientsCSV}
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl flex items-center gap-3 font-bold text-slate-700 text-sm transition-colors"
+                      >
+                        <FileText size={18} className="text-blue-600 shrink-0" /> CSV (.csv)
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 <button 
                   onClick={() => { resetForm(); setShowAddModal(true); }}
