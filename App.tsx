@@ -109,27 +109,25 @@ const App: React.FC = () => {
       });
       
       // Optional: Show a browser notification if permitted
-      if ("Notification" in window && Notification.permission === "granted") {
-        newArrivals.forEach(id => {
-          const patient = patients.find(p => p.id === id);
-          if (patient) {
-            new Notification("Nuevo Paciente en Sala", {
-              body: `${patient.firstName} ${patient.lastName} ha llegado.`,
-              icon: patient.photoUrl
-            });
-          }
-        });
+      if (typeof window !== 'undefined' && "Notification" in window && Notification.permission === "granted") {
+        try {
+          newArrivals.forEach(id => {
+            const patient = patients.find(p => p.id === id);
+            if (patient) {
+              new Notification("Nuevo Paciente en Sala", {
+                body: `${patient.firstName} ${patient.lastName} ha llegado.`,
+                icon: patient.photoUrl
+              });
+            }
+          });
+        } catch (e) {
+          console.warn("Notification error (iOS Safari WebKit):", e);
+        }
       }
     }
 
     prevInRoomIds.current = currentInRoomIds;
   }, [patients, user, loading]);
-
-  useEffect(() => {
-    if (user && user.role === UserRole.KINE && "Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, [user]);
 
   // Persistence of session (ahora delegado a Firebase Auth)
   useEffect(() => {

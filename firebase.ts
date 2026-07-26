@@ -1,4 +1,3 @@
-
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { 
@@ -36,12 +35,17 @@ if (isConfigValid) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     
-    // Firestore con persistencia avanzada
-    db = initializeFirestore(app!, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-      })
-    });
+    // Firestore con persistencia avanzada (con fallback seguro para iOS Safari)
+    try {
+      db = initializeFirestore(app!, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+    } catch (cacheError) {
+      console.warn("Persistencia de Firestore no soportada o bloqueada (iOS Safari), usando Firestore estándar:", cacheError);
+      db = getFirestore(app!);
+    }
 
     console.log("Firebase initialized successfully with project:", firebaseConfig.projectId);
 
@@ -49,8 +53,8 @@ if (isConfigValid) {
     storage = getStorage(app!);
     auth = getAuth(app!);
 
-    // App secundaria para crear usuarios sin desloguear a Recepción
-    secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+    // App secundaria para crear usuarios sin desloguear a Recepción (evitando errores de duplicación)
+    secondaryApp = getApps().find(a => a.name === 'SecondaryApp') || initializeApp(firebaseConfig, "SecondaryApp");
     secondaryAuth = getAuth(secondaryApp);
 
     isSupported().then((yes: boolean) => {
