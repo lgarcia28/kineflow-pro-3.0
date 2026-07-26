@@ -40,9 +40,8 @@ export const SUB_REGIONS_BY_REGION: Record<string, string[]> = {
 };
 
 export const MOVEMENT_TYPES = [
-  'Flexión / Extensión',
-  'Movilidad / Rango Articular',
   'Fuerza / Potencia',
+  'Movilidad / Rango Articular',
   'Aeróbico / Resistencia',
   'Neurodinamia / Movilización Neural',
   'Propiocepción / Equilibrio',
@@ -103,7 +102,6 @@ export function inferExerciseCategories(ex: Partial<ExerciseDefinition>): Inferr
   if (!movementType) {
     if (/neurodinam|nervio|gliding|sliding/i.test(fullStr)) movementType = 'Neurodinamia / Movilización Neural';
     else if (/movilidad|rango|movimiento|flexibilidad|estiramiento/i.test(fullStr)) movementType = 'Movilidad / Rango Articular';
-    else if (/flexión|flexion|extensión|extension/i.test(fullStr)) movementType = 'Flexión / Extensión';
     else if (/propiocep|equilibrio|balance|estabilidad/i.test(fullStr)) movementType = 'Propiocepción / Equilibrio';
     else if (/aeróbico|aerobico|cardio|resistencia/i.test(fullStr)) movementType = 'Aeróbico / Resistencia';
     else movementType = 'Fuerza / Potencia';
