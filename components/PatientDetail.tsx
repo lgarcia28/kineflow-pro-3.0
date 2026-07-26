@@ -219,7 +219,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
 }) => {
   // Estado local para la navegación
   const [routineType, setRoutineType] = useState<'CLINIC' | 'HOME'>('CLINIC');
-  const [activeDayId, setActiveDayId] = useState<string>(patient.routine.days[0]?.id || '');
+  const [activeDayId, setActiveDayId] = useState<string>(patient.routine?.days?.[0]?.id || '');
   const [viewMode, setViewMode] = useState<'daily' | 'plan' | 'stats' | 'evaluations'>('daily');
   const [showHistory, setShowHistory] = useState(false);
   const [showRoutineEditor, setShowRoutineEditor] = useState(false);
@@ -247,18 +247,26 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
 
   const isKine = role === UserRole.KINE;
   
-  // IMPORTANTE: Obtenemos el número de semana siempre de la prop patient
-  const currentWeek = patient.routine.currentWeek || 1;
+  // Safe routine fallbacks
+  const safeClinicRoutine = (patient.routine && Array.isArray(patient.routine.days)) 
+    ? patient.routine 
+    : { id: `r_${patient.id}`, stage: Stage.KINESIOLOGY, currentWeek: 1, days: [] };
+
+  const safeHomeRoutine = (patient.homeRoutine && Array.isArray(patient.homeRoutine.days)) 
+    ? patient.homeRoutine 
+    : { id: `hr_${patient.id}`, stage: Stage.KINESIOLOGY, currentWeek: 1, days: [] };
+
+  const activeRoutine = routineType === 'CLINIC' ? safeClinicRoutine : safeHomeRoutine;
+  const currentWeek = activeRoutine.currentWeek || 1;
 
   // Sincronizar el día activo si cambia la rutina o el tipo de rutina
   useEffect(() => {
-    const currentRoutine = routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] });
-    if (currentRoutine.days.length > 0 && (!activeDayId || !currentRoutine.days.find(d => d.id === activeDayId))) {
-        setActiveDayId(currentRoutine.days[0].id);
+    if (activeRoutine.days.length > 0 && (!activeDayId || !activeRoutine.days.find(d => d.id === activeDayId))) {
+        setActiveDayId(activeRoutine.days[0].id);
     }
-  }, [patient.routine.days, patient.homeRoutine?.days, activeDayId, routineType]);
+  }, [activeRoutine.days, activeDayId, routineType]);
 
-  const activeDay = (routineType === 'CLINIC' ? patient.routine : (patient.homeRoutine || { days: [] })).days.find(d => d.id === activeDayId);
+  const activeDay = activeRoutine.days.find(d => d.id === activeDayId);
 
   const resolvedActiveDay = useMemo(() => {
     if (!activeDay) return null;

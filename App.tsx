@@ -228,8 +228,29 @@ const App: React.FC = () => {
     console.log("Starting Firestore snapshot listener...");
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const patientsData: Patient[] = [];
-      snapshot.forEach((doc) => {
-        patientsData.push(doc.data() as Patient);
+      snapshot.forEach((docSnap) => {
+        const raw = docSnap.data() as any;
+        const patientId = raw.id || docSnap.id;
+        const routine = (raw.routine && typeof raw.routine === 'object')
+          ? {
+              id: raw.routine.id || `r_${patientId}`,
+              stage: raw.routine.stage || Stage.KINESIOLOGY,
+              currentWeek: raw.routine.currentWeek || 1,
+              days: Array.isArray(raw.routine.days) ? raw.routine.days : [{ id: `d1_${patientId}`, name: 'Día 1', exercises: [] }]
+            }
+          : {
+              id: `r_${patientId}`,
+              stage: Stage.KINESIOLOGY,
+              currentWeek: 1,
+              days: [{ id: `d1_${patientId}`, name: 'Día 1', exercises: [] }]
+            };
+
+        patientsData.push({
+          ...raw,
+          id: patientId,
+          checkInStatus: raw.checkInStatus || CheckInStatus.IDLE,
+          routine
+        } as Patient);
       });
       
       console.log(`Firestore Snapshot: ${patientsData.length} patients found`);
@@ -674,12 +695,12 @@ const App: React.FC = () => {
             )
           ) : (
             // KINE VIEW
-            view === 'HOME' ? (
+            (view === 'HOME' || !currentPatient) ? (
               <PatientList 
                   patients={patients} 
                   onSelectPatient={handleSelectPatient} 
               />
-            ) : currentPatient && (
+            ) : (
               <PatientDetail 
                   patient={currentPatient}
                   role={user.role}
