@@ -74,6 +74,9 @@ export interface ExerciseDefinition {
   tenantId?: string; // Para aislamiento multi-tenant
   name: string;
   category: string;
+  bodyRegion?: string; // Ej: 'Miembro Inferior', 'Miembro Superior', 'Zona Media'
+  subRegion?: string;  // Ej: 'Tobillo y Pie', 'Rodilla', 'Cadera'
+  movementType?: string; // Ej: 'Flexión', 'Movilidad', 'Fuerza', 'Aeróbico', 'Neurodinamia'
   videoUrl?: string;
   metricType: MetricType;
   difficulty?: number; // Nivel de dificultad del ejercicio (1-5)

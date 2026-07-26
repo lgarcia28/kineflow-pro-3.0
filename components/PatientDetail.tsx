@@ -5,6 +5,7 @@ import { ExerciseCard } from './ExerciseCard';
 import { generateAIPortion } from '../services/aiService';
 import { ProgressChart } from './ProgressChart';
 import { parseMediaUrl } from '../utils/mediaUrl';
+import { BODY_REGIONS, inferExerciseCategories } from '../utils/exerciseCategories';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -227,6 +228,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
   // Estados para modales y edición
   const [chartExercise, setChartExercise] = useState<RoutineExercise | null>(null);
   const [exerciseSearch, setExerciseSearch] = useState('');
+  const [exerciseRegionFilter, setExerciseRegionFilter] = useState('');
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [isAddingExerciseModal, setIsAddingExerciseModal] = useState<{show: boolean, dayId: string}>({show: false, dayId: ''});
   const [notes, setNotes] = useState('');
@@ -1407,12 +1409,43 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                       </div>
                       <div className="relative group">
                           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={18} />
-                          <input type="text" placeholder="Buscar por nombre o músculo..." className="w-full pl-11 pr-4 py-3 bg-slate-100/80 border border-slate-200/50 rounded-xl text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" value={exerciseSearch} onChange={e => setExerciseSearch(e.target.value)} />
+                          <input type="text" placeholder="Buscar por nombre, subzona o movimiento..." className="w-full pl-11 pr-4 py-3 bg-slate-100/80 border border-slate-200/50 rounded-xl text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" value={exerciseSearch} onChange={e => setExerciseSearch(e.target.value)} />
                       </div>
-                      <button onClick={() => { setIsAddingExerciseModal({show:false, dayId:''}); setSelectedExerciseIds([]); }} className="absolute top-4 right-4 w-8 h-8 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm"><X size={18}/></button>
+                      
+                      {/* Filtros por Zona Corporal */}
+                      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                        <button
+                          onClick={() => setExerciseRegionFilter('')}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold whitespace-nowrap transition-all ${!exerciseRegionFilter ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        >
+                          Todas las zonas
+                        </button>
+                        {BODY_REGIONS.map(reg => (
+                          <button
+                            key={reg}
+                            onClick={() => setExerciseRegionFilter(exerciseRegionFilter === reg ? '' : reg)}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold whitespace-nowrap transition-all ${exerciseRegionFilter === reg ? 'bg-primary-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                          >
+                            {reg}
+                          </button>
+                        ))}
+                      </div>
+                      <button onClick={() => { setIsAddingExerciseModal({show:false, dayId:''}); setSelectedExerciseIds([]); setExerciseRegionFilter(''); setExerciseSearch(''); }} className="absolute top-4 right-4 w-8 h-8 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm"><X size={18}/></button>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-slate-50/50 scroll-container">
-                      {exercises.filter(ex => ex.name.toLowerCase().includes(exerciseSearch.toLowerCase())).map(ex => {
+                      {exercises.filter(ex => {
+                          const inferred = inferExerciseCategories(ex);
+                          if (exerciseRegionFilter && inferred.region !== exerciseRegionFilter) return false;
+                          if (exerciseSearch.trim()) {
+                            const q = exerciseSearch.toLowerCase();
+                            const matchName = ex.name.toLowerCase().includes(q);
+                            const matchCat = (ex.category || '').toLowerCase().includes(q);
+                            const matchSub = inferred.subRegion.toLowerCase().includes(q);
+                            const matchMov = inferred.movementType.toLowerCase().includes(q);
+                            return matchName || matchCat || matchSub || matchMov;
+                          }
+                          return true;
+                      }).map(ex => {
                           const isSelected = selectedExerciseIds.includes(ex.id);
                           return (
                               <button key={ex.id} onClick={() => setSelectedExerciseIds(prev => isSelected ? prev.filter(i => i !== ex.id) : [...prev, ex.id])} className={`w-full flex items-center p-2 rounded-lg border-2 transition-all duration-300 text-left ${isSelected ? 'bg-primary-50/50 border-primary-500 shadow-sm ring-2 ring-primary-500/10' : 'bg-white border-slate-200/60 shadow-sm hover:shadow-md hover:border-slate-300'}`}>
@@ -1462,11 +1495,23 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                               </button>
                           );
                       })}
-                      {exercises.filter(ex => ex.name.toLowerCase().includes(exerciseSearch.toLowerCase())).length === 0 && (
-                          <div className="py-20 text-center">
-                              <Search className="mx-auto text-slate-300 mb-4" size={40}/>
-                              <p className="text-slate-500 font-bold text-lg">No se encontraron rutinas</p>
-                              <p className="text-slate-400 text-sm mt-1">Prueba usando otro término de búsqueda.</p>
+                      {exercises.filter(ex => {
+                          const inferred = inferExerciseCategories(ex);
+                          if (exerciseRegionFilter && inferred.region !== exerciseRegionFilter) return false;
+                          if (exerciseSearch.trim()) {
+                            const q = exerciseSearch.toLowerCase();
+                            const matchName = ex.name.toLowerCase().includes(q);
+                            const matchCat = (ex.category || '').toLowerCase().includes(q);
+                            const matchSub = inferred.subRegion.toLowerCase().includes(q);
+                            const matchMov = inferred.movementType.toLowerCase().includes(q);
+                            return matchName || matchCat || matchSub || matchMov;
+                          }
+                          return true;
+                      }).length === 0 && (
+                          <div className="py-16 text-center">
+                              <Search className="mx-auto text-slate-300 mb-3" size={36}/>
+                              <p className="text-slate-500 font-bold text-base">No se encontraron ejercicios</p>
+                              <p className="text-slate-400 text-xs mt-1">Prueba usando otro término o seleccionando otra zona.</p>
                           </div>
                       )}
                   </div>
