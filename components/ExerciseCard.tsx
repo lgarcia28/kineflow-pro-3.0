@@ -95,6 +95,20 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       );
     }
 
+    if (media.type === 'video') {
+      return (
+        <button
+          onClick={() => setIsZoomed(true)}
+          className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative group cursor-zoom-in block"
+        >
+          <video src={media.embedUrl} autoPlay loop muted playsInline className="w-full h-full object-cover block pointer-events-none" />
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+            <Maximize2 size={16} className="text-white" />
+          </div>
+        </button>
+      );
+    }
+
     if (media.isVideo && media.thumbnailUrl) {
       return (
         <button
@@ -144,33 +158,37 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
   // Contenido expandido al hacer clic (modal)
   const renderZoomedContent = () => {
-    if (!media || !isZoomed) return null;
+    if (!isZoomed || !media) return null;
 
     return (
       <div
-        className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
+        className="fixed inset-0 z-[500] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-in fade-in duration-200"
         onClick={() => setIsZoomed(false)}
       >
         <div
-          className="relative bg-white rounded-3xl overflow-hidden shadow-2xl max-w-2xl w-full animate-in zoom-in-95 cursor-default"
+          className="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl max-w-2xl w-full animate-in zoom-in-95 duration-300 cursor-default"
           onClick={e => e.stopPropagation()}
         >
           <button
             onClick={() => setIsZoomed(false)}
-            className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white transition-colors"
+            className="absolute top-6 right-6 z-10 p-3 bg-white/80 backdrop-blur-md hover:bg-white rounded-full text-slate-900 transition-all shadow-lg active:scale-95"
           >
             <X size={24} />
           </button>
 
-          {media.isVideo ? (
-            <div className="aspect-video bg-slate-900">
+          {media.type === 'youtube' || media.type === 'drive' || media.type === 'instagram' ? (
+            <div className="aspect-video bg-black flex items-center justify-center">
               <iframe
                 src={media.embedUrl}
-                className="w-full h-full"
+                title={definition.name}
+                className="w-full h-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                title={definition.name}
               />
+            </div>
+          ) : media.type === 'video' ? (
+            <div className="aspect-video bg-black flex items-center justify-center">
+              <video src={media.embedUrl} autoPlay loop muted playsInline controls className="max-w-full max-h-full object-contain block" />
             </div>
           ) : (
             <div className="aspect-video bg-slate-100 flex items-center justify-center">

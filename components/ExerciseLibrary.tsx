@@ -10,6 +10,7 @@ import {
   formatCategoryString, 
   getRegionColorBadge 
 } from '../utils/exerciseCategories';
+import { convertFileToWebp } from '../utils/videoToWebp';
 import { X, Search, Plus, Trash2, Edit2, Save, Dumbbell, Timer, Image as ImageIcon, Upload, Loader2, Link, Maximize2, Activity, Filter, RotateCcw } from 'lucide-react';
 
 interface ExerciseLibraryProps {
@@ -140,7 +141,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
-    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.name.endsWith('.mov')) {
         alert("Por favor selecciona una imagen, GIF o video.");
         return;
     }
@@ -152,13 +153,15 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
 
     try {
       setIsUploading(true);
-      setUploadProgress(0);
+      setUploadProgress(10);
       
-      const fileExt = file.name.split('.').pop();
-      const fileName = `exercises/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      // Conversión automática a WebP ultraliviano antes de subir
+      const convertedBlob = await convertFileToWebp(file);
+      
+      const fileName = `exercises/${Date.now()}_${Math.random().toString(36).substring(7)}.webp`;
       const storageRef = ref(storage, fileName);
       
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      const uploadTask = uploadBytesResumable(storageRef, convertedBlob, { contentType: 'image/webp' });
 
       uploadTask.on(
         'state_changed',

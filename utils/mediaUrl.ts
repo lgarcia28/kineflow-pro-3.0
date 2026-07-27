@@ -3,11 +3,11 @@
  * necesarios para renderizarla correctamente.
  */
 
-export type MediaType = 'youtube' | 'drive' | 'instagram' | 'image' | 'unknown';
+export type MediaType = 'youtube' | 'drive' | 'instagram' | 'image' | 'video' | 'unknown';
 
 export interface MediaInfo {
   type: MediaType;
-  embedUrl: string;     // URL para usar en <iframe src="...">
+  embedUrl: string;     // URL para usar en <iframe src="..."> o <video src="...">
   thumbnailUrl: string; // URL de miniatura para preview
   isVideo: boolean;
 }
@@ -87,7 +87,18 @@ export function parseMediaUrl(url: string): MediaInfo {
     };
   }
 
-  // Imagen convencional (URL directa a imagen)
+  // Videos directos (MP4, MOV, WebM, M4V)
+  const videoExtensions = /\.(mp4|mov|webm|m4v)(\?.*)?$/i;
+  if (videoExtensions.test(url)) {
+    return {
+      type: 'video',
+      embedUrl: url,
+      thumbnailUrl: url,
+      isVideo: true,
+    };
+  }
+
+  // Imagen convencional (URL directa a imagen JPG, PNG, GIF, WebP)
   const imageExtensions = /\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i;
   if (imageExtensions.test(url)) {
     return {
@@ -98,7 +109,7 @@ export function parseMediaUrl(url: string): MediaInfo {
     };
   }
 
-  // Fallback: tratamos de mostrar como imagen pero sabemos que puede fallar
+  // Fallback: tratamos de mostrar como imagen
   return {
     type: 'unknown',
     embedUrl: url,
