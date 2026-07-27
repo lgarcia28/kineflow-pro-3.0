@@ -343,26 +343,26 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
     return Array.from(weeks).sort((a, b) => a - b);
   }, [patient]);
 
-  // LOGICA MAESTRA: FINALIZAR SEMANA
-  const handleStartNewWeek = () => {
-    const confirmText = `¿Finalizar la SEMANA ${currentWeek}?\n\nEsto hará:\n1. Guardar lo realizado en el historial.\n2. Limpiar los checks de hoy.\n3. Avanzar a la SEMANA ${currentWeek + 1}.`;
+  // LOGICA MAESTRA: FINALIZAR SESIÓN DE RUTINA
+  const handleFinishSession = () => {
+    const confirmText = `¿Finalizar la sesión actual del día?\n\nEsto hará:\n1. Guardar los ejercicios realizados en el historial.\n2. Limpiar los tildes y marcas para la próxima sesión.\n3. Registrar la asistencia/visita de hoy (${new Date().toLocaleDateString()}).`;
     
     if (!window.confirm(confirmText)) return;
 
     const today = new Date().toISOString().split('T')[0];
-    const nextWeekNum = currentWeek + 1;
+    const targetRoutine = routineType === 'CLINIC' ? safeClinicRoutine : safeHomeRoutine;
     
-    // Clonamos y reseteamos profundamente
-    const resetDays = patient.routine.days.map(day => ({
+    // Clonamos y reseteamos los ejercicios realizados
+    const resetDays = targetRoutine.days.map(day => ({
       ...day,
       exercises: day.exercises.map(ex => {
         const newHistory = [...(ex.history || [])];
         
-        // Si el ejercicio se marcó como hecho, guardamos esa foto en el historial con el NÚMERO DE SEMANA ACTUAL
+        // Si el ejercicio se marcó como hecho, guardamos esa foto en el historial
         if (ex.isDone) {
           newHistory.push({
             date: today,
-            week: currentWeek, // GUARDA EL NÚMERO DE SEMANA
+            week: currentWeek,
             load: ex.targetLoad,
             reps: ex.targetReps,
             rpe: ex.currentRpe || 5,
@@ -370,40 +370,24 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
           });
         }
 
-        // Resolviendo targets para la siguiente semana desde weeklyTargets si existen
-        let nextTargetSets = ex.targetSets;
-        let nextTargetReps = ex.targetReps;
-        let nextTargetLoad = ex.targetLoad;
-
-        if (ex.weeklyTargets) {
-          const target = ex.weeklyTargets.find(t => t.week === nextWeekNum);
-          if (target) {
-            nextTargetSets = target.sets;
-            nextTargetReps = target.reps;
-            nextTargetLoad = target.load;
-          }
-        }
-
         return {
           ...ex,
-          isDone: false,        // DESTILDAR (RESET)
+          isDone: false,        // DESTILDAR (RESET PARA LA PRÓXIMA SESIÓN)
           currentRpe: 0,        // RESET A 0
           currentPain: 0,       // RESET DOLOR A 0
-          targetSets: nextTargetSets,
-          targetReps: nextTargetReps,
-          targetLoad: nextTargetLoad,
           history: newHistory
         };
       })
     }));
 
+    const routineKey = routineType === 'CLINIC' ? 'routine' : 'homeRoutine';
+
     // Actualizamos el objeto completo
     const updatedPatient: Patient = {
       ...patient,
       lastVisit: today,
-      routine: {
-        ...patient.routine,
-        currentWeek: currentWeek + 1, // INCREMENTAR SEMANA
+      [routineKey]: {
+        ...targetRoutine,
         days: resetDays
       }
     };
@@ -411,8 +395,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
     onUpdatePatient(updatedPatient);
     
     // Feedback inmediato
-    setViewMode('stats'); // Llevamos a stats para que vea que se guardó
-    setTimeout(() => alert(`¡Semana ${currentWeek} completada y guardada!`), 100);
+    setViewMode('stats'); // Llevamos a estadísticas para ver lo guardado
+    setTimeout(() => alert('¡Sesión finalizada y guardada en el historial con éxito!'), 100);
   };
 
   const handleExerciseUpdate = (exerciseId: string, updates: Partial<RoutineExercise>) => {
@@ -899,11 +883,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
             </div>
 
             <button 
-              onClick={handleStartNewWeek}
-              className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-full font-black text-[9px] uppercase tracking-wide shadow-md shadow-indigo-500/10 active:scale-95 transition-all"
+              onClick={handleFinishSession}
+              className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full font-black text-[9px] uppercase tracking-wide shadow-md shadow-emerald-500/10 active:scale-95 transition-all"
+              title="Finalizar Sesión del Día"
             >
-              <ChevronRightCircle size={10} strokeWidth={2.5} />
-              Finalizar
+              <CheckCircle2 size={10} strokeWidth={2.5} />
+              Finalizar Sesión
             </button>
           </div>
         </div>
@@ -940,11 +925,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
             <div className="w-px h-8 bg-slate-300/50 mx-4 shrink-0"></div>
             
             <button 
-                onClick={handleStartNewWeek}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-[1.25rem] font-black text-xs uppercase tracking-wide shadow-xl shadow-indigo-500/20 hover:-translate-y-0.5 hover:shadow-indigo-500/30 active:scale-95 transition-all shrink-0 mr-4"
+                onClick={handleFinishSession}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-[1.25rem] font-black text-xs uppercase tracking-wide shadow-xl shadow-emerald-500/20 hover:-translate-y-0.5 hover:shadow-emerald-500/30 active:scale-95 transition-all shrink-0 mr-4"
+                title="Finalizar Sesión del Día"
             >
-                <ChevronRightCircle size={16} strokeWidth={2.5} />
-                Finalizar Semana
+                <CheckCircle2 size={16} strokeWidth={2.5} />
+                Finalizar Sesión
             </button>
           </div>
 
@@ -986,32 +972,48 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                         }
                       });
 
-                      return blocks.map((block, bIdx) => (
-                        <div key={block.isGroup ? block.groupId : block.exercises[0].id} className={`flex flex-col animate-slide-up ${block.isGroup ? 'shadow-sm rounded-2xl' : ''}`} style={{ animationDelay: `${bIdx * 40}ms` }}>
-                          {block.exercises.map((ex, exIdx) => {
-                            const ssInfo = supersetInfo.get(ex.id);
-                            const isFirstInGroup = block.isGroup && block.exercises.length > 1 && exIdx === 0;
-                            const isLastInGroup = block.isGroup && block.exercises.length > 1 && exIdx === block.exercises.length - 1;
-                            const isMiddleInGroup = block.isGroup && block.exercises.length > 1 && !isFirstInGroup && !isLastInGroup;
+                      return (
+                        <>
+                          {blocks.map((block, bIdx) => (
+                            <div key={block.isGroup ? block.groupId : block.exercises[0].id} className={`flex flex-col animate-slide-up ${block.isGroup ? 'shadow-sm rounded-2xl' : ''}`} style={{ animationDelay: `${bIdx * 40}ms` }}>
+                              {block.exercises.map((ex, exIdx) => {
+                                const ssInfo = supersetInfo.get(ex.id);
+                                const isFirstInGroup = block.isGroup && block.exercises.length > 1 && exIdx === 0;
+                                const isLastInGroup = block.isGroup && block.exercises.length > 1 && exIdx === block.exercises.length - 1;
+                                const isMiddleInGroup = block.isGroup && block.exercises.length > 1 && !isFirstInGroup && !isLastInGroup;
 
-                            return (
-                              <ExerciseCard
-                                key={ex.id}
-                                exercise={ex}
-                                role={role}
-                                onUpdate={(id, up) => handleExerciseUpdate(id, up)}
-                                onShowHistory={(e) => setChartExercise(e)}
-                                onDelete={(id) => handleRemoveExercise(activeDayId, id)}
-                                supersetLabel={ssInfo?.label}
-                                supersetColor={ssInfo?.color}
-                                isFirstInGroup={isFirstInGroup}
-                                isLastInGroup={isLastInGroup}
-                                isMiddleInGroup={isMiddleInGroup}
-                              />
-                            );
-                          })}
-                        </div>
-                      ));
+                                return (
+                                  <ExerciseCard
+                                    key={ex.id}
+                                    exercise={ex}
+                                    role={role}
+                                    onUpdate={(id, up) => handleExerciseUpdate(id, up)}
+                                    onShowHistory={(e) => setChartExercise(e)}
+                                    onDelete={(id) => handleRemoveExercise(activeDayId, id)}
+                                    supersetLabel={ssInfo?.label}
+                                    supersetColor={ssInfo?.color}
+                                    isFirstInGroup={isFirstInGroup}
+                                    isLastInGroup={isLastInGroup}
+                                    isMiddleInGroup={isMiddleInGroup}
+                                  />
+                                );
+                              })}
+                            </div>
+                          ))}
+
+                          {resolvedActiveDay.exercises.length > 0 && (
+                            <div className="pt-6 pb-2 text-center">
+                              <button
+                                onClick={handleFinishSession}
+                                className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-500/20 hover:scale-[1.01] active:scale-95 transition-all"
+                              >
+                                <CheckCircle2 size={18} strokeWidth={2.5} />
+                                Finalizar Sesión y Registrar Progreso
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      );
                   })()}
                   {resolvedActiveDay.exercises.length === 0 && (
                     <div className="py-24 text-center glass-panel rounded-[2rem] border-dashed">
