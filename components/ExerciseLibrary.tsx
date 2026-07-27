@@ -49,9 +49,9 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
     difficulty: number;
   }>({
     name: '',
-    bodyRegion: 'Miembro Inferior',
-    subRegion: 'Rodilla',
-    movementType: 'Fuerza / Potencia',
+    bodyRegion: '',
+    subRegion: '',
+    movementType: '',
     videoUrl: '',
     metricType: 'kg',
     difficulty: 1
@@ -102,9 +102,9 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
   const startCreating = () => {
     setFormData({
       name: '',
-      bodyRegion: 'Miembro Inferior',
-      subRegion: 'Rodilla',
-      movementType: 'Fuerza / Potencia',
+      bodyRegion: '',
+      subRegion: '',
+      movementType: '',
       videoUrl: '',
       metricType: 'kg',
       difficulty: 1
@@ -129,11 +129,10 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
   };
 
   const handleRegionChange = (newRegion: string) => {
-    const subList = SUB_REGIONS_BY_REGION[newRegion] || [];
     setFormData(prev => ({
       ...prev,
       bodyRegion: newRegion,
-      subRegion: subList[0] || 'General'
+      subRegion: ''
     }));
   };
 
@@ -188,6 +187,11 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
   const handleSave = () => {
     if (!formData.name.trim()) {
       alert("Ingresa el nombre del ejercicio.");
+      return;
+    }
+
+    if (!formData.bodyRegion || !formData.subRegion || !formData.movementType) {
+      alert("Por favor selecciona la Parte del Cuerpo, Subcategoría y Tipo de Trabajo.");
       return;
     }
 
@@ -463,12 +467,14 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                  <div className="space-y-1.5">
                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">1. Parte del Cuerpo / Zona Principal</label>
                    <select 
-                     className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-800"
+                     className={`w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 transition-colors ${!formData.bodyRegion ? 'text-slate-400 font-medium' : 'text-slate-800 font-bold'}`}
                      value={formData.bodyRegion}
                      onChange={e => handleRegionChange(e.target.value)}
                    >
+                     <option value="" disabled hidden>Ej: Miembro Inferior, Zona Media, etc...</option>
+                     <option value="" disabled>-- Selecciona Parte del Cuerpo --</option>
                      {BODY_REGIONS.map(reg => (
-                       <option key={reg} value={reg}>{reg}</option>
+                       <option key={reg} value={reg} className="text-slate-800 font-bold">{reg}</option>
                      ))}
                    </select>
                  </div>
@@ -477,12 +483,15 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                  <div className="space-y-1.5">
                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">2. Subcategoría / Articulación</label>
                    <select 
-                     className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-800"
+                     className={`w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 transition-colors ${!formData.subRegion ? 'text-slate-400 font-medium' : 'text-slate-800 font-bold'}`}
                      value={formData.subRegion}
                      onChange={e => setFormData({ ...formData, subRegion: e.target.value })}
+                     disabled={!formData.bodyRegion}
                    >
+                     <option value="" disabled hidden>{formData.bodyRegion ? 'Ej: Rodilla, Tobillo, Cadera...' : 'Primero selecciona una parte del cuerpo'}</option>
+                     <option value="" disabled>-- Selecciona Subcategoría --</option>
                      {availableSubRegions.map(sub => (
-                       <option key={sub} value={sub}>{sub}</option>
+                       <option key={sub} value={sub} className="text-slate-800 font-bold">{sub}</option>
                      ))}
                    </select>
                  </div>
@@ -491,12 +500,14 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                  <div className="space-y-1.5">
                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">3. Tipo de Trabajo / Modalidad</label>
                    <select 
-                     className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-800"
+                     className={`w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 transition-colors ${!formData.movementType ? 'text-slate-400 font-medium' : 'text-slate-800 font-bold'}`}
                      value={formData.movementType}
                      onChange={e => setFormData({ ...formData, movementType: e.target.value })}
                    >
+                     <option value="" disabled hidden>Ej: Fuerza / Potencia, Movilidad...</option>
+                     <option value="" disabled>-- Selecciona Tipo de Trabajo --</option>
                      {MOVEMENT_TYPES.map(mov => (
-                       <option key={mov} value={mov}>{mov}</option>
+                       <option key={mov} value={mov} className="text-slate-800 font-bold">{mov}</option>
                      ))}
                    </select>
                  </div>
