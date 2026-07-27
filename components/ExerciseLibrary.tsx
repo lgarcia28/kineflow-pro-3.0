@@ -151,32 +151,37 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
         return;
     }
 
-    setIsUploading(true);
-    setUploadProgress(0);
-
     try {
-        const storageRef = ref(storage, `exercises/${Date.now()}_${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+      setIsUploading(true);
+      setUploadProgress(0);
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `exercises/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const storageRef = ref(storage, fileName);
+      
+      const uploadTask = uploadBytesResumable(storageRef, file);
 
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                setUploadProgress(progress);
-            }, 
-            (error) => {
-                console.error("Error subiendo archivo:", error);
-                alert("Hubo un error al subir el archivo.");
-                setIsUploading(false);
-            }, 
-            async () => {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                setFormData(prev => ({ ...prev, videoUrl: downloadURL }));
-                setIsUploading(false);
-            }
-        );
-    } catch (error) {
-        console.error("Error inesperado:", error);
-        setIsUploading(false);
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(Math.round(progress));
+        },
+        (error) => {
+          console.error("Error uploading file:", error);
+          alert("Error al subir el archivo. Intenta de nuevo.");
+          setIsUploading(false);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          setFormData(prev => ({ ...prev, videoUrl: downloadURL }));
+          setIsUploading(false);
+        }
+      );
+    } catch (err) {
+      console.error("Exception during upload:", err);
+      alert("Error al procesar la subida del archivo.");
+      setIsUploading(false);
     }
   };
 
@@ -237,8 +242,8 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
 
         <div className="flex flex-1 overflow-hidden relative">
           
-          {/* Panel Izquierdo: Lista & Filtros Jerárquicos */}
-          <div className={`flex-1 flex flex-col border-r border-slate-100 min-w-0 bg-slate-50/50 ${(isCreating || editingId) ? 'hidden md:flex' : 'flex'}`}>
+          {/* Panel Principal: Lista & Filtros Jerárquicos */}
+          <div className="flex-1 flex flex-col min-w-0 bg-slate-50/50">
             
             {/* Buscador y Botón de Nuevo Ejercicio */}
             <div className="p-4 border-b border-slate-100 bg-white shrink-0 space-y-3">
@@ -252,8 +257,8 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                       onChange={e => setSearchTerm(e.target.value)}
                     />
                  </div>
-                 <button onClick={startCreating} className="px-5 py-3 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 shrink-0">
-                    <Plus size={16} /> <span className="hidden sm:inline">Nuevo Ejercicio</span><span className="sm:hidden">Nuevo</span>
+                 <button onClick={startCreating} className="px-5 py-3 bg-primary-600 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 shrink-0 active:scale-95">
+                    <Plus size={16} /> <span>Nuevo Ejercicio</span>
                  </button>
                </div>
 
@@ -430,156 +435,158 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
               )}
             </div>
           </div>
-
-          {/* Panel Derecho: Formulario de Creación / Edición */}
-          {(isCreating || editingId) ? (
-            <div className="w-full md:w-1/3 md:min-w-[360px] bg-white p-6 md:p-8 flex flex-col border-l border-slate-100 overflow-y-auto">
-               <h3 className="text-lg font-black text-slate-900 mb-5 uppercase tracking-tight">{isCreating ? 'Crear Ejercicio' : 'Editar Ejercicio'}</h3>
-               
-               <div className="space-y-5 flex-1">
-                  {/* Nombre */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Nombre del Ejercicio</label>
-                    <input autoFocus className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all border border-slate-200/60" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej: Sentadilla con carga..." />
-                  </div>
-
-                  {/* NIVEL 1: Zona Corporal */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">1. Parte del Cuerpo / Zona Principal</label>
-                    <select 
-                      className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-800"
-                      value={formData.bodyRegion}
-                      onChange={e => handleRegionChange(e.target.value)}
-                    >
-                      {BODY_REGIONS.map(reg => (
-                        <option key={reg} value={reg}>{reg}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* NIVEL 2: Subzona / Articulación */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">2. Subcategoría / Articulación</label>
-                    <select 
-                      className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-800"
-                      value={formData.subRegion}
-                      onChange={e => setFormData({ ...formData, subRegion: e.target.value })}
-                    >
-                      {availableSubRegions.map(sub => (
-                        <option key={sub} value={sub}>{sub}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* NIVEL 3: Tipo de Trabajo */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">3. Tipo de Trabajo / Modalidad</label>
-                    <select 
-                      className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-800"
-                      value={formData.movementType}
-                      onChange={e => setFormData({ ...formData, movementType: e.target.value })}
-                    >
-                      {MOVEMENT_TYPES.map(mov => (
-                        <option key={mov} value={mov}>{mov}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Tipo de Medición */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Tipo de Medición</label>
-                    <div className="grid grid-cols-3 gap-2 p-1 bg-slate-50 rounded-2xl border border-slate-200/60">
-                       <button onClick={() => setFormData({...formData, metricType: 'kg'})} className={`py-2.5 rounded-xl text-[11px] font-black uppercase transition-all flex items-center justify-center gap-1 ${formData.metricType === 'kg' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
-                          <Dumbbell size={14}/> Peso
-                       </button>
-                       <button onClick={() => setFormData({...formData, metricType: 'time'})} className={`py-2.5 rounded-xl text-[11px] font-black uppercase transition-all flex items-center justify-center gap-1 ${formData.metricType === 'time' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
-                          <Timer size={14}/> Tiempo
-                       </button>
-                       <button onClick={() => setFormData({...formData, metricType: 'tension'})} className={`py-2.5 rounded-xl text-[11px] font-black uppercase transition-all flex items-center justify-center gap-1 ${formData.metricType === 'tension' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
-                          <Activity size={14}/> Banda
-                       </button>
-                    </div>
-                  </div>
-
-                  {/* Dificultad */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Dificultad (1-5)</label>
-                    <div className="flex gap-2 p-1 bg-slate-50 rounded-2xl border border-slate-200/60">
-                      {[1, 2, 3, 4, 5].map((num) => (
-                        <button
-                          key={num}
-                          type="button"
-                          onClick={() => setFormData({...formData, difficulty: num})}
-                          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${formData.difficulty === num ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
-                        >
-                          {num}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Archivo o Video URL */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Visual / Video</label>
-                    
-                    <div className="flex gap-2 mb-2">
-                        <label className="flex-1 cursor-pointer bg-slate-900 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-800 transition-all text-center flex items-center justify-center gap-2 shadow-md">
-                           {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                           {isUploading ? 'Subiendo...' : 'Subir desde dispositivo'}
-                           <input type="file" className="hidden" accept="image/gif,image/jpeg,image/png,video/mp4" onChange={handleFileUpload} disabled={isUploading} />
-                        </label>
-                    </div>
-
-                    {isUploading && (
-                        <div className="w-full bg-slate-100 rounded-full h-1.5 mb-2 overflow-hidden">
-                            <div className="bg-primary-600 h-1.5 rounded-full transition-all duration-300" style={{width: `${uploadProgress}%`}}></div>
-                        </div>
-                    )}
-
-                    <div className="relative">
-                        <Link className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                        <input className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-700" value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="Pega un link (https://...)" />
-                    </div>
-
-                    {formData.videoUrl && (
-                        <div className="mt-2 rounded-2xl overflow-hidden border border-slate-100 h-28 flex items-center justify-center bg-slate-50 relative group">
-                            <button 
-                              type="button"
-                              onClick={() => setZoomedImage({ url: formData.videoUrl || '', name: formData.name || 'Vista Previa' })}
-                              className="h-full w-full flex items-center justify-center cursor-zoom-in relative"
-                            >
-                                <img src={formData.videoUrl} className="h-full object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                   <Maximize2 size={18} className="text-white" />
-                                </div>
-                            </button>
-                            <button 
-                              type="button"
-                              onClick={() => setFormData({...formData, videoUrl: ''})} 
-                              className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"
-                            >
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                    )}
-                  </div>
-               </div>
-
-               <div className="mt-6 flex gap-3 pb-[calc(1rem+var(--sab))] md:pb-0">
-                  <button onClick={() => { setIsCreating(false); setEditingId(null); }} className="flex-1 py-3.5 text-xs font-black uppercase text-slate-400 hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
-                  <button onClick={handleSave} disabled={isUploading} className="flex-[2] py-3.5 bg-primary-600 text-white rounded-xl text-xs font-black uppercase shadow-xl shadow-primary-200 hover:bg-primary-500 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50">
-                     <Save size={16} /> Guardar
-                  </button>
-               </div>
-            </div>
-          ) : (
-            <div className="hidden md:flex w-1/3 min-w-[320px] bg-slate-50/30 flex-col items-center justify-center text-center p-8 border-l border-slate-100">
-                <Dumbbell className="text-slate-200 mb-4" size={64} />
-                <p className="text-slate-400 font-bold text-sm max-w-[220px]">Selecciona un ejercicio para editar o crea uno nuevo con categorías completas.</p>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Ventana Emergente (Modal Overlay) para Crear / Editar Ejercicio */}
+      {(isCreating || editingId) && (
+        <div className="fixed inset-0 z-[300] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+           <div className="w-full max-w-lg bg-white rounded-[2.5rem] p-6 md:p-8 flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] border border-slate-100 relative">
+              <div className="flex items-center justify-between mb-5">
+                 <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{isCreating ? 'Crear Nuevo Ejercicio' : 'Editar Ejercicio'}</h3>
+                 <button onClick={() => { setIsCreating(false); setEditingId(null); }} className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                    <X size={20} />
+                 </button>
+              </div>
+              
+              <div className="space-y-4 flex-1">
+                 {/* Nombre */}
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Nombre del Ejercicio</label>
+                   <input autoFocus className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all border border-slate-200/60" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej: Sentadilla con carga..." />
+                 </div>
+
+                 {/* NIVEL 1: Zona Corporal */}
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">1. Parte del Cuerpo / Zona Principal</label>
+                   <select 
+                     className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-800"
+                     value={formData.bodyRegion}
+                     onChange={e => handleRegionChange(e.target.value)}
+                   >
+                     {BODY_REGIONS.map(reg => (
+                       <option key={reg} value={reg}>{reg}</option>
+                     ))}
+                   </select>
+                 </div>
+
+                 {/* NIVEL 2: Subzona / Articulación */}
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">2. Subcategoría / Articulación</label>
+                   <select 
+                     className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-800"
+                     value={formData.subRegion}
+                     onChange={e => setFormData({ ...formData, subRegion: e.target.value })}
+                   >
+                     {availableSubRegions.map(sub => (
+                       <option key={sub} value={sub}>{sub}</option>
+                     ))}
+                   </select>
+                 </div>
+
+                 {/* NIVEL 3: Tipo de Trabajo */}
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">3. Tipo de Trabajo / Modalidad</label>
+                   <select 
+                     className="w-full p-3.5 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-800"
+                     value={formData.movementType}
+                     onChange={e => setFormData({ ...formData, movementType: e.target.value })}
+                   >
+                     {MOVEMENT_TYPES.map(mov => (
+                       <option key={mov} value={mov}>{mov}</option>
+                     ))}
+                   </select>
+                 </div>
+
+                 {/* Tipo de Medición */}
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Tipo de Medición</label>
+                   <div className="grid grid-cols-3 gap-2 p-1 bg-slate-50 rounded-2xl border border-slate-200/60">
+                      <button onClick={() => setFormData({...formData, metricType: 'kg'})} className={`py-2.5 rounded-xl text-[11px] font-black uppercase transition-all flex items-center justify-center gap-1 ${formData.metricType === 'kg' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                         <Dumbbell size={14}/> Peso
+                      </button>
+                      <button onClick={() => setFormData({...formData, metricType: 'time'})} className={`py-2.5 rounded-xl text-[11px] font-black uppercase transition-all flex items-center justify-center gap-1 ${formData.metricType === 'time' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                         <Timer size={14}/> Tiempo
+                      </button>
+                      <button onClick={() => setFormData({...formData, metricType: 'tension'})} className={`py-2.5 rounded-xl text-[11px] font-black uppercase transition-all flex items-center justify-center gap-1 ${formData.metricType === 'tension' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                         <Activity size={14}/> Banda
+                      </button>
+                   </div>
+                 </div>
+
+                 {/* Dificultad */}
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Dificultad (1-5)</label>
+                   <div className="flex gap-2 p-1 bg-slate-50 rounded-2xl border border-slate-200/60">
+                     {[1, 2, 3, 4, 5].map((num) => (
+                       <button
+                         key={num}
+                         type="button"
+                         onClick={() => setFormData({...formData, difficulty: num})}
+                         className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${formData.difficulty === num ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+                       >
+                         {num}
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+
+                 {/* Archivo o Video URL */}
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Visual / Video</label>
+                   
+                   <div className="flex gap-2 mb-2">
+                       <label className="flex-1 cursor-pointer bg-slate-900 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-800 transition-all text-center flex items-center justify-center gap-2 shadow-md">
+                          {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                          {isUploading ? 'Subiendo...' : 'Subir desde dispositivo'}
+                          <input type="file" className="hidden" accept="image/gif,image/jpeg,image/png,video/mp4" onChange={handleFileUpload} disabled={isUploading} />
+                       </label>
+                   </div>
+
+                   {isUploading && (
+                       <div className="w-full bg-slate-100 rounded-full h-1.5 mb-2 overflow-hidden">
+                           <div className="bg-primary-600 h-1.5 rounded-full transition-all duration-300" style={{width: `${uploadProgress}%`}}></div>
+                       </div>
+                   )}
+
+                   <div className="relative">
+                       <Link className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-700" value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="Pega un link (https://...)" />
+                   </div>
+
+                   {formData.videoUrl && (
+                       <div className="mt-2 rounded-2xl overflow-hidden border border-slate-100 h-28 flex items-center justify-center bg-slate-50 relative group">
+                           <button 
+                             type="button"
+                             onClick={() => setZoomedImage({ url: formData.videoUrl || '', name: formData.name || 'Vista Previa' })}
+                             className="h-full w-full flex items-center justify-center cursor-zoom-in relative"
+                           >
+                               <img src={formData.videoUrl} className="h-full object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                               <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                  <Maximize2 size={18} className="text-white" />
+                               </div>
+                           </button>
+                           <button 
+                             type="button"
+                             onClick={() => setFormData({...formData, videoUrl: ''})} 
+                             className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"
+                           >
+                               <Trash2 size={14} />
+                           </button>
+                       </div>
+                   )}
+                 </div>
+              </div>
+
+              <div className="mt-6 flex gap-3 pt-4 border-t border-slate-100">
+                 <button onClick={() => { setIsCreating(false); setEditingId(null); }} className="flex-1 py-3.5 text-xs font-black uppercase text-slate-400 hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
+                 <button onClick={handleSave} disabled={isUploading} className="flex-[2] py-3.5 bg-primary-600 text-white rounded-xl text-xs font-black uppercase shadow-xl shadow-primary-200 hover:bg-primary-500 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50">
+                    <Save size={16} /> Guardar Ejercicio
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
 
       {/* Image Zoom Modal */}
       {zoomedImage && (
