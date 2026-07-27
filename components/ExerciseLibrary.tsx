@@ -11,7 +11,8 @@ import {
   getRegionColorBadge 
 } from '../utils/exerciseCategories';
 import { convertFileToWebp } from '../utils/videoToWebp';
-import { X, Search, Plus, Trash2, Edit2, Save, Dumbbell, Timer, Image as ImageIcon, Upload, Loader2, Link, Maximize2, Activity, Filter, RotateCcw } from 'lucide-react';
+import { parseMediaUrl } from '../utils/mediaUrl';
+import { X, Search, Plus, Trash2, Edit2, Save, Dumbbell, Timer, Image as ImageIcon, Upload, Loader2, Link, Maximize2, Activity, Filter, RotateCcw, Play } from 'lucide-react';
 
 interface ExerciseLibraryProps {
   exercises: ExerciseDefinition[];
@@ -127,6 +128,20 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
     });
     setEditingId(ex.id);
     setIsCreating(false);
+  };
+
+  const handleCancel = () => {
+    setIsCreating(false);
+    setEditingId(null);
+    setFormData({
+      name: '',
+      bodyRegion: '',
+      subRegion: '',
+      movementType: '',
+      videoUrl: '',
+      metricType: 'kg',
+      difficulty: 1
+    });
   };
 
   const handleRegionChange = (newRegion: string) => {
@@ -251,7 +266,8 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
   const hasActiveFilters = Boolean(selectedRegion || selectedSubRegion || selectedMovementType || searchTerm);
 
   return (
-    <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+    <>
+      <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
       <div className="bg-white w-full max-w-5xl h-[92vh] md:h-[88vh] rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 md:animate-none">
         
         {/* Header */}
@@ -410,17 +426,31 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                       key={ex.id} 
                       className={`p-3.5 rounded-2xl border transition-all flex items-center gap-3 bg-white ${isEditingThis ? 'border-primary-500 ring-2 ring-primary-50' : 'border-slate-100 hover:border-slate-300 hover:shadow-sm'}`}
                     >
-                       {ex.videoUrl ? (
-                         <button 
-                           onClick={() => setZoomedImage({ url: ex.videoUrl || '', name: ex.name })}
-                           className="w-14 h-14 rounded-xl object-cover bg-slate-100 overflow-hidden relative group cursor-zoom-in shrink-0"
-                         >
-                            <img src={ex.videoUrl} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                               <Maximize2 size={14} className="text-white" />
-                            </div>
-                         </button>
-                       ) : (
+                       {ex.videoUrl ? (() => {
+                         const media = parseMediaUrl(ex.videoUrl);
+                         return (
+                           <button 
+                             onClick={() => setZoomedImage({ url: ex.videoUrl || '', name: ex.name })}
+                             className="w-14 h-14 rounded-xl bg-slate-900 overflow-hidden relative group cursor-zoom-in shrink-0 block border border-slate-200/60"
+                           >
+                              {media.type === 'youtube' ? (
+                                <div className="w-full h-full relative bg-slate-900 flex items-center justify-center">
+                                  <img src={media.thumbnailUrl} className="w-full h-full object-cover opacity-80" />
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <Play size={16} className="text-white fill-white shadow-md" />
+                                  </div>
+                                </div>
+                              ) : media.type === 'video' ? (
+                                <video src={media.embedUrl} autoPlay loop muted playsInline className="w-full h-full object-cover block pointer-events-none" />
+                              ) : (
+                                <img src={media.embedUrl} className="w-full h-full object-cover" />
+                              )}
+                              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                 <Maximize2 size={14} className="text-white" />
+                              </div>
+                           </button>
+                         );
+                       })() : (
                          <div className="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
                             {ex.metricType === 'time' ? <Timer size={22}/> : ex.metricType === 'tension' ? <Activity size={22}/> : <Dumbbell size={22}/>}
                          </div>
@@ -462,6 +492,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
           </div>
         </div>
       </div>
+    </div>
 
       {/* Ventana Emergente (Modal Overlay) para Crear / Editar Ejercicio */}
       {(isCreating || editingId) && (
@@ -471,7 +502,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
               {/* Header Fijo (Sticky Top) */}
               <div className="px-6 md:px-8 py-5 bg-white border-b border-slate-100 flex items-center justify-between shrink-0 z-10">
                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{isCreating ? 'Crear Nuevo Ejercicio' : 'Editar Ejercicio'}</h3>
-                 <button onClick={() => { setIsCreating(false); setEditingId(null); }} className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                 <button onClick={handleCancel} className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 transition-colors" title="Cancelar sin guardar">
                     <X size={20} />
                  </button>
               </div>
@@ -580,38 +611,54 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                         </div>
                     )}
 
-                   <div className="relative">
+                    <div className="relative">
                        <Link className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                        <input className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-2xl font-bold text-xs outline-none focus:ring-2 focus:ring-primary-500 border border-slate-200/60 text-slate-700" value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="Pega un link (https://...)" />
-                   </div>
+                    </div>
 
-                   {formData.videoUrl && (
-                       <div className="mt-2 rounded-2xl overflow-hidden border border-slate-100 h-28 flex items-center justify-center bg-slate-50 relative group">
-                           <button 
-                             type="button"
-                             onClick={() => setZoomedImage({ url: formData.videoUrl || '', name: formData.name || 'Vista Previa' })}
-                             className="h-full w-full flex items-center justify-center cursor-zoom-in relative"
-                           >
-                               <img src={formData.videoUrl} className="h-full object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                               <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                  <Maximize2 size={18} className="text-white" />
-                               </div>
-                           </button>
-                           <button 
-                             type="button"
-                             onClick={() => setFormData({...formData, videoUrl: ''})} 
-                             className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"
-                           >
-                               <Trash2 size={14} />
-                           </button>
-                       </div>
-                   )}
+                    {formData.videoUrl && (() => {
+                      const media = parseMediaUrl(formData.videoUrl);
+                      return (
+                        <div className="mt-2 rounded-2xl overflow-hidden border border-slate-200 h-36 flex items-center justify-center bg-slate-900 relative group">
+                          {media.type === 'youtube' || media.type === 'drive' || media.type === 'instagram' ? (
+                            <iframe 
+                              src={media.embedUrl} 
+                              title="Vista previa del video" 
+                              className="w-full h-full border-0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          ) : media.type === 'video' ? (
+                            <video src={media.embedUrl} autoPlay loop muted playsInline controls className="w-full h-full object-contain" />
+                          ) : (
+                            <button 
+                              type="button"
+                              onClick={() => setZoomedImage({ url: formData.videoUrl || '', name: formData.name || 'Vista Previa' })}
+                              className="h-full w-full flex items-center justify-center cursor-zoom-in relative"
+                            >
+                              <img src={media.embedUrl} className="h-full object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                 <Maximize2 size={18} className="text-white" />
+                              </div>
+                            </button>
+                          )}
+                          <button 
+                            type="button"
+                            onClick={() => setFormData({...formData, videoUrl: ''})} 
+                            className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full text-slate-500 hover:text-red-500 opacity-90 hover:opacity-100 transition-all z-10 shadow-md"
+                            title="Quitar video"
+                          >
+                              <Trash2 size={14} />
+                          </button>
+                        </div>
+                      );
+                    })()}
                  </div>
               </div>
 
               {/* Footer Fijo (Sticky Bottom) */}
               <div className="px-6 md:px-8 py-4 bg-white border-t border-slate-100 flex gap-3 shrink-0 z-10">
-                 <button onClick={() => { setIsCreating(false); setEditingId(null); }} className="flex-1 py-3.5 text-xs font-black uppercase text-slate-400 hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
+                 <button onClick={handleCancel} className="flex-1 py-3.5 text-xs font-black uppercase text-slate-400 hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
                  <button onClick={handleSave} disabled={isUploading} className="flex-[2] py-3.5 bg-primary-600 text-white rounded-xl text-xs font-black uppercase shadow-xl shadow-primary-200 hover:bg-primary-500 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50">
                     <Save size={16} /> Guardar Ejercicio
                  </button>
@@ -620,32 +667,53 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
         </div>
       )}
 
-      {/* Image Zoom Modal */}
-      {zoomedImage && (
-        <div 
-          className="fixed inset-0 z-[500] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-in fade-in duration-200"
-          onClick={() => setZoomedImage(null)}
-        >
+      {/* Image / Media Zoom Modal */}
+      {zoomedImage && (() => {
+        const media = parseMediaUrl(zoomedImage.url);
+        return (
           <div 
-            className="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl max-w-2xl w-full animate-in zoom-in-95 duration-300 cursor-default"
-            onClick={e => e.stopPropagation()}
+            className="fixed inset-0 z-[500] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-in fade-in duration-200"
+            onClick={() => setZoomedImage(null)}
           >
-            <button 
-              onClick={() => setZoomedImage(null)}
-              className="absolute top-6 right-6 z-10 p-3 bg-white/80 backdrop-blur-md hover:bg-white rounded-full text-slate-900 transition-all shadow-lg active:scale-95"
+            <div 
+              className="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl max-w-2xl w-full animate-in zoom-in-95 duration-300 cursor-default"
+              onClick={e => e.stopPropagation()}
             >
-              <X size={24} />
-            </button>
-            <div className="aspect-video bg-slate-100 flex items-center justify-center">
-              <img src={zoomedImage.url} alt={zoomedImage.name} className="max-w-full max-h-full object-contain block" />
-            </div>
-            <div className="p-8">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">{zoomedImage.name}</h2>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Biblioteca Global de Kineflow Pro</p>
+              <button 
+                onClick={() => setZoomedImage(null)}
+                className="absolute top-6 right-6 z-10 p-3 bg-white/80 backdrop-blur-md hover:bg-white rounded-full text-slate-900 transition-all shadow-lg active:scale-95"
+              >
+                <X size={24} />
+              </button>
+              
+              {media.type === 'youtube' || media.type === 'drive' || media.type === 'instagram' ? (
+                <div className="aspect-video bg-black flex items-center justify-center">
+                  <iframe
+                    src={media.embedUrl}
+                    title={zoomedImage.name}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              ) : media.type === 'video' ? (
+                <div className="aspect-video bg-black flex items-center justify-center">
+                  <video src={media.embedUrl} autoPlay loop muted playsInline controls className="max-w-full max-h-full object-contain block" />
+                </div>
+              ) : (
+                <div className="aspect-video bg-slate-100 flex items-center justify-center">
+                  <img src={media.embedUrl} alt={zoomedImage.name} className="max-w-full max-h-full object-contain block" />
+                </div>
+              )}
+
+              <div className="p-8">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">{zoomedImage.name}</h2>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Biblioteca Global de Kineflow Pro</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        );
+      })()}
+    </>
   );
 };
