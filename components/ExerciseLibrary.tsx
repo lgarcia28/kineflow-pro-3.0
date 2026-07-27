@@ -471,8 +471,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                      value={formData.bodyRegion}
                      onChange={e => handleRegionChange(e.target.value)}
                    >
-                     <option value="" disabled hidden>Ej: Miembro Inferior, Zona Media, etc...</option>
-                     <option value="" disabled>-- Selecciona Parte del Cuerpo --</option>
+                     <option value="" disabled hidden style={{ display: 'none' }}>Seleccionar Parte del Cuerpo...</option>
                      {BODY_REGIONS.map(reg => (
                        <option key={reg} value={reg} className="text-slate-800 font-bold">{reg}</option>
                      ))}
@@ -488,8 +487,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                      onChange={e => setFormData({ ...formData, subRegion: e.target.value })}
                      disabled={!formData.bodyRegion}
                    >
-                     <option value="" disabled hidden>{formData.bodyRegion ? 'Ej: Rodilla, Tobillo, Cadera...' : 'Primero selecciona una parte del cuerpo'}</option>
-                     <option value="" disabled>-- Selecciona Subcategoría --</option>
+                     <option value="" disabled hidden style={{ display: 'none' }}>{formData.bodyRegion ? 'Seleccionar Subcategoría...' : 'Primero selecciona una parte del cuerpo'}</option>
                      {availableSubRegions.map(sub => (
                        <option key={sub} value={sub} className="text-slate-800 font-bold">{sub}</option>
                      ))}
@@ -504,8 +502,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                      value={formData.movementType}
                      onChange={e => setFormData({ ...formData, movementType: e.target.value })}
                    >
-                     <option value="" disabled hidden>Ej: Fuerza / Potencia, Movilidad...</option>
-                     <option value="" disabled>-- Selecciona Tipo de Trabajo --</option>
+                     <option value="" disabled hidden style={{ display: 'none' }}>Seleccionar Tipo de Trabajo...</option>
                      {MOVEMENT_TYPES.map(mov => (
                        <option key={mov} value={mov} className="text-slate-800 font-bold">{mov}</option>
                      ))}
