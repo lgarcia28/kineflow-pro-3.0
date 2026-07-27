@@ -441,15 +441,18 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
       {/* Ventana Emergente (Modal Overlay) para Crear / Editar Ejercicio */}
       {(isCreating || editingId) && (
         <div className="fixed inset-0 z-[300] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-           <div className="w-full max-w-lg bg-white rounded-[2.5rem] p-6 md:p-8 flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] border border-slate-100 relative">
-              <div className="flex items-center justify-between mb-5">
+           <div className="w-full max-w-lg bg-white rounded-[2.5rem] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] border border-slate-100 relative overflow-hidden">
+              
+              {/* Header Fijo (Sticky Top) */}
+              <div className="px-6 md:px-8 py-5 bg-white border-b border-slate-100 flex items-center justify-between shrink-0 z-10">
                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{isCreating ? 'Crear Nuevo Ejercicio' : 'Editar Ejercicio'}</h3>
                  <button onClick={() => { setIsCreating(false); setEditingId(null); }} className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
                     <X size={20} />
                  </button>
               </div>
               
-              <div className="space-y-4 flex-1">
+              {/* Cuerpo del Formulario Scrolleable */}
+              <div className="p-6 md:p-8 space-y-4 flex-1 overflow-y-auto scroll-container">
                  {/* Nombre */}
                  <div className="space-y-1.5">
                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Nombre del Ejercicio</label>
@@ -578,7 +581,8 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                  </div>
               </div>
 
-              <div className="mt-6 flex gap-3 pt-4 border-t border-slate-100">
+              {/* Footer Fijo (Sticky Bottom) */}
+              <div className="px-6 md:px-8 py-4 bg-white border-t border-slate-100 flex gap-3 shrink-0 z-10">
                  <button onClick={() => { setIsCreating(false); setEditingId(null); }} className="flex-1 py-3.5 text-xs font-black uppercase text-slate-400 hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
                  <button onClick={handleSave} disabled={isUploading} className="flex-[2] py-3.5 bg-primary-600 text-white rounded-xl text-xs font-black uppercase shadow-xl shadow-primary-200 hover:bg-primary-500 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50">
                     <Save size={16} /> Guardar Ejercicio
