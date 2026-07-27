@@ -1,6 +1,6 @@
 /**
  * Conversor cliente-side de archivos (Imágenes, GIFs, Videos MP4/MOV) a WebP optimizado.
- * Incluye timeout de seguridad de 2 segundos para evitar bloqueos en Safari/iOS.
+ * Extrae fotogramas de video instantáneamente a una imagen WebP de ~300KB.
  */
 
 export async function convertFileToWebp(file: File): Promise<Blob> {
@@ -14,18 +14,21 @@ export async function convertFileToWebp(file: File): Promise<Blob> {
       }
     };
 
-    // Timeout de seguridad: Si la decodificación tarda más de 2 segundos, usar archivo original inmediatamente
+    // Timeout de 5 segundos antes de usar fallback
     const timer = setTimeout(() => {
       safeResolve(file);
-    }, 2000);
+    }, 5000);
 
-    const isVideo = file.type.startsWith('video/') || file.name.endsWith('.mov') || file.name.endsWith('.MOV') || file.name.endsWith('.mp4');
+    const isVideo = file.type.startsWith('video/') || 
+                    file.name.toLowerCase().endsWith('.mov') || 
+                    file.name.toLowerCase().endsWith('.mp4') || 
+                    file.name.toLowerCase().endsWith('.webm');
 
     if (isVideo) {
       const video = document.createElement('video');
       video.muted = true;
       video.playsInline = true;
-      video.autoplay = false;
+      video.preload = 'auto';
 
       const url = URL.createObjectURL(file);
       video.src = url;
@@ -35,17 +38,7 @@ export async function convertFileToWebp(file: File): Promise<Blob> {
         URL.revokeObjectURL(url);
       };
 
-      video.onloadedmetadata = () => {
-        try {
-          const seekTime = Math.min(1, (video.duration || 2) * 0.2);
-          video.currentTime = seekTime;
-        } catch (e) {
-          cleanup();
-          safeResolve(file);
-        }
-      };
-
-      video.onseeked = () => {
+      const capture = () => {
         try {
           const maxDim = 800;
           let width = video.videoWidth || 640;
@@ -83,7 +76,7 @@ export async function convertFileToWebp(file: File): Promise<Blob> {
               }
             },
             'image/webp',
-            0.85
+            0.8
           );
         } catch (e) {
           cleanup();
@@ -91,12 +84,19 @@ export async function convertFileToWebp(file: File): Promise<Blob> {
         }
       };
 
+      video.onloadeddata = () => {
+        capture();
+      };
+
+      video.oncanplay = () => {
+        capture();
+      };
+
       video.onerror = () => {
         cleanup();
         safeResolve(file);
       };
 
-      // Iniciar la carga del video
       video.load();
     } else {
       // Para imágenes (JPG, PNG, GIF, WebP)

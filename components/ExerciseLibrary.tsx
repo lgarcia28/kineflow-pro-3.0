@@ -554,15 +554,15 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                    
                    <div className="flex gap-2 mb-2">
                        <label className="flex-1 cursor-pointer bg-slate-900 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-800 transition-all text-center flex items-center justify-center gap-2 shadow-md">
-                          {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                          {isUploading ? 'Subiendo...' : 'Subir desde dispositivo'}
+                          {isUploading ? <Loader2 size={16} className="animate-spin text-primary-400" /> : <Upload size={16} />}
+                          {isUploading ? `Subiendo (${uploadProgress}%)...` : 'Subir desde dispositivo'}
                           <input type="file" className="hidden" accept="image/*,video/*,.mov,.MOV,.mp4,.webm" onChange={handleFileUpload} disabled={isUploading} />
                        </label>
                    </div>
 
                    {isUploading && (
-                       <div className="w-full bg-slate-100 rounded-full h-1.5 mb-2 overflow-hidden">
-                           <div className="bg-primary-600 h-1.5 rounded-full transition-all duration-300" style={{width: `${uploadProgress}%`}}></div>
+                       <div className="w-full bg-slate-100 rounded-full h-2 mb-2 overflow-hidden border border-slate-200">
+                           <div className="bg-primary-600 h-full rounded-full transition-all duration-300" style={{width: `${uploadProgress}%`}}></div>
                        </div>
                    )}
 
