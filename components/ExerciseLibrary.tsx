@@ -153,9 +153,9 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
 
     try {
       setIsUploading(true);
-      setUploadProgress(10);
+      setUploadProgress(0);
       
-      // Conversión automática o fallback seguro de 2s
+      // Conversión rápida para imágenes o passthrough instantáneo para videos
       const convertedBlob = await convertFileToWebp(file);
       const isWebp = convertedBlob.type === 'image/webp';
       const fileExt = isWebp ? 'webp' : (file.name.split('.').pop() || 'mp4');
@@ -170,7 +170,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
         'state_changed',
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(Math.max(10, Math.round(progress)));
+          setUploadProgress(Math.round(progress));
         },
         (error) => {
           console.error("Error uploading file:", error);
