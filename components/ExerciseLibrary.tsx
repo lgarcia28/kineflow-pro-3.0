@@ -553,7 +553,7 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                        <label className="flex-1 cursor-pointer bg-slate-900 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-800 transition-all text-center flex items-center justify-center gap-2 shadow-md">
                           {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                           {isUploading ? 'Subiendo...' : 'Subir desde dispositivo'}
-                          <input type="file" className="hidden" accept="image/gif,image/jpeg,image/png,video/mp4" onChange={handleFileUpload} disabled={isUploading} />
+                          <input type="file" className="hidden" accept="image/*,video/*,.mov,.MOV,.mp4,.webm" onChange={handleFileUpload} disabled={isUploading} />
                        </label>
                    </div>
 
