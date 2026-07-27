@@ -190,10 +190,16 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
           setUploadProgress(pct);
           setUploadDetail(`${transferredMb} MB de ${totalMb} MB (${pct}%)`);
         },
-        (error) => {
+        (error: any) => {
           console.error("Error al subir archivo:", error);
-          alert("Error al subir el archivo. Verifica tu conexión a internet.");
+          const errCode = error?.code || '';
+          if (errCode.includes('unauthorized') || errCode.includes('canceled') || errCode.includes('unknown') || error?.message?.includes('permission')) {
+            alert("⚠️ No se pudo subir el archivo:\n\nFirebase Storage no está activado o requiere permisos en tu consola de Firebase (console.firebase.google.com -> Build -> Storage -> Rules).\n\nMientras tanto, puedes pegar el link del video abajo.");
+          } else {
+            alert(`Error al subir el archivo (${errCode || 'Desconocido'}). Verifica la conexión.`);
+          }
           setIsUploading(false);
+          setUploadDetail('');
         },
         async () => {
           setUploadProgress(100);
