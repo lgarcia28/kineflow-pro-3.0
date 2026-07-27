@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ExerciseDefinition, MetricType } from '../types';
 import { storage } from '../firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { 
   BODY_REGIONS, 
   SUB_REGIONS_BY_REGION, 
@@ -141,48 +141,75 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
-    if (!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.name.endsWith('.mov')) {
-        alert("Por favor selecciona una imagen, GIF o video.");
-        return;
+    const lowerName = file.name.toLowerCase();
+    const isSupportedType = file.type.startsWith('image/') || 
+                            file.type.startsWith('video/') || 
+                            lowerName.endsWith('.mov') || 
+                            lowerName.endsWith('.mp4') || 
+                            lowerName.endsWith('.webm');
+
+    if (!isSupportedType) {
+      alert("Por favor selecciona una imagen, GIF o video.");
+      return;
     }
 
     if (!storage) {
-        alert("El almacenamiento no está configurado correctamente. Verifica tu conexión.");
-        return;
+      alert("El almacenamiento no está configurado correctamente. Verifica tu conexión.");
+      return;
     }
 
     try {
       setIsUploading(true);
-      setUploadProgress(0);
+      setUploadProgress(10);
       
-      // Conversión rápida para imágenes o passthrough instantáneo para videos
       const convertedBlob = await convertFileToWebp(file);
       const isWebp = convertedBlob.type === 'image/webp';
-      const fileExt = isWebp ? 'webp' : (file.name.split('.').pop() || 'mp4');
-      const mimeType = isWebp ? 'image/webp' : (file.type || 'video/mp4');
+      const fileExt = isWebp ? 'webp' : (lowerName.split('.').pop() || 'mp4');
+      let mimeType = isWebp ? 'image/webp' : file.type;
+      if (!mimeType) {
+        mimeType = fileExt === 'mov' ? 'video/quicktime' : 'video/mp4';
+      }
 
       const fileName = `exercises/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const storageRef = ref(storage, fileName);
-      
-      const uploadTask = uploadBytesResumable(storageRef, convertedBlob, { contentType: mimeType });
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(Math.round(progress));
-        },
-        (error) => {
-          console.error("Error uploading file:", error);
-          alert("Error al subir el archivo. Verifica tu conexión a internet.");
-          setIsUploading(false);
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          setFormData(prev => ({ ...prev, videoUrl: downloadURL }));
-          setIsUploading(false);
-        }
-      );
+      // Progreso visual continuo durante la subida
+      const progressTimer = setInterval(() => {
+        setUploadProgress(prev => (prev < 90 ? prev + 10 : prev));
+      }, 350);
+
+      try {
+        const snapshot = await uploadBytes(storageRef, convertedBlob, { contentType: mimeType });
+        clearInterval(progressTimer);
+        setUploadProgress(100);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        setFormData(prev => ({ ...prev, videoUrl: downloadURL }));
+      } catch (uploadErr) {
+        clearInterval(progressTimer);
+        console.warn("uploadBytes error, usando fallback resumable:", uploadErr);
+        
+        const uploadTask = uploadBytesResumable(storageRef, convertedBlob, { contentType: mimeType });
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(Math.round(p));
+          },
+          (err) => {
+            console.error("Error final de subida:", err);
+            alert("Error al subir el archivo. Verifica tu conexión.");
+            setIsUploading(false);
+          },
+          async () => {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            setFormData(prev => ({ ...prev, videoUrl: downloadURL }));
+            setIsUploading(false);
+          }
+        );
+        return;
+      }
+
+      setIsUploading(false);
     } catch (err) {
       console.error("Exception during upload:", err);
       alert("Error al procesar la subida del archivo.");
