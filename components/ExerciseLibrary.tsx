@@ -37,7 +37,6 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
   const [isCreating, setIsCreating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadDetail, setUploadDetail] = useState<string>('');
   const [zoomedImage, setZoomedImage] = useState<{url: string, name: string} | null>(null);
 
   // Form State
@@ -162,7 +161,6 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
     try {
       setIsUploading(true);
       setUploadProgress(0);
-      setUploadDetail('Procesando archivo...');
       
       const convertedBlob = await convertFileToWebp(file);
       const isWebp = convertedBlob.type === 'image/webp';
@@ -175,20 +173,13 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
       const fileName = `exercises/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const storageRef = ref(storage, fileName);
 
-      const totalMb = (convertedBlob.size / (1024 * 1024)).toFixed(1);
-      setUploadDetail(`Iniciando subida (0 de ${totalMb} MB)...`);
-
       const uploadTask = uploadBytesResumable(storageRef, convertedBlob, { contentType: mimeType });
 
       uploadTask.on(
         'state_changed',
         (snapshot) => {
-          const transferredMb = (snapshot.bytesTransferred / (1024 * 1024)).toFixed(1);
-          const totalMb = (snapshot.totalBytes / (1024 * 1024)).toFixed(1);
           const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-          
           setUploadProgress(pct);
-          setUploadDetail(`${transferredMb} MB de ${totalMb} MB (${pct}%)`);
         },
         (error: any) => {
           console.error("Error al subir archivo:", error);
@@ -199,11 +190,9 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
             alert(`Error al subir el archivo (${errCode || 'Desconocido'}). Verifica la conexión.`);
           }
           setIsUploading(false);
-          setUploadDetail('');
         },
         async () => {
           setUploadProgress(100);
-          setUploadDetail('¡Subida lista! Procesando enlace...');
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           setFormData(prev => ({ ...prev, videoUrl: downloadURL }));
           setIsUploading(false);
@@ -575,28 +564,21 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
                  </div>
 
                  <div className="space-y-1.5">
-                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Visual / Video</label>
-                   
-                   <div className="flex gap-2 mb-2">
-                       <label className="flex-1 cursor-pointer bg-slate-900 text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-800 transition-all text-center flex items-center justify-center gap-2 shadow-md">
-                          {isUploading ? <Loader2 size={16} className="animate-spin text-primary-400" /> : <Upload size={16} />}
-                          {isUploading ? (uploadDetail || `Subiendo (${uploadProgress}%)...`) : 'Subir desde dispositivo'}
-                          <input type="file" className="hidden" accept="image/*,video/*,.mov,.MOV,.mp4,.webm" onChange={handleFileUpload} disabled={isUploading} />
-                       </label>
-                   </div>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Visual / Video</label>
+                    
+                    <div className="flex gap-2 mb-2">
+                        <label className="flex-1 cursor-pointer bg-slate-900 text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-800 transition-all text-center flex items-center justify-center gap-2 shadow-md">
+                           {isUploading ? <Loader2 size={16} className="animate-spin text-primary-400" /> : <Upload size={16} />}
+                           {isUploading ? `Subiendo (${uploadProgress}%)...` : 'Subir desde dispositivo'}
+                           <input type="file" className="hidden" accept="image/*,video/*,.mov,.MOV,.mp4,.webm" onChange={handleFileUpload} disabled={isUploading} />
+                        </label>
+                    </div>
 
-                   {isUploading && (
-                       <div className="space-y-1 mb-3">
-                           <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
-                               <div className="bg-primary-600 h-full rounded-full transition-all duration-300" style={{width: `${uploadProgress}%`}}></div>
-                           </div>
-                           {uploadDetail && (
-                               <p className="text-[11px] font-extrabold text-primary-600 text-center animate-pulse">
-                                  {uploadDetail}
-                               </p>
-                           )}
-                       </div>
-                   )}
+                    {isUploading && (
+                        <div className="w-full bg-slate-100 rounded-full h-2 mb-2 overflow-hidden border border-slate-200">
+                            <div className="bg-primary-600 h-full rounded-full transition-all duration-300" style={{width: `${uploadProgress}%`}}></div>
+                        </div>
+                    )}
 
                    <div className="relative">
                        <Link className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
