@@ -155,23 +155,26 @@ export const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({
       setIsUploading(true);
       setUploadProgress(10);
       
-      // Conversión automática a WebP ultraliviano antes de subir
+      // Conversión automática o fallback seguro de 2s
       const convertedBlob = await convertFileToWebp(file);
-      
-      const fileName = `exercises/${Date.now()}_${Math.random().toString(36).substring(7)}.webp`;
+      const isWebp = convertedBlob.type === 'image/webp';
+      const fileExt = isWebp ? 'webp' : (file.name.split('.').pop() || 'mp4');
+      const mimeType = isWebp ? 'image/webp' : (file.type || 'video/mp4');
+
+      const fileName = `exercises/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const storageRef = ref(storage, fileName);
       
-      const uploadTask = uploadBytesResumable(storageRef, convertedBlob, { contentType: 'image/webp' });
+      const uploadTask = uploadBytesResumable(storageRef, convertedBlob, { contentType: mimeType });
 
       uploadTask.on(
         'state_changed',
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(Math.round(progress));
+          setUploadProgress(Math.max(10, Math.round(progress)));
         },
         (error) => {
           console.error("Error uploading file:", error);
-          alert("Error al subir el archivo. Intenta de nuevo.");
+          alert("Error al subir el archivo. Verifica tu conexión a internet.");
           setIsUploading(false);
         },
         async () => {

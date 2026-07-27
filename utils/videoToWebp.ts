@@ -1,25 +1,48 @@
 /**
  * Conversor cliente-side de archivos (Imágenes, GIFs, Videos MP4/MOV) a WebP optimizado.
- * Reduce el tamaño de los archivos hasta un 90% antes de subirlos a Firebase Storage.
+ * Incluye timeout de seguridad de 2 segundos para evitar bloqueos en Safari/iOS.
  */
 
 export async function convertFileToWebp(file: File): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const isVideo = file.type.startsWith('video/') || file.name.endsWith('.mov') || file.name.endsWith('.mp4');
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    const safeResolve = (result: Blob) => {
+      if (!resolved) {
+        resolved = true;
+        resolve(result);
+      }
+    };
+
+    // Timeout de seguridad: Si la decodificación tarda más de 2 segundos, usar archivo original inmediatamente
+    const timer = setTimeout(() => {
+      safeResolve(file);
+    }, 2000);
+
+    const isVideo = file.type.startsWith('video/') || file.name.endsWith('.mov') || file.name.endsWith('.MOV') || file.name.endsWith('.mp4');
 
     if (isVideo) {
       const video = document.createElement('video');
       video.muted = true;
       video.playsInline = true;
-      video.preload = 'metadata';
+      video.autoplay = false;
 
       const url = URL.createObjectURL(file);
       video.src = url;
 
+      const cleanup = () => {
+        clearTimeout(timer);
+        URL.revokeObjectURL(url);
+      };
+
       video.onloadedmetadata = () => {
-        // Buscar un fotograma representativo al 20% de la duración o al segundo 1
-        const seekTime = Math.min(1, video.duration * 0.2);
-        video.currentTime = seekTime;
+        try {
+          const seekTime = Math.min(1, (video.duration || 2) * 0.2);
+          video.currentTime = seekTime;
+        } catch (e) {
+          cleanup();
+          safeResolve(file);
+        }
       };
 
       video.onseeked = () => {
@@ -44,39 +67,47 @@ export async function convertFileToWebp(file: File): Promise<Blob> {
 
           const ctx = canvas.getContext('2d');
           if (!ctx) {
-            URL.revokeObjectURL(url);
-            return resolve(file); // Fallback al archivo original
+            cleanup();
+            return safeResolve(file);
           }
 
           ctx.drawImage(video, 0, 0, width, height);
 
           canvas.toBlob(
             (blob) => {
-              URL.revokeObjectURL(url);
+              cleanup();
               if (blob && blob.size > 0) {
-                resolve(blob);
+                safeResolve(blob);
               } else {
-                resolve(file); // Fallback
+                safeResolve(file);
               }
             },
             'image/webp',
             0.85
           );
         } catch (e) {
-          URL.revokeObjectURL(url);
-          resolve(file); // Fallback
+          cleanup();
+          safeResolve(file);
         }
       };
 
       video.onerror = () => {
-        URL.revokeObjectURL(url);
-        resolve(file); // Fallback al archivo original si falla la decodificación
+        cleanup();
+        safeResolve(file);
       };
+
+      // Iniciar la carga del video
+      video.load();
     } else {
       // Para imágenes (JPG, PNG, GIF, WebP)
       const img = new Image();
       const url = URL.createObjectURL(file);
       img.src = url;
+
+      const cleanup = () => {
+        clearTimeout(timer);
+        URL.revokeObjectURL(url);
+      };
 
       img.onload = () => {
         try {
@@ -100,33 +131,33 @@ export async function convertFileToWebp(file: File): Promise<Blob> {
 
           const ctx = canvas.getContext('2d');
           if (!ctx) {
-            URL.revokeObjectURL(url);
-            return resolve(file);
+            cleanup();
+            return safeResolve(file);
           }
 
           ctx.drawImage(img, 0, 0, width, height);
 
           canvas.toBlob(
             (blob) => {
-              URL.revokeObjectURL(url);
+              cleanup();
               if (blob && blob.size > 0) {
-                resolve(blob);
+                safeResolve(blob);
               } else {
-                resolve(file);
+                safeResolve(file);
               }
             },
             'image/webp',
             0.85
           );
         } catch (e) {
-          URL.revokeObjectURL(url);
-          resolve(file);
+          cleanup();
+          safeResolve(file);
         }
       };
 
       img.onerror = () => {
-        URL.revokeObjectURL(url);
-        resolve(file);
+        cleanup();
+        safeResolve(file);
       };
     }
   });
