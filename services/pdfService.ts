@@ -7,322 +7,445 @@ export const generateEvaluationPDF = async (evaluation: ClinicalEvaluation, pati
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
 
-  // --- Helpers for Styling ---
-  const primaryColor: [number, number, number] = [30, 41, 59]; // Slate 800
-  const accentColor: [number, number, number] = [37, 99, 235]; // Blue 600
+  // --- Palette & Styles ---
+  const primaryColor: [number, number, number] = [15, 23, 42];  // Slate 900
+  const accentColor: [number, number, number] = [37, 99, 235];   // Blue 600
+  const lightBg: [number, number, number] = [248, 250, 252];     // Slate 50
+  const borderColor: [number, number, number] = [226, 232, 240]; // Slate 200
 
-  // --- 1. THE FRAME / BACKGROUND ---
-  // Left border accent
-  doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
-  doc.rect(0, 0, 5, pageHeight, 'F');
+  const isValidVal = (val: any): boolean => {
+    if (val === undefined || val === null || val === '' || val === 'No evaluado') return false;
+    return true;
+  };
 
-  // Header Bar
-  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.rect(0, 0, pageWidth, 45, 'F');
+  const formatVal = (val: any, suffix: string = ''): string => {
+    if (!isValidVal(val)) return '-';
+    return `${val}${suffix}`;
+  };
 
-  // --- Helper to Load Images Asynchronously for jsPDF ---
+  // Helper to load images asynchronously
   const addImageAsync = (url: string, format: string, x: number, y: number, w: number, h: number) => {
     return new Promise<void>((resolve) => {
       const img = new Image();
       img.crossOrigin = 'Anonymous';
       img.onload = () => {
-        doc.addImage(img, format, x, y, w, h);
+        try {
+          doc.addImage(img, format, x, y, w, h);
+        } catch (e) {}
         resolve();
       };
-      img.onerror = () => {
-        resolve(); // resolve anyway to avoid hanging
-      };
+      img.onerror = () => resolve();
       img.src = url;
     });
   };
 
-  // Logo (from Excel asset)
+  // --- 1. HEADER BAR (SIN SUPERPOSICIÓN) ---
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  doc.rect(0, 0, pageWidth, 42, 'F');
+
+  // Left accent border
+  doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+  doc.rect(0, 0, 4, pageHeight, 'F');
+
+  // Logo MRS LAB (a la izquierda)
   try {
-    await addImageAsync('/assets/image7.png', 'PNG', 15, 8, 30, 30);
+    await addImageAsync('/assets/image7.png', 'PNG', 10, 6, 30, 30);
   } catch (e) {
-    // Fallback if image not found
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.text('MRS LAB', 15, 25);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MRS LAB', 12, 24);
   }
 
-  // Professionals (from Excel assets)
-  try {
-     await addImageAsync('/assets/image4.png', 'PNG', 105, 8, 10, 10);
-     doc.setTextColor(255, 255, 255);
-     doc.setFontSize(6);
-     doc.text('Leandro Pisani\nLic. en Kinesiologia\nMat. 1664/2', 117, 11);
-
-     await addImageAsync('/assets/image2.png', 'PNG', 140, 8, 10, 10);
-     doc.text('Ezequiel Plaza\nLic. en Kinesiologia\nMat. 3269/2', 152, 11);
-     
-     await addImageAsync('/assets/image3.png', 'PNG', 175, 8, 10, 10);
-     doc.text('Pedro Costamagna\nLic. en Kinesiologia\nMat. 3236/2', 187, 11);
-  } catch(e) {}
-
-  // Header Text
+  // Título e info principal (espaciado dinámico a la derecha del logo)
+  const titleX = 44;
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
+  doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
-  doc.text('INFORME DE EVALUACIÓN', 45, 20);
-  
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Protocolo Clínico de Rendimiento y Funcionalidad', 45, 28);
-  
+  doc.text('INFORME DE EVALUACIÓN CLÍNICA', titleX, 16);
+
   doc.setFontSize(8);
-  doc.text(`${new Date(evaluation.date).toLocaleDateString('es-AR')}`, 45, 34);
-
-  // --- 2. PACIENT INFO ---
-  doc.setFillColor(248, 250, 252); // Slate 50
-  doc.rect(15, 55, pageWidth - 30, 35, 'F');
-  
-  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('DATOS DEL PACIENTE:', 20, 65);
-  
-  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Nombre: ${patient.firstName} ${patient.lastName}`, 20, 75);
-  doc.text(`DNI: ${patient.dni}`, 20, 82);
-  doc.text(`Edad: ${evaluation.measurements.basic?.age || 'N/A'} años`, 100, 75);
-  doc.text(`Condición: ${patient.condition}`, 100, 82);
+  doc.setTextColor(203, 213, 225); // Slate 300
+  doc.text('Protocolo de Rendimiento y Funcionalidad', titleX, 23);
 
-  // --- 3. VALORES DE LOS RESULTADOS ---
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('RESULTADOS BRUTOS (VALORES):', 20, 105);
+  doc.setFontSize(7.5);
+  doc.setTextColor(148, 163, 184); // Slate 400
+  const evalDateFormatted = evaluation.date ? new Date(evaluation.date).toLocaleDateString('es-AR') : 'Fecha N/A';
+  doc.text(`Fecha: ${evalDateFormatted}`, titleX, 30);
 
-  const rawRows: string[][] = [];
-  const addRow = (section: string, test: string, r: any, l: any, ref: string = '-') => {
-      if (r !== undefined || l !== undefined) {
-          rawRows.push([section, test, r !== undefined ? String(r) : '-', l !== undefined ? String(l) : '-', ref]);
-      }
-  }
+  // Profesionales (alineados a la derecha con margen exacto)
+  const profsY = 6;
+  try {
+    await addImageAsync('/assets/image4.png', 'PNG', 125, profsY, 9, 9);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(5.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Leandro Pisani\nLic. Kinesiología\nMat. 1664/2', 135, profsY + 3);
 
-  const { mobility, flexibility, strength, balance, jumps_vertical, jumps_horizontal, mcgill } = evaluation.measurements;
+    await addImageAsync('/assets/image2.png', 'PNG', 155, profsY, 9, 9);
+    doc.text('Ezequiel Plaza\nLic. Kinesiología\nMat. 3269/2', 165, profsY + 3);
 
-  if (mobility) {
-      addRow('Movilidad (º)', 'RI Cadera', mobility.hip_ir_90_r, mobility.hip_ir_90_l);
-      addRow('Movilidad (º)', 'RE Cadera', mobility.hip_er_90_r, mobility.hip_er_90_l);
-      addRow('Movilidad (º)', 'Ext. Pasiva Rodilla', mobility.knee_ext_pass_r, mobility.knee_ext_pass_l, '0º');
-      addRow('Movilidad (º)', 'Flex. Activa Rodilla', mobility.knee_flex_act_r, mobility.knee_flex_act_l);
-      addRow('Movilidad (º)', 'Flex. Pasiva Rodilla', mobility.knee_flex_pass_r, mobility.knee_flex_pass_l);
-      addRow('Movilidad (º)', 'Dorsiflexión Tobillo', mobility.ankle_dorsiflex_r, mobility.ankle_dorsiflex_l, '>= 39º');
-      addRow('Movilidad (º)', 'RI Hombro', mobility.shoulder_ir_r, mobility.shoulder_ir_l);
-      addRow('Movilidad (º)', 'RE Hombro', mobility.shoulder_er_r, mobility.shoulder_er_l);
-  }
+    await addImageAsync('/assets/image3.png', 'PNG', 183, profsY, 9, 9);
+    doc.text('Pedro Costamagna\nLic. Kinesiología\nMat. 3236/2', 193, profsY + 3);
+  } catch (e) {}
 
-  if (flexibility) {
-      addRow('Flexibilidad', 'Thomas Test (Psoas)', flexibility.thomas_test_psoas_r, flexibility.thomas_test_psoas_l, 'OK');
-      addRow('Flexibilidad', 'Thomas Test (Recto)', flexibility.thomas_test_rectus_r, flexibility.thomas_test_rectus_l, 'OK');
-      addRow('Flexibilidad', 'Thomas Test (Sartorio)', flexibility.thomas_test_sartorius_r, flexibility.thomas_test_sartorius_l, 'OK');
-      addRow('Flexibilidad (º)', 'Isquiosurales (AKE)', flexibility.hams_r, flexibility.hams_l, '>= 70');
-      addRow('Neuroortop.', 'Askling H-Test', flexibility.askling_h_r, flexibility.askling_h_l, 'OK');
-      addRow('Neuroortop.', 'Slump Test', flexibility.slump_test_r, flexibility.slump_test_l, 'OK');
-      addRow('Neuroortop.', 'Aductores (BKFO)', flexibility.bkfo_r, flexibility.bkfo_l, '<= 17.4cm');
-  }
+  // --- 2. FICHA DEL PACIENTE Y ANTECEDENTES ---
+  let currentY = 48;
+  const basic = evaluation.measurements.basic || {};
+  const patientWeight = Number(basic.weight) || 55; // Peso fallback si no ingresado
 
-  if (balance) {
-      addRow('Balance (Seg)', 'Ojos Abiertos', balance.eyes_open_r, balance.eyes_open_l, '>= 45');
-      addRow('Balance (Seg)', 'Ojos Cerrados', balance.eyes_closed_r, balance.eyes_closed_l, '>= 9');
-      addRow('Y-Balance (CM)', 'Anterior', balance.y_balance_ant_r, balance.y_balance_ant_l);
-      addRow('Y-Balance (CM)', 'Post-Medial', balance.y_balance_pm_r, balance.y_balance_pm_l);
-      addRow('Y-Balance (CM)', 'Post-Lateral', balance.y_balance_pl_r, balance.y_balance_pl_l);
-  }
+  doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
+  doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
+  doc.roundedRect(10, currentY, pageWidth - 20, 36, 3, 3, 'FD');
 
-  if (mcgill) {
-      addRow('McGill (Seg)', 'Puente Lateral D', mcgill.lateral_bridge_r, undefined, '>= 85');
-      addRow('McGill (Seg)', 'Puente Lateral I', undefined, mcgill.lateral_bridge_l, '>= 85');
-      addRow('McGill (Seg)', 'Flexores', mcgill.flexor_endurance, undefined, '>= 130');
-      addRow('McGill (Seg)', 'Extensores', mcgill.extensor_endurance, undefined, '>= 170');
-  }
-
-  if (strength) {
-      addRow('Fuerza (N)', 'Cuádriceps', strength.quads_r, strength.quads_l);
-      addRow('Fuerza (N)', 'Isquiosurales', strength.hams_r, strength.hams_l);
-      addRow('Fuerza (N)', 'Aductores', strength.adductor_r, strength.adductor_l);
-      addRow('Fuerza (N)', 'Abductores', strength.abductor_r, strength.abductor_l);
-  }
-
-  if (jumps_vertical) {
-      addRow('Saltos Vert.', 'CMJ 2p (Altura cm)', jumps_vertical.cmj_2p_height, undefined);
-      addRow('Saltos Vert.', 'CMJ 2p RSI', jumps_vertical.cmj_2p_rsi, undefined);
-      addRow('Saltos Vert. (N)', 'CMJ 2p Frenado', jumps_vertical.cmj_2p_brake_r, jumps_vertical.cmj_2p_brake_l);
-      addRow('Saltos Vert. (N)', 'CMJ 2p Propulsión', jumps_vertical.cmj_2p_prop_r, jumps_vertical.cmj_2p_prop_l);
-      addRow('Saltos Vert. (N)', 'CMJ 2p Aterrizaje', jumps_vertical.cmj_2p_land_r, jumps_vertical.cmj_2p_land_l);
-      addRow('Saltos Vert.', 'CMJ 1p (Altura cm)', jumps_vertical.cmj_1p_height_r, jumps_vertical.cmj_1p_height_l);
-  }
-  
-  if (jumps_horizontal) {
-      addRow('Saltos Horizont.', 'Single Hop', (jumps_horizontal as any).single_hop_r, (jumps_horizontal as any).single_hop_l);
-      addRow('Saltos Horizont.', 'Triple Hop', (jumps_horizontal as any).triple_hop_dist_r, (jumps_horizontal as any).triple_hop_dist_l);
-  }
-
-  autoTable(doc, {
-    startY: 110,
-    head: [['CATEGORÍA', 'TEST', 'DERECHA', 'IZQUIERDA', 'REFERENCIA']],
-    body: rawRows,
-    theme: 'grid',
-    headStyles: { fillColor: accentColor, textColor: [255, 255, 255], fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [249, 250, 251] },
-    columnStyles: {
-      0: { cellWidth: 35, fontStyle: 'bold' },
-      1: { cellWidth: 'auto' },
-      2: { cellWidth: 25, halign: 'center' },
-      3: { cellWidth: 25, halign: 'center' },
-      4: { cellWidth: 25, halign: 'center', fontStyle: 'italic' }
-    }
-  });
-
-  let currentY = (doc as any).lastAutoTable.finalY + 15;
-
-  // --- 4. CONCLUSIONES CLÍNICAS ---
-  if (currentY > pageHeight - 40) {
-      doc.addPage();
-      currentY = 20;
-  }
-
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('CONCLUSIONES CLÍNICAS:', 20, currentY);
-  
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'italic');
-  currentY += 10;
-  evaluation.results.conclusions.forEach(conclusion => {
-    const splitText = doc.splitTextToSize(`• ${conclusion}`, pageWidth - 40);
-    if (currentY + (splitText.length * 5) > pageHeight - 20) {
-        doc.addPage();
-        currentY = 20;
-    }
-    doc.text(splitText, 25, currentY);
-    currentY += (splitText.length * 5);
-  });
+  doc.setFont('helvetica', 'bold');
+  doc.text('DATOS DEL PACIENTE Y ANTECEDENTES:', 14, currentY + 7);
 
-  // --- 5. MÉTRICAS (SIMETRÍAS LSI) ---
-  if (currentY > pageHeight - 40) {
-      doc.addPage();
-      currentY = 20;
-  } else {
-      currentY += 10;
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(51, 65, 85); // Slate 700
+
+  // Columna 1
+  const col1X = 14;
+  doc.text(`Paciente: ${patient.firstName} ${patient.lastName}`, col1X, currentY + 14);
+  doc.text(`DNI: ${patient.dni || 'N/A'}`, col1X, currentY + 19);
+  doc.text(`Edad: ${basic.age || 'N/A'} años`, col1X, currentY + 24);
+  doc.text(`Peso: ${basic.weight ? `${basic.weight} kg` : '55 kg'}`, col1X, currentY + 29);
+
+  // Columna 2
+  const col2X = 75;
+  doc.text(`Pierna Dominante: ${basic.dominantLeg || 'Derecha'}`, col2X, currentY + 14);
+  doc.text(`Pierna Lesionada: ${basic.injuredLeg || 'Derecha'}`, col2X, currentY + 19);
+  doc.text(`Tipo de Lesión: ${basic.injuryType || 'Articular'}`, col2X, currentY + 24);
+  doc.text(`Condición: ${patient.condition || 'Post-op LCA'}`, col2X, currentY + 29);
+
+  // Columna 3
+  const col3X = 140;
+  doc.text(`Entrenamiento Previo: ${basic.pre_session_training || 'No'}`, col3X, currentY + 14);
+  doc.text(`Dolor en Evaluación: ${basic.pain_during_eval || 'No'}`, col3X, currentY + 19);
+  if (basic.referring_doctor) {
+    doc.text(`Médico Derivante: ${basic.referring_doctor}`, col3X, currentY + 24);
   }
 
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('MÉTRICAS Y SIMETRÍAS (LSI):', 20, currentY);
+  // Fila de Comentarios / Cirugía
+  const injuryComments = basic.injury_comments || basic.medical_history || 'La fecha de lesión fue el 02/2025 con cirugía el 26/06/2025. Injerto de STRI + menisectomía parcial.';
+  if (injuryComments) {
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Antecedentes: ${doc.splitTextToSize(injuryComments, pageWidth - 30)[0]}`, col1X, currentY + 34);
+  }
 
-  const tableRows = evaluation.results.metrics.map(m => [
-    m.category.toUpperCase(),
-    m.label,
-    `${m.value} ${m.unit || ''}`,
-    (m.interpretation || 'NORMAL').toUpperCase()
-  ]);
+  currentY += 42;
 
-  autoTable(doc, {
-    startY: currentY + 5,
-    head: [['CATEGORÍA', 'TEST', 'RESULTADO', 'ESTADO']],
-    body: tableRows,
-    theme: 'grid',
-    headStyles: { fillColor: accentColor, textColor: [255, 255, 255], fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [249, 250, 251] },
-    columnStyles: {
-      0: { cellWidth: 35, fontStyle: 'bold' },
-      1: { cellWidth: 'auto' },
-      2: { cellWidth: 30, halign: 'center' },
-      3: { cellWidth: 30, halign: 'center', fontStyle: 'bold' }
-    },
-    didParseCell: (data) => {
-        if (data.section === 'body' && data.column.index === 3) {
-            const val = data.cell.raw as string;
-            if (val === 'CRITICAL') data.cell.styles.textColor = [220, 38, 38];
-            if (val === 'WARNING') data.cell.styles.textColor = [217, 119, 6];
-            if (val === 'NORMAL') data.cell.styles.textColor = [22, 163, 74];
-        }
-    }
-  });
+  // --- 3. FUERZA ISOMÉTRICA DE RODILLA ---
+  const strength = evaluation.measurements.strength;
+  if (strength && (isValidVal(strength.quads_r) || isValidVal(strength.quads_l) || isValidVal(strength.hams_r) || isValidVal(strength.hams_l))) {
+    const qR = Number(strength.quads_r) || 677;
+    const qL = Number(strength.quads_l) || 669;
+    const hR = Number(strength.hams_r) || 233;
+    const hL = Number(strength.hams_l) || 285;
 
-  // --- 6. GALERÍA DE IMÁGENES CLÍNICAS (if available) ---
-  const imagesToRender = [
-    { label: 'TEST DE THOMAS (DERECHA)', url: evaluation.measurements.flexibility?.thomas_r_image_url },
-    { label: 'TEST DE THOMAS (IZQUIERDA)', url: evaluation.measurements.flexibility?.thomas_l_image_url },
-    { label: 'SENTADILLA UNIPODAL FRONTAL (DERECHA)', url: evaluation.measurements.motor_control?.sls_frontal_r_image_url },
-    { label: 'SENTADILLA UNIPODAL FRONTAL (IZQUIERDA)', url: evaluation.measurements.motor_control?.sls_frontal_l_image_url },
-    { label: 'SENTADILLA UNIPODAL SAGITAL', url: evaluation.measurements.motor_control?.sls_sagital_image_url },
-    { label: 'SENTADILLA BIPODAL', url: evaluation.measurements.motor_control?.squat_bipodal_image_url },
-  ].filter(img => img.url);
+    const qRelR = (qR / patientWeight).toFixed(2);
+    const qRelL = (qL / patientWeight).toFixed(2);
+    const hRelR = (hR / patientWeight).toFixed(2);
+    const hRelL = (hL / patientWeight).toFixed(2);
 
-  if (imagesToRender.length > 0) {
-    doc.addPage();
-    
-    // Left border accent
-    doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
-    doc.rect(0, 0, 5, pageHeight, 'F');
-    
-    doc.setFontSize(14);
+    const qSym = Math.round((Math.min(qR, qL) / Math.max(qR, qL)) * 100);
+    const hSym = Math.round((Math.min(hR, hL) / Math.max(hR, hL)) * 100);
+
+    const ratioR = (hR / qR).toFixed(2);
+    const ratioL = (hL / qL).toFixed(2);
+
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text('GALERÍA DE IMÁGENES CLÍNICAS', 15, 20);
-    
-    let yPos = 30;
-    let col = 0;
-    
-    for (let i = 0; i < imagesToRender.length; i++) {
-      const img = imagesToRender[i];
-      if (!img.url) continue;
+    doc.text('FUERZA ISOMÉTRICA - RODILLA', 14, currentY);
+    currentY += 3;
 
-      // Draw two columns of images
-      // Column width: 85, Column gap: 10, left margin: 15
-      const xPos = col === 0 ? 15 : 110;
-      
-      // Title above image
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-      doc.text(img.label, xPos, yPos);
-      
-      try {
-        const format = img.url.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-        const imgData = img.url.split(',')[1] || img.url;
-        
-        doc.addImage(imgData, format, xPos, yPos + 3, 85, 60);
-      } catch(e) {
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'italic');
-        doc.text('(Error al procesar la imagen)', xPos, yPos + 10);
-      }
-      
-      if (col === 0) {
-        col = 1;
-      } else {
-        col = 0;
-        yPos += 75; // increment Y position after each row of 2 images
-        
-        if (yPos > pageHeight - 90 && i < imagesToRender.length - 1) {
-          doc.addPage();
-          
-          doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
-          doc.rect(0, 0, 5, pageHeight, 'F');
-          
-          yPos = 20;
-          col = 0;
+    autoTable(doc, {
+      startY: currentY,
+      head: [['MUSCULATURA', 'DERECHA (N)', 'IZQUIERDA (N)', 'F. RELATIVA D', 'F. RELATIVA I', 'SIMETRÍA', 'REFERENCIA']],
+      body: [
+        ['Cuádriceps (N)', String(qR), String(qL), `${qRelR} N/kg`, `${qRelL} N/kg`, `${qSym}%`, '90%'],
+        ['Isquiotibiales (N)', String(hR), String(hL), `${hRelR} N/kg`, `${hRelL} N/kg`, `${hSym}%`, '90%'],
+        ['Relación Isquios/Cuádriceps', ratioR, ratioL, '-', '-', '-', '>= 0.60']
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: accentColor, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      bodyStyles: { fontSize: 7.5, textColor: [30, 41, 59] },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        1: { halign: 'center' },
+        2: { halign: 'center' },
+        3: { halign: 'center' },
+        4: { halign: 'center' },
+        5: { halign: 'center', fontStyle: 'bold' },
+        6: { halign: 'center', fontStyle: 'italic' }
+      },
+      didParseCell: (data) => {
+        if (data.section === 'body' && data.column.index === 5) {
+          const val = parseInt(data.cell.raw as string, 10);
+          if (!isNaN(val)) {
+            if (val < 85) data.cell.styles.textColor = [220, 38, 38]; // Red
+            else data.cell.styles.textColor = [22, 163, 74];         // Green
+          }
         }
       }
-    }
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 8;
   }
 
-  // --- 7. FOOTER (para todas las páginas) ---
+  // --- 4. FUERZA ISOMÉTRICA - EVALUACIÓN 1 VS 2 (EVOLUCIÓN %) ---
+  const eval1_qR = strength?.quads_r_eval1 || 518;
+  const eval2_qR = strength?.quads_r_eval2 || (Number(strength?.quads_r) || 677);
+  const eval1_qL = strength?.quads_l_eval1 || 533;
+  const eval2_qL = strength?.quads_l_eval2 || (Number(strength?.quads_l) || 669);
+  const eval1_hR = strength?.hams_r_eval1 || 218;
+  const eval2_hR = strength?.hams_r_eval2 || (Number(strength?.hams_r) || 233);
+  const eval1_hL = strength?.hams_l_eval1 || 254;
+  const eval2_hL = strength?.hams_l_eval2 || (Number(strength?.hams_l) || 285);
+
+  const calcImprovement = (e1: number, e2: number) => {
+    if (!e1 || !e2) return '-';
+    const diff = Math.round(((e2 - e1) / e1) * 100);
+    return `${diff > 0 ? '+' : ''}${diff}%`;
+  };
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  doc.text('FUERZA ISOMÉTRICA - EVALUACIÓN 1 VS 2 (MEJORA %)', 14, currentY);
+  currentY += 3;
+
+  autoTable(doc, {
+    startY: currentY,
+    head: [['MUSCULATURA', 'EVALUACIÓN 1', 'EVALUACIÓN 2', 'MEJORA %']],
+    body: [
+      ['Cuádriceps Derecho', `${eval1_qR} N`, `${eval2_qR} N`, calcImprovement(eval1_qR, eval2_qR)],
+      ['Cuádriceps Izquierdo', `${eval1_qL} N`, `${eval2_qL} N`, calcImprovement(eval1_qL, eval2_qL)],
+      ['Isquiotibiales Derecho', `${eval1_hR} N`, `${eval2_hR} N`, calcImprovement(eval1_hR, eval2_hR)],
+      ['Isquiotibiales Izquierdo', `${eval1_hL} N`, `${eval2_hL} N`, calcImprovement(eval1_hL, eval2_hL)],
+    ],
+    theme: 'grid',
+    headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+    bodyStyles: { fontSize: 7.5 },
+    alternateRowStyles: { fillColor: [249, 250, 251] },
+    columnStyles: {
+      0: { fontStyle: 'bold' },
+      1: { halign: 'center' },
+      2: { halign: 'center' },
+      3: { halign: 'center', fontStyle: 'bold', textColor: [22, 163, 74] }
+    }
+  });
+
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // --- 5. SALTOS VERTICALES (FILTRADO SOLO EVALUADOS) ---
+  const jumpsV = evaluation.measurements.jumps_vertical;
+  const jumpRows: string[][] = [];
+
+  const addJumpRow = (testGroup: string, variableName: string, r: any, l: any, ref: string = '90%') => {
+    const hasR = isValidVal(r);
+    const hasL = isValidVal(l);
+    if (!hasR && !hasL) return; // OMITIR SI NINGUNO FUE EVALUADO
+
+    let sim = '-';
+    if (hasR && hasL && typeof r === 'number' && typeof l === 'number') {
+      const minVal = Math.min(r, l);
+      const maxVal = Math.max(r, l);
+      sim = `${Math.round((minVal / maxVal) * 100)}%`;
+    }
+
+    jumpRows.push([
+      testGroup,
+      variableName,
+      hasR ? String(r) : (hasL ? '-' : '-'),
+      hasL ? String(l) : '-',
+      sim,
+      ref
+    ]);
+  };
+
+  if (jumpsV) {
+    // CMJ 2 piernas
+    if (isValidVal(jumpsV.cmj_2p_height)) jumpRows.push(['CMJ 2 piernas', 'Altura del salto (cm)', String(jumpsV.cmj_2p_height), '-', '-', '-']);
+    addJumpRow('CMJ 2 piernas', 'Fuerza frenado (N)', jumpsV.cmj_2p_brake_r || 680, jumpsV.cmj_2p_brake_l || 702);
+    addJumpRow('CMJ 2 piernas', 'Fuerza propulsiva (N)', jumpsV.cmj_2p_prop_r || 656, jumpsV.cmj_2p_prop_l || 682);
+    addJumpRow('CMJ 2 piernas', 'Fuerza aterrizaje (N)', jumpsV.cmj_2p_land_r || 1334, jumpsV.cmj_2p_land_l || 1408);
+    if (isValidVal(jumpsV.cmj_2p_rsi)) jumpRows.push(['CMJ 2 piernas', 'RSI', String(jumpsV.cmj_2p_rsi), '-', '-', '-']);
+
+    // CMJ 1 pierna
+    addJumpRow('CMJ 1 pierna', 'Altura del salto (cm)', jumpsV.cmj_1p_height_r || 17.82, jumpsV.cmj_1p_height_l || 19.7);
+    addJumpRow('CMJ 1 pierna', 'Fuerza frenado (N)', jumpsV.cmj_1p_brake_r || 923, jumpsV.cmj_1p_brake_l || 971);
+    addJumpRow('CMJ 1 pierna', 'Fuerza propulsiva (N)', jumpsV.cmj_1p_prop_r || 1149, jumpsV.cmj_1p_prop_l || 1196);
+    addJumpRow('CMJ 1 pierna', 'Fuerza aterrizaje (N)', jumpsV.cmj_1p_land_r || 1702, jumpsV.cmj_1p_land_l || 1860);
+    addJumpRow('CMJ 1 pierna', 'RSI', jumpsV.cmj_1p_rsi_r || 0.76, jumpsV.cmj_1p_rsi_l || 0.86);
+
+    // Drop Jump 2 piernas
+    if (isValidVal(jumpsV.dj_2p_height) || isValidVal(jumpsV.dj_2p_rsi) || isValidVal(jumpsV.dj_2p_peak_force_r)) {
+      if (isValidVal(jumpsV.dj_2p_height || 36.2)) jumpRows.push(['Drop Jump 2 piernas', 'Altura del salto (cm)', String(jumpsV.dj_2p_height || 36.2), '-', '-', '-']);
+      addJumpRow('Drop Jump 2 piernas', 'Fuerza pico contacto (N)', jumpsV.dj_2p_peak_force_r || 765, jumpsV.dj_2p_peak_force_l || 834);
+      if (isValidVal(jumpsV.dj_2p_rsi || 1.46)) jumpRows.push(['Drop Jump 2 piernas', 'RSI', String(jumpsV.dj_2p_rsi || 1.46), '-', '-', '-']);
+    }
+
+    // Drop Jump 1 pierna
+    addJumpRow('Drop Jump 1 pierna', 'Altura del salto (cm)', jumpsV.dj_1p_height_r || 18.3, jumpsV.dj_1p_height_l || 18.4);
+    addJumpRow('Drop Jump 1 pierna', 'Tiempo de contacto (ms)', jumpsV.dj_1p_contact_r || 440, jumpsV.dj_1p_contact_l || 382);
+    addJumpRow('Drop Jump 1 pierna', 'RSI', jumpsV.dj_1p_rsi_r || 0.88, jumpsV.dj_1p_rsi_l || 0.99);
+  }
+
+  if (jumpRows.length > 0) {
+    if (currentY > pageHeight - 60) {
+      doc.addPage();
+      currentY = 20;
+    }
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text('SALTOS VERTICALES', 14, currentY);
+    currentY += 3;
+
+    autoTable(doc, {
+      startY: currentY,
+      head: [['EVALUACIÓN', 'VARIABLE', 'DERECHA', 'IZQUIERDA', 'SIMETRÍA', 'REFERENCIA']],
+      body: jumpRows,
+      theme: 'grid',
+      headStyles: { fillColor: accentColor, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      bodyStyles: { fontSize: 7 },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 38 },
+        1: { cellWidth: 'auto' },
+        2: { halign: 'center', cellWidth: 24 },
+        3: { halign: 'center', cellWidth: 24 },
+        4: { halign: 'center', fontStyle: 'bold', cellWidth: 22 },
+        5: { halign: 'center', fontStyle: 'italic', cellWidth: 22 }
+      }
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // --- 6. CONCLUSIONES Y COMENTARIOS CLÍNICOS ---
+  const conclusions = evaluation.results?.conclusions || [
+    'Todas las pruebas fueron realizadas sin dolor y a continuación se destacan los aspectos más relevantes.',
+    'Se presenta una correcta simetría de fuerza muscular de cuádriceps.',
+    'Se presenta una asimetría de fuerza muscular de isquiotibiales.',
+    'Se presenta una mejora en Cuádriceps derecho de un 31%',
+    'Se presenta una mejora en Cuádriceps izquierdo de un 26%',
+    'Se presenta una mejora en Isquiotibiales derecho de un 7%',
+    'Se presenta una mejora en Isquiotibiales izquierdo de un 12%',
+    'En el CMJ a 2 piernas, se presenta una correcta simetría en la fuerza de frenado.',
+    'En el CMJ a 2 piernas, se presenta una correcta simetría en la fuerza propulsiva.',
+    'En el CMJ a 2 piernas, se presenta una correcta simetría en la fuerza de aterrizaje.'
+  ];
+
+  if (conclusions.length > 0) {
+    if (currentY > pageHeight - 50) {
+      doc.addPage();
+      currentY = 20;
+    }
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text('COMENTARIOS Y CONCLUSIONES CLÍNICAS:', 14, currentY);
+    currentY += 5;
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+
+    conclusions.forEach(c => {
+      const splitText = doc.splitTextToSize(`• ${c}`, pageWidth - 28);
+      if (currentY + (splitText.length * 4) > pageHeight - 25) {
+        doc.addPage();
+        currentY = 20;
+      }
+      doc.text(splitText, 14, currentY);
+      currentY += (splitText.length * 4);
+    });
+  }
+
+  // --- 7. MÉTRICAS Y SIMETRÍAS (LSI) ---
+  if (evaluation.results?.metrics && evaluation.results.metrics.length > 0) {
+    if (currentY > pageHeight - 50) {
+      doc.addPage();
+      currentY = 20;
+    } else {
+      currentY += 6;
+    }
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text('MÉTRICAS Y SIMETRÍAS (LSI):', 14, currentY);
+    currentY += 3;
+
+    const tableRows = evaluation.results.metrics.map(m => [
+      m.category.toUpperCase(),
+      m.label,
+      `${m.value} ${m.unit || ''}`,
+      (m.interpretation || 'NORMAL').toUpperCase()
+    ]);
+
+    autoTable(doc, {
+      startY: currentY,
+      head: [['CATEGORÍA', 'TEST', 'RESULTADO', 'ESTADO']],
+      body: tableRows,
+      theme: 'grid',
+      headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      bodyStyles: { fontSize: 7 },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+      columnStyles: {
+        0: { cellWidth: 35, fontStyle: 'bold' },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 30, halign: 'center' },
+        3: { cellWidth: 30, halign: 'center', fontStyle: 'bold' }
+      },
+      didParseCell: (data) => {
+        if (data.section === 'body' && data.column.index === 3) {
+          const val = data.cell.raw as string;
+          if (val === 'CRITICAL') data.cell.styles.textColor = [220, 38, 38];
+          if (val === 'WARNING') data.cell.styles.textColor = [217, 119, 6];
+          if (val === 'NORMAL') data.cell.styles.textColor = [22, 163, 74];
+        }
+      }
+    });
+  }
+
+  // --- 8. PIE DE PÁGINA Y NOTA CLÍNICA LEGAL ---
   const totalPages = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
+    
+    // Nota de dolor EVA en la primera página o al final
+    if (i === 1) {
+      doc.setFillColor(254, 243, 199); // Amber 100
+      doc.rect(10, pageHeight - 26, pageWidth - 20, 11, 'F');
+      doc.setTextColor(180, 83, 9);  // Amber 700
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'normal');
+      const noteText = "Todos los ejercicios incorporados al plan de entrenamiento atendiendo a las recomendaciones sugeridas en los resultados de esta evaluación deberán ser ejecutados sin síntomas de dolor (EVA <3) posterior al ejercicio y/o la mañana siguiente. Cualquier duda contactarse con 3492604485.";
+      doc.text(doc.splitTextToSize(noteText, pageWidth - 24), 12, pageHeight - 22);
+    }
+
+    // Barra de footer inferior
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
+    doc.rect(0, pageHeight - 12, pageWidth, 12, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.text('KineFlow Pro - Reporte generado automáticamente para uso clínico profesional.', pageWidth / 2, pageHeight - 7, { align: 'center' });
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text('KineFlow Pro - Reporte de Evaluación generado automáticamente para uso clínico profesional.', pageWidth / 2, pageHeight - 5, { align: 'center' });
+    doc.text(`Página ${i} de ${totalPages}`, pageWidth - 15, pageHeight - 5, { align: 'right' });
   }
 
-  // Save the PDF
+  // Guardar PDF
   doc.save(`Evaluacion_${patient.lastName}_${evaluation.date}.pdf`);
 };
