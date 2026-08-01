@@ -50,6 +50,18 @@ export const STAFF_COLORS = [
   { id: 'cyan',    bg: '#cffafe', border: '#06b6d4', text: '#164e63', name: 'Cian' },
 ];
 
+export interface SetSegment {
+  reps: number;
+  load: number;
+}
+
+export interface SetEntry {
+  setNumber: number;
+  segments: SetSegment[];
+  rpe?: number;
+  pain?: number;
+}
+
 export interface ExerciseLog {
   date: string;
   week: number;
@@ -58,6 +70,7 @@ export interface ExerciseLog {
   rpe: number;
   pain?: number;
   observation?: string; // Para rutina domiciliaria
+  setsDetail?: SetEntry[];
 }
 
 export type MetricType = 'kg' | 'time' | 'tension';
@@ -94,6 +107,7 @@ export interface RoutineExercise {
   notes?: string;
   isDone: boolean;
   history: ExerciseLog[];
+  setsDetail?: SetEntry[];
   supersetGroup?: string; // ID de grupo para biserie/triserie
   weeklyTargets?: WeeklyTarget[]; // Proyección de progresión de la carga semana a semana
 }

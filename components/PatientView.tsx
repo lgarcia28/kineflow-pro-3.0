@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Patient, Product, PlanType, RoutineExercise, RoutineDay, ExerciseDefinition, UserRole, Stage } from '../types';
 import { TabataTimer } from './TabataTimer';
+import { ExerciseCard } from './ExerciseCard';
 import { 
   Calendar, 
   ShoppingBag, 
@@ -45,6 +46,59 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
   const selectedDay = patient.routine.days.find(d => d.id === selectedDayId) || patient.routine.days[0] || null;
   const [zoomedImage, setZoomedImage] = useState<{url: string, name: string} | null>(null);
   const [chartExercise, setChartExercise] = useState<RoutineExercise | null>(null);
+
+  const handleExerciseUpdate = (exerciseId: string, updates: Partial<RoutineExercise>) => {
+    const newDays = patient.routine.days.map(d => ({
+      ...d,
+      exercises: d.exercises.map(ex => ex.id === exerciseId ? { ...ex, ...updates } : ex)
+    }));
+    onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
+  };
+
+  const handleFinishPatientSession = () => {
+    const confirmText = `¿Finalizar la sesión de hoy?\n\nLos ejercicios marcados como realizados se guardarán en tu historial de progreso.`;
+    if (!window.confirm(confirmText)) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const currentWeek = patient.routine.currentWeek || 1;
+
+    const resetDays = patient.routine.days.map(day => ({
+      ...day,
+      exercises: day.exercises.map(ex => {
+        const newHistory = [...(ex.history || [])];
+        if (ex.isDone) {
+          newHistory.push({
+            date: today,
+            week: currentWeek,
+            load: ex.targetLoad,
+            reps: ex.targetReps,
+            rpe: ex.currentRpe || 5,
+            pain: ex.currentPain || 0,
+            setsDetail: ex.setsDetail ? JSON.parse(JSON.stringify(ex.setsDetail)) : undefined,
+            observation: ex.notes
+          });
+        }
+        return {
+          ...ex,
+          isDone: false,
+          currentRpe: 0,
+          currentPain: 0,
+          history: newHistory
+        };
+      })
+    }));
+
+    onUpdatePatient({
+      ...patient,
+      lastVisit: today,
+      routine: {
+        ...patient.routine,
+        days: resetDays
+      }
+    });
+
+    alert('¡Sesión finalizada y guardada en tu historial con éxito!');
+  };
 
   const supersetPalette = [
     { bg: 'bg-indigo-500', text: 'text-indigo-600', key: 'indigo' },
@@ -298,265 +352,49 @@ export const PatientView: React.FC<PatientViewProps> = ({ patient, products, exe
                     }
                   });
 
-                  return blocks.map((block) => (
-                    <div key={block.isGroup ? block.groupId : block.exercises[0].id} className={`flex flex-col ${block.isGroup ? 'shadow-sm rounded-[2rem]' : ''}`}>
-                      {block.exercises.map((ex, exIdx) => {
-                        const ssInfo = supersetInfo.get(ex.id);
-                        const isFirstInGroup = block.isGroup && block.exercises.length > 1 && exIdx === 0;
-                        const isLastInGroup = block.isGroup && block.exercises.length > 1 && exIdx === block.exercises.length - 1;
-                        const isMiddleInGroup = block.isGroup && block.exercises.length > 1 && !isFirstInGroup && !isLastInGroup;
-                        
-                        const groupClasses = isFirstInGroup ? 'rounded-t-[2rem] rounded-b-none border-b-0' :
-                                             isMiddleInGroup ? 'rounded-none border-b-0' :
-                                             isLastInGroup ? 'rounded-b-[2rem] rounded-t-none' : 'rounded-[2rem] shadow-sm';
+                  return (
+                    <>
+                      {blocks.map((block) => (
+                        <div key={block.isGroup ? block.groupId : block.exercises[0].id} className={`flex flex-col ${block.isGroup ? 'shadow-sm rounded-2xl' : ''}`}>
+                          {block.exercises.map((ex, exIdx) => {
+                            const ssInfo = supersetInfo.get(ex.id);
+                            const isFirstInGroup = block.isGroup && block.exercises.length > 1 && exIdx === 0;
+                            const isLastInGroup = block.isGroup && block.exercises.length > 1 && exIdx === block.exercises.length - 1;
+                            const isMiddleInGroup = block.isGroup && block.exercises.length > 1 && !isFirstInGroup && !isLastInGroup;
 
-                        const url = resolveExerciseImage(ex);
-                        const media = url ? parseMediaUrl(url) : null;
-                        const isGym = patient.routine.stage === Stage.GYM;
-
-                        const getBgColor = (val: number | undefined) => {
-                          if (!val) return { backgroundColor: '#ffffff', color: '#94a3b8', borderColor: '#e2e8f0' };
-                          const hue = Math.max(0, 120 - (val - 1) * (120 / 9));
-                          return {
-                            backgroundColor: `hsl(${hue}, 85%, 94%)`,
-                            color: `hsl(${hue}, 90%, 25%)`,
-                            borderColor: `hsl(${hue}, 70%, 80%)`,
-                          };
-                        };
-
-                        return (
-                          <div key={ex.id} className={`bg-white p-5 border relative overflow-hidden transition-all ${groupClasses} ${block.isGroup ? 'border-slate-200' : 'border-slate-100'}`}>
-                            {ssInfo && (
-                              <div className={`absolute left-0 top-0 bottom-0 w-2 ${ssInfo.color}`} />
-                            )}
-                            <div className={`flex items-start gap-4 ${ssInfo ? 'pl-3' : ''}`}>
-                              <button 
-                                onClick={() => { if (url) setZoomedImage({ url, name: ex.definition.name }); }}
-                                className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative group mt-1 ${media ? 'cursor-zoom-in' : ''} ${media?.type === 'instagram' ? 'bg-gradient-to-br from-pink-400 to-purple-600' : 'bg-slate-50'}`}
-                              >
-                                {media ? (
-                                  <>
-                                    {media.thumbnailUrl ? <img src={media.thumbnailUrl} alt="" className="w-full h-full object-cover" /> : <Activity className="text-white" size={16}/>}
-                                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                      <Maximize2 size={14} className="text-white" />
-                                    </div>
-                                  </>
-                                ) : (
-                                  <Activity className="text-slate-300" />
-                                )}
-                              </button>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-start pr-1">
-                                  <div className="min-w-0">
-                                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                      <h4 className="font-black text-slate-900 truncate leading-tight">{ex.definition.name}</h4>
-                                      {ssInfo && <span className={`${ssInfo.color} text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase shrink-0`}>{ssInfo.label}</span>}
-                                    </div>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{ex.definition.category}</p>
-                                  </div>
-                                  <button onClick={() => setChartExercise(ex)} className="p-2 text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl shrink-0 transition-colors shadow-sm border border-primary-100/50">
-                                    <TrendingUp size={18} />
-                                  </button>
-                                </div>
-                                
-                                {/* Fila Inferior: Métricas - A la derecha de la imagen */}
-                                <div className={`flex flex-nowrap items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner mt-3 overflow-x-auto hide-scrollbar`}>
-                              {/* Series x Reps - SOLO LECTURA */}
-                              <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[70px]">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Plan</p>
-                                <div className="flex items-baseline gap-0.5">
-                                  <span className="text-sm font-black text-slate-800 leading-none">{ex.targetSets}</span>
-                                  <span className="text-slate-300 text-[10px] font-bold mx-0.5">×</span>
-                                  <span className="text-sm font-black text-slate-800 leading-none">{ex.targetReps}</span>
-                                </div>
-                              </div>
-
-                              {/* Carga/Tiempo/Tensión - EDITABLE SI ES GYM */}
-                              <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[75px] flex-1">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">
-                                  {ex.definition.metricType === 'kg' ? 'Carga' : ex.definition.metricType === 'tension' ? 'Tensión' : 'Tiempo'}
-                                </p>
-                                {isGym ? (
-                                  <div className="flex flex-col items-center w-full">
-                                    <div className="flex items-baseline gap-0.5 w-full justify-center">
-                                      {ex.definition.metricType === 'tension' ? (
-                                        <select
-                                          className="bg-transparent text-center text-sm font-black text-purple-600 outline-none cursor-pointer"
-                                          value={ex.targetLoad || 2}
-                                          onChange={(e) => {
-                                            const newLoad = Number(e.target.value);
-                                            const newDays = patient.routine.days.map(d => {
-                                              if (d.id === selectedDay!.id) {
-                                                return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
-                                              }
-                                              return d;
-                                            });
-                                            onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                          }}
-                                        >
-                                          <option value={1}>Baja</option>
-                                          <option value={2}>Media</option>
-                                          <option value={3}>Alta</option>
-                                        </select>
-                                      ) : (
-                                        <>
-                                          <input 
-                                            type="text"
-                                            inputMode="decimal"
-                                            className="w-10 bg-transparent text-center text-sm font-black text-slate-800 outline-none focus:text-primary-600 transition-colors touch-none"
-                                            value={ex.targetLoad?.toString() || '0'}
-                                            onChange={(e) => {
-                                              let valStr = e.target.value.replace(/[^0-9.]/g, '');
-                                              valStr = valStr.replace(/^0+(?=\d)/, '');
-                                              const newLoad = parseFloat(valStr) || 0;
-                                              const newDays = patient.routine.days.map(d => {
-                                                if (d.id === selectedDay!.id) {
-                                                  return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
-                                                }
-                                                return d;
-                                              });
-                                              onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                            }}
-                                            onWheel={(e) => {
-                                              e.preventDefault();
-                                              const current = parseFloat(ex.targetLoad?.toString() || '0');
-                                              const step = ex.definition.metricType === 'time' ? 5 : 0.5;
-                                              let newLoad = Math.max(0, Math.round((current + (e.deltaY < 0 ? step : -step)) * 100) / 100);
-                                              const newDays = patient.routine.days.map(d => {
-                                                if (d.id === selectedDay!.id) {
-                                                  return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
-                                                }
-                                                return d;
-                                              });
-                                              onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                            }}
-                                            onTouchStart={(e) => {
-                                              e.currentTarget.dataset.startY = e.touches[0].clientY.toString();
-                                              e.currentTarget.dataset.startLoad = (ex.targetLoad || 0).toString();
-                                            }}
-                                            onTouchMove={(e) => {
-                                              const startY = parseFloat(e.currentTarget.dataset.startY || '0');
-                                              const startLoad = parseFloat(e.currentTarget.dataset.startLoad || '0');
-                                              const currentY = e.touches[0].clientY;
-                                              const deltaY = startY - currentY; // positive if dragging up
-                                              
-                                              if (Math.abs(deltaY) > 10) {
-                                                const steps = Math.sign(deltaY) * Math.floor(Math.abs(deltaY) / 15);
-                                                const stepValue = ex.definition.metricType === 'time' ? 5 : 0.5;
-                                                const newLoad = Math.max(0, Math.round((startLoad + steps * stepValue) * 100) / 100);
-                                                
-                                                if (newLoad !== ex.targetLoad) {
-                                                    const newDays = patient.routine.days.map(d => {
-                                                      if (d.id === selectedDay!.id) {
-                                                        return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, targetLoad: newLoad } : exItem) };
-                                                      }
-                                                      return d;
-                                                    });
-                                                    onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                                }
-                                              }
-                                            }}
-                                          />
-                                          <span className="text-[8px] font-black text-slate-400 uppercase">{ex.definition.metricType === 'kg' ? 'kg' : 's'}</span>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <p className="text-sm font-black text-slate-800 leading-none">
-                                    {ex.definition.metricType === 'tension' ? (
-                                      ex.targetLoad === 1 ? 'Baja' : ex.targetLoad === 2 ? 'Media' : 'Alta'
-                                    ) : (
-                                      <>
-                                        {ex.targetLoad}
-                                        <span className="text-[8px] font-bold text-primary-500 ml-1 uppercase">
-                                          {ex.definition.metricType === 'kg' ? 'kg' : 's'}
-                                        </span>
-                                      </>
-                                    )}
-                                  </p>
-                                )}
-                              </div>
-
-                              {isGym && (
-                                <>
-                                  {/* RPE */}
-                                  <div className="flex flex-col items-center justify-center py-2 px-1.5 border-r border-slate-200/60 shrink-0 min-w-[45px]">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">RPE</p>
-                                    <select
-                                      style={getBgColor(ex.currentRpe)}
-                                      className="font-black text-[10px] rounded w-[38px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center appearance-none"
-                                      value={ex.currentRpe || ""}
-                                      onChange={(e) => {
-                                        const newDays = patient.routine.days.map(d => {
-                                          if (d.id === selectedDay!.id) {
-                                            return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, currentRpe: Number(e.target.value) } : exItem) };
-                                          }
-                                          return d;
-                                        });
-                                        onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                      }}
-                                    >
-                                      <option value="" className="bg-white text-slate-400 font-normal">—</option>
-                                      {[...Array(10)].map((_, i) => (
-                                        <option key={i+1} value={i+1} style={getBgColor(i+1)} className="font-bold">{i+1}</option>
-                                      ))}
-                                    </select>
-                                  </div>
-
-                                  {/* Dolor */}
-                                  <div className="flex flex-col items-center justify-center py-2 px-1.5 shrink-0 min-w-[45px]">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap mb-1 opacity-80">Dolor</p>
-                                    <select
-                                      style={getBgColor(ex.currentPain)}
-                                      className="font-black text-[10px] rounded w-[38px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center appearance-none"
-                                      value={ex.currentPain || ""}
-                                      onChange={(e) => {
-                                        const newDays = patient.routine.days.map(d => {
-                                          if (d.id === selectedDay!.id) {
-                                            return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, currentPain: Number(e.target.value) } : exItem) };
-                                          }
-                                          return d;
-                                        });
-                                        onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                      }}
-                                    >
-                                      <option value="" className="bg-white text-slate-400 font-normal">—</option>
-                                      {[...Array(10)].map((_, i) => (
-                                        <option key={i+1} value={i+1} style={getBgColor(i+1)} className="font-bold">{i+1}</option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                            
-                            {/* Observaciones (Opcional) */}
-                            <div className="mt-2">
-                              <textarea
-                                placeholder="Añadir una observación o comentario..."
-                                className="w-full bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none shadow-inner"
-                                rows={2}
-                                value={ex.notes || ''}
-                                onChange={(e) => {
-                                  const newDays = patient.routine.days.map(d => {
-                                    if (d.id === selectedDay!.id) {
-                                      return { ...d, exercises: d.exercises.map(exItem => exItem.id === ex.id ? { ...exItem, notes: e.target.value } : exItem) };
-                                    }
-                                    return d;
-                                  });
-                                  onUpdatePatient({ ...patient, routine: { ...patient.routine, days: newDays } });
-                                }}
+                            return (
+                              <ExerciseCard
+                                key={ex.id}
+                                exercise={ex}
+                                role={UserRole.PATIENT}
+                                routineStage={patient.routine.stage}
+                                onUpdate={(id, up) => handleExerciseUpdate(id, up)}
+                                onShowHistory={(e) => setChartExercise(e)}
+                                onDelete={() => {}}
+                                supersetLabel={ssInfo?.label}
+                                supersetColor={ssInfo?.color}
+                                isFirstInGroup={isFirstInGroup}
+                                isLastInGroup={isLastInGroup}
+                                isMiddleInGroup={isMiddleInGroup}
                               />
-                            </div>
-                            
-                          </div>
+                            );
+                          })}
                         </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ));
+                      ))}
+
+                      {selectedDay.exercises.length > 0 && (
+                        <div className="pt-6 pb-2 text-center">
+                          <button
+                            onClick={handleFinishPatientSession}
+                            className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-500/20 hover:scale-[1.01] active:scale-95 transition-all"
+                          >
+                            <CheckCircle2 size={18} strokeWidth={2.5} />
+                            Finalizar Sesión y Registrar Progreso
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  );
                 })()}
               </div>
             ) : (

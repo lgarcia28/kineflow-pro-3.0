@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { RoutineExercise, UserRole } from '../types';
-import { CheckCircle, Circle, Minus, Plus, TrendingUp, Trash2, Maximize2, X, Timer, Dumbbell, Play, Activity } from 'lucide-react';
+import { RoutineExercise, UserRole, Stage, SetEntry, SetSegment } from '../types';
+import { CheckCircle, Circle, Minus, Plus, TrendingUp, Trash2, Maximize2, X, Timer, Dumbbell, Play, Activity, Layers, ChevronDown, ChevronUp } from 'lucide-react';
 import { parseMediaUrl } from '../utils/mediaUrl';
 
 interface ExerciseCardProps {
   exercise: RoutineExercise;
   role: UserRole;
+  routineStage?: Stage;
   onUpdate: (id: string, updates: Partial<RoutineExercise>) => void;
   onShowHistory: (exercise: RoutineExercise) => void;
   onDelete: (id: string) => void;
@@ -20,6 +21,7 @@ interface ExerciseCardProps {
 export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   exercise,
   role,
+  routineStage = Stage.KINESIOLOGY,
   onUpdate,
   onShowHistory,
   onDelete,
@@ -29,11 +31,13 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   isLastInGroup,
   isMiddleInGroup,
 }) => {
-  const { definition, targetSets, targetReps, targetLoad, currentRpe, currentPain, isDone } = exercise;
+  const { definition, targetSets, targetReps, targetLoad, currentRpe, currentPain, isDone, setsDetail } = exercise;
   const [isZoomed, setIsZoomed] = useState(false);
+  const [showSetsDetail, setShowSetsDetail] = useState(false);
   
-  const isReadOnly = role === UserRole.PATIENT || role === UserRole.RECEPCION;
-  const isLoadReadOnly = role === UserRole.RECEPCION; // Pacientes pueden editar la carga (registro propio)
+  // Permisos: Kine/Admin edita siempre; Paciente edita SOLO si la rutina está en etapa Gimnasio
+  const canEditValues = role === UserRole.KINE || role === UserRole.SUPER_ADMIN || role === UserRole.TENANT_ADMIN || (role === UserRole.PATIENT && routineStage === Stage.GYM);
+  const isLoadReadOnly = !canEditValues;
   const isTimeBased = definition.metricType === 'time';
   const isTensionBased = definition.metricType === 'tension';
 
@@ -64,23 +68,80 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   const painStyle = getPainStyle(currentPain);
 
   const adjustSets = (amount: number, e: React.MouseEvent) => {
-    if (isReadOnly) return;
+    if (!canEditValues) return;
     e.stopPropagation();
     onUpdate(exercise.id, { targetSets: Math.max(1, targetSets + amount) });
   };
 
   const adjustReps = (amount: number, e: React.MouseEvent) => {
-    if (isReadOnly) return;
+    if (!canEditValues) return;
     e.stopPropagation();
     onUpdate(exercise.id, { targetReps: Math.max(1, targetReps + amount) });
   };
 
   const adjustLoad = (amount: number, e: React.MouseEvent) => {
-    if (isReadOnly) return;
+    if (!canEditValues) return;
     e.stopPropagation();
     const step = isTimeBased ? 5 : 0.5;
     let newLoad = Math.max(0, Math.round((targetLoad + (amount * step) / 0.5) * 100) / 100);
     onUpdate(exercise.id, { targetLoad: newLoad });
+  };
+
+  // --- Funciones para Desglose Serie por Serie / Drop Sets ---
+  const handleInitializeSetsDetail = () => {
+    if (!canEditValues) return;
+    const initialSets: SetEntry[] = Array.from({ length: Math.max(1, targetSets) }, (_, i) => ({
+      setNumber: i + 1,
+      segments: [{ reps: targetReps, load: targetLoad }]
+    }));
+    onUpdate(exercise.id, { setsDetail: initialSets });
+  };
+
+  const handleAddSet = () => {
+    if (!canEditValues) return;
+    const current = setsDetail || [];
+    const newSet: SetEntry = {
+      setNumber: current.length + 1,
+      segments: [{ reps: targetReps, load: targetLoad }]
+    };
+    onUpdate(exercise.id, { setsDetail: [...current, newSet], targetSets: current.length + 1 });
+  };
+
+  const handleRemoveSet = (index: number) => {
+    if (!canEditValues || !setsDetail) return;
+    const updated = setsDetail.filter((_, i) => i !== index).map((s, i) => ({ ...s, setNumber: i + 1 }));
+    onUpdate(exercise.id, { setsDetail: updated, targetSets: Math.max(1, updated.length) });
+  };
+
+  const handleAddSegment = (setIndex: number) => {
+    if (!canEditValues || !setsDetail) return;
+    const updated = [...setsDetail];
+    const targetSet = { ...updated[setIndex] };
+    const lastSeg = targetSet.segments[targetSet.segments.length - 1] || { reps: 4, load: 10 };
+    targetSet.segments = [...targetSet.segments, { reps: lastSeg.reps, load: Math.max(0, lastSeg.load - 5) }];
+    updated[setIndex] = targetSet;
+    onUpdate(exercise.id, { setsDetail: updated });
+  };
+
+  const handleRemoveSegment = (setIndex: number, segIndex: number) => {
+    if (!canEditValues || !setsDetail) return;
+    const updated = [...setsDetail];
+    const targetSet = { ...updated[setIndex] };
+    if (targetSet.segments.length <= 1) return; // Mantener al menos 1 tramo
+    targetSet.segments = targetSet.segments.filter((_, i) => i !== segIndex);
+    updated[setIndex] = targetSet;
+    onUpdate(exercise.id, { setsDetail: updated });
+  };
+
+  const handleUpdateSegment = (setIndex: number, segIndex: number, field: 'reps' | 'load', value: number) => {
+    if (!canEditValues || !setsDetail) return;
+    const updated = [...setsDetail];
+    const targetSet = { ...updated[setIndex] };
+    const segments = [...targetSet.segments];
+    segments[segIndex] = { ...segments[segIndex], [field]: Math.max(0, value) };
+    targetSet.segments = segments;
+    updated[setIndex] = targetSet;
+    onUpdate(exercise.id, { setsDetail: updated });
   };
 
   const toggleDone = () => onUpdate(exercise.id, { isDone: !isDone });
@@ -427,6 +488,151 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 onChange={(e) => onUpdate(exercise.id, { notes: e.target.value })}
                 onClick={(e) => e.stopPropagation()}
               />
+            </div>
+          )}
+
+          {/* Botón opcional para desplegar desglose de series / Drop Sets */}
+          {role !== UserRole.RECEPCION && (
+            <div className={`mt-3 ${supersetLabel ? 'ml-3' : ''}`}>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!setsDetail || setsDetail.length === 0) {
+                      handleInitializeSetsDetail();
+                    }
+                    setShowSetsDetail(!showSetsDetail);
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-extrabold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl border border-indigo-100/80 transition-all shadow-sm active:scale-95"
+                >
+                  <Layers size={14} />
+                  <span>
+                    {showSetsDetail
+                      ? 'Ocultar Series'
+                      : setsDetail && setsDetail.length > 0
+                      ? `Ver/Editar ${setsDetail.length} Series (Drop-Sets)`
+                      : 'Detallar Series / Drop Sets (Opcional)'}
+                  </span>
+                  {showSetsDetail ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
+
+                {!canEditValues && (
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide bg-slate-100 px-2 py-0.5 rounded-md">
+                    Solo Lectura (Etapa Kine)
+                  </span>
+                )}
+              </div>
+
+              {/* Panel desplegable de Series / Drop Sets */}
+              {showSetsDetail && (
+                <div className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <h5 className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                      <Layers size={14} className="text-indigo-600"/> Desglose por Series y Drop-Sets
+                    </h5>
+                    {canEditValues && (
+                      <button
+                        type="button"
+                        onClick={handleAddSet}
+                        className="text-[10px] font-black text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm transition-all active:scale-95"
+                      >
+                        <Plus size={12}/> Agregar Serie
+                      </button>
+                    )}
+                  </div>
+
+                  {(!setsDetail || setsDetail.length === 0) ? (
+                    <p className="text-xs text-slate-400 font-medium text-center py-2">Sin series detalladas aún.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {setsDetail.map((setEntry, sIdx) => (
+                        <div key={sIdx} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                          <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                            <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                              Serie {setEntry.setNumber || sIdx + 1}
+                            </span>
+                            {canEditValues && (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddSegment(sIdx)}
+                                  className="text-[9px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-md border border-indigo-100 flex items-center gap-0.5 transition-colors"
+                                  title="Añadir bajada de peso o tramo adicional en esta misma serie"
+                                >
+                                  <Plus size={10}/> + Drop Set
+                                </button>
+                                {setsDetail.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveSet(sIdx)}
+                                    className="text-slate-400 hover:text-red-500 p-1 transition-colors"
+                                    title="Eliminar Serie"
+                                  >
+                                    <Trash2 size={12}/>
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Segmentos de la serie */}
+                          <div className="space-y-1.5">
+                            {setEntry.segments.map((seg, segIdx) => (
+                              <div key={segIdx} className="flex items-center justify-between gap-2 bg-slate-50/80 p-2 rounded-lg border border-slate-100">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <span className="text-[10px] font-black text-slate-400 uppercase shrink-0">
+                                    {segIdx === 0 ? 'Tramo 1:' : `Drop ${segIdx}:`}
+                                  </span>
+                                  {canEditValues ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex items-baseline gap-1">
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          className="w-12 text-center font-black text-xs bg-white rounded-lg border border-slate-200 py-1 outline-none focus:border-indigo-500"
+                                          value={seg.reps}
+                                          onChange={e => handleUpdateSegment(sIdx, segIdx, 'reps', parseInt(e.target.value) || 0)}
+                                        />
+                                        <span className="text-[9px] font-bold text-slate-500">reps</span>
+                                      </div>
+                                      <span className="text-slate-300 font-bold">@</span>
+                                      <div className="flex items-baseline gap-1">
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.5"
+                                          className="w-14 text-center font-black text-xs bg-white rounded-lg border border-slate-200 py-1 outline-none focus:border-indigo-500"
+                                          value={seg.load}
+                                          onChange={e => handleUpdateSegment(sIdx, segIdx, 'load', parseFloat(e.target.value) || 0)}
+                                        />
+                                        <span className="text-[9px] font-bold text-slate-500">{isTimeBased ? 's' : 'kg'}</span>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs font-black text-slate-800">
+                                      {seg.reps} reps @ {seg.load} {isTimeBased ? 's' : 'kg'}
+                                    </span>
+                                  )}
+                                </div>
+                                {canEditValues && setEntry.segments.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveSegment(sIdx, segIdx)}
+                                    className="text-slate-300 hover:text-red-500 text-xs px-1 font-bold"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

@@ -366,7 +366,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
             load: ex.targetLoad,
             reps: ex.targetReps,
             rpe: ex.currentRpe || 5,
-            pain: ex.currentPain || 0
+            pain: ex.currentPain || 0,
+            setsDetail: ex.setsDetail ? JSON.parse(JSON.stringify(ex.setsDetail)) : undefined,
+            observation: ex.notes
           });
         }
 
@@ -987,6 +989,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
                                     key={ex.id}
                                     exercise={ex}
                                     role={role}
+                                    routineStage={routineType === 'CLINIC' ? safeClinicRoutine.stage : (safeHomeRoutine?.stage || patient.routine.stage)}
                                     onUpdate={(id, up) => handleExerciseUpdate(id, up)}
                                     onShowHistory={(e) => setChartExercise(e)}
                                     onDelete={(id) => handleRemoveExercise(activeDayId, id)}
