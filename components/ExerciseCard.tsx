@@ -618,13 +618,14 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                             ))}
                           </div>
                         </div>
-                      ))}
                     </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
-    </div>
 
     {renderZoomedContent()}
   </>
