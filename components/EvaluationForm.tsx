@@ -232,10 +232,11 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
 
     if (initialData?.measurements) {
       const merged: any = { ...defaultState };
-      for (const section of Object.keys(initialData.measurements)) {
+      const measurements = initialData.measurements as Record<string, any>;
+      for (const section of Object.keys(measurements)) {
         merged[section] = {
           ...((defaultState as any)[section] || {}),
-          ...initialData.measurements[section]
+          ...measurements[section]
         };
       }
       return merged;
