@@ -150,8 +150,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   const renderThumbnail = () => {
     if (!media) {
       return (
-        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-50 rounded-xl shrink-0 border border-slate-100 flex items-center justify-center">
-          {isTimeBased ? <Timer className="text-slate-300" /> : isTensionBased ? <Activity className="text-purple-500" /> : <Dumbbell className="text-slate-300" />}
+        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-50 rounded-2xl shrink-0 border border-slate-100 flex items-center justify-center shadow-sm">
+          {isTimeBased ? <Timer className="text-slate-300 w-8 h-8" /> : isTensionBased ? <Activity className="text-purple-500 w-8 h-8" /> : <Dumbbell className="text-slate-300 w-8 h-8" />}
         </div>
       );
     }
@@ -159,12 +159,13 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
     if (media.type === 'video') {
       return (
         <button
+          type="button"
           onClick={() => setIsZoomed(true)}
-          className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative group cursor-zoom-in block"
+          className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-100 rounded-2xl overflow-hidden shrink-0 border border-slate-200 relative group cursor-zoom-in block shadow-sm"
         >
           <video src={media.embedUrl} autoPlay loop muted playsInline className="w-full h-full object-cover block pointer-events-none" />
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-            <Maximize2 size={16} className="text-white" />
+            <Maximize2 size={18} className="text-white" />
           </div>
         </button>
       );
@@ -173,8 +174,9 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
     if (media.isVideo && media.thumbnailUrl) {
       return (
         <button
+          type="button"
           onClick={() => setIsZoomed(true)}
-          className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative group cursor-zoom-in block"
+          className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-100 rounded-2xl overflow-hidden shrink-0 border border-slate-200 relative group cursor-zoom-in block shadow-sm"
         >
           <img
             src={media.thumbnailUrl}
@@ -182,8 +184,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
             className="w-full h-full object-cover block"
           />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <div className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-              <Play size={12} className="text-slate-900 ml-0.5" fill="currentColor" />
+            <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+              <Play size={14} className="text-slate-900 ml-0.5" fill="currentColor" />
             </div>
           </div>
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -195,10 +197,11 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       // Instagram sin thumbnail preview
       return (
         <button
+          type="button"
           onClick={() => setIsZoomed(true)}
-          className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-pink-400 to-purple-600 rounded-xl overflow-hidden shrink-0 border border-pink-200 relative group cursor-zoom-in flex items-center justify-center"
+          className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-pink-400 to-purple-600 rounded-2xl overflow-hidden shrink-0 border border-pink-200 relative group cursor-zoom-in flex items-center justify-center shadow-sm"
         >
-          <Play size={20} className="text-white" fill="currentColor" />
+          <Play size={24} className="text-white" fill="currentColor" />
         </button>
       );
     }
@@ -206,12 +209,13 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
     // Imagen estática
     return (
       <button
+        type="button"
         onClick={() => setIsZoomed(true)}
-        className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative group cursor-zoom-in block"
+        className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-100 rounded-2xl overflow-hidden shrink-0 border border-slate-200 relative group cursor-zoom-in block shadow-sm"
       >
         <img src={media.embedUrl} alt={definition.name} className="w-full h-full object-cover block" />
         <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-          <Maximize2 size={16} className="text-white" />
+          <Maximize2 size={18} className="text-white" />
         </div>
       </button>
     );
@@ -362,8 +366,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
               </div>
             </div>
 
-            {/* Carga / Tiempo / Tensión */}
-            <div className="flex flex-col items-center justify-center px-2 py-0.5 bg-white rounded-lg border border-slate-200/80 shadow-sm shrink-0 flex-1 min-w-[85px]">
+            {/* Carga / Tiempo / Tensión (Compacto) */}
+            <div className="flex flex-col items-center justify-center px-2 py-0.5 bg-white rounded-lg border border-slate-200/80 shadow-sm shrink-0 min-w-[70px]">
               <p className="text-[7.5px] text-slate-400 font-black uppercase tracking-widest opacity-80">
                 {isTimeBased ? 'Tiempo' : isTensionBased ? 'Tensión' : 'Carga'}
               </p>
@@ -377,21 +381,21 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 1 }); }}
-                      className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase transition-all ${targetLoad === 1 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400'}`}
+                      className={`px-1 py-0.5 rounded text-[8px] font-black uppercase transition-all ${targetLoad === 1 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400'}`}
                     >
                       Baja
                     </button>
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 2 }); }}
-                      className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase transition-all ${targetLoad === 2 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400'}`}
+                      className={`px-1 py-0.5 rounded text-[8px] font-black uppercase transition-all ${targetLoad === 2 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400'}`}
                     >
-                      Media
+                      Med
                     </button>
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 3 }); }}
-                      className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase transition-all ${targetLoad === 3 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400'}`}
+                      className={`px-1 py-0.5 rounded text-[8px] font-black uppercase transition-all ${targetLoad === 3 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400'}`}
                     >
                       Alta
                     </button>
@@ -402,8 +406,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                   {targetLoad}<span className="text-[8px] font-bold text-primary-500 ml-0.5 uppercase">{isTimeBased ? 's' : 'kg'}</span>
                 </span>
               ) : (
-                <div className="flex items-center gap-1">
-                  <button type="button" onClick={(e) => adjustLoad(-0.5, e)} className="w-4 h-4 bg-slate-100 rounded border border-slate-200 flex items-center justify-center shrink-0 active:scale-90"><Minus size={9} className="text-slate-600"/></button>
+                <div className="flex items-center gap-0.5">
+                  <button type="button" onClick={(e) => adjustLoad(-0.5, e)} className="w-4 h-4 bg-slate-100 rounded border border-slate-200 flex items-center justify-center shrink-0 active:scale-90"><Minus size={8} className="text-slate-600"/></button>
                   <div className="flex items-baseline gap-0.5">
                     <input
                       type="text"
@@ -414,12 +418,12 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                         valStr = valStr.replace(/^0+(?=\d)/, '');
                         onUpdate(exercise.id, { targetLoad: parseFloat(valStr) || 0 });
                       }}
-                      className="w-8 text-center font-black text-xs bg-transparent outline-none leading-none focus:text-primary-600"
+                      className="w-7 text-center font-black text-xs bg-transparent outline-none leading-none focus:text-primary-600"
                       onClick={e => e.stopPropagation()}
                     />
-                    <span className="text-[8px] font-black text-slate-400 uppercase leading-none">{isTimeBased ? 's' : 'kg'}</span>
+                    <span className="text-[7.5px] font-black text-slate-400 uppercase leading-none">{isTimeBased ? 's' : 'kg'}</span>
                   </div>
-                  <button type="button" onClick={(e) => adjustLoad(0.5, e)} className="w-4 h-4 bg-slate-100 rounded border border-slate-200 flex items-center justify-center shrink-0 active:scale-90"><Plus size={9} className="text-slate-600"/></button>
+                  <button type="button" onClick={(e) => adjustLoad(0.5, e)} className="w-4 h-4 bg-slate-100 rounded border border-slate-200 flex items-center justify-center shrink-0 active:scale-90"><Plus size={8} className="text-slate-600"/></button>
                 </div>
               )}
             </div>
