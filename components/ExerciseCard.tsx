@@ -335,306 +335,288 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 )}
               </div>
               
-              {/* Fila Inferior: Métricas - A la derecha de la imagen */}
-              <div className="flex items-stretch bg-slate-50/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner overflow-x-auto hide-scrollbar mt-3">
-            {/* Series x Reps - SOLO LECTURA en esta vista */}
-            <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[70px]">
-              <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">
-                {isTimeBased ? 'Series' : 'Plan'}
-              </p>
-              <div className="flex items-baseline gap-0.5">
-                <span className="text-sm font-black text-slate-900 leading-none">{targetSets}</span>
-                {!isTimeBased && (
+              {/* Fila Inferior: Métricas de Ejercicio */}
+              <div className="mt-3 bg-slate-50/90 rounded-2xl p-2.5 border border-slate-200/60 shadow-inner flex flex-wrap items-center justify-between gap-2">
+                {/* Target Sets x Reps */}
+                <div className="flex flex-col items-center justify-center px-3 py-1 bg-white rounded-xl border border-slate-200/80 shadow-sm shrink-0 min-w-[75px]">
+                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-0.5 opacity-80">
+                    {isTimeBased ? 'Series' : 'Plan'}
+                  </p>
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-sm font-black text-slate-900 leading-none">{targetSets}</span>
+                    {!isTimeBased && (
+                      <>
+                        <span className="text-slate-300 text-[10px] font-bold mx-0.5">×</span>
+                        <span className="text-sm font-black text-slate-900 leading-none">{targetReps}</span>
+                      </>
+                    )}
+                    {isTimeBased && <span className="text-slate-400 text-[9px] font-bold uppercase tracking-tighter ml-0.5">Ser</span>}
+                  </div>
+                </div>
+
+                {/* Carga / Tiempo / Tensión */}
+                <div className="flex flex-col items-center justify-center px-3 py-1 bg-white rounded-xl border border-slate-200/80 shadow-sm shrink-0 min-w-[95px] flex-1">
+                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-0.5 opacity-80">
+                    {isTimeBased ? 'Tiempo' : isTensionBased ? 'Tensión' : 'Carga'}
+                  </p>
+                  {isTensionBased ? (
+                    isLoadReadOnly ? (
+                      <span className="text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">
+                        {targetLoad === 1 ? 'Baja' : targetLoad === 2 ? 'Media' : targetLoad === 3 ? 'Alta' : 'Media'}
+                      </span>
+                    ) : (
+                      <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 shadow-sm shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 1 }); }}
+                          className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase transition-all ${targetLoad === 1 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                          Baja
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 2 }); }}
+                          className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase transition-all ${targetLoad === 2 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                          Media
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 3 }); }}
+                          className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase transition-all ${targetLoad === 3 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                          Alta
+                        </button>
+                      </div>
+                    )
+                  ) : isLoadReadOnly ? (
+                    <span className="text-sm font-black text-slate-900 leading-none">
+                      {targetLoad}<span className="text-[9px] font-bold text-primary-500 ml-1 uppercase">{isTimeBased ? 's' : 'kg'}</span>
+                    </span>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={(e) => adjustLoad(-0.5, e)} className="w-5 h-5 bg-slate-100 rounded-md shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={10} className="text-slate-600"/></button>
+                      <div className="flex items-baseline gap-0.5">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={targetLoad.toString()}
+                          onChange={e => {
+                            let valStr = e.target.value.replace(/[^0-9.]/g, '');
+                            valStr = valStr.replace(/^0+(?=\d)/, '');
+                            onUpdate(exercise.id, { targetLoad: parseFloat(valStr) || 0 });
+                          }}
+                          className="w-10 text-center font-black text-sm bg-transparent outline-none leading-none focus:text-primary-600 transition-colors"
+                          onClick={e => e.stopPropagation()}
+                        />
+                        <span className="text-[8px] font-black text-slate-400 uppercase leading-none">{isTimeBased ? 's' : 'kg'}</span>
+                      </div>
+                      <button type="button" onClick={(e) => adjustLoad(0.5, e)} className="w-5 h-5 bg-slate-100 rounded-md shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={10} className="text-slate-600"/></button>
+                    </div>
+                  )}
+                </div>
+
+                {role !== UserRole.RECEPCION && (
                   <>
-                    <span className="text-slate-300 text-[10px] font-bold mx-0.5">×</span>
-                    <span className="text-sm font-black text-slate-900 leading-none">{targetReps}</span>
+                    {/* RPE */}
+                    <div className="flex flex-col items-center justify-center px-2 py-1 bg-white rounded-xl border border-slate-200/80 shadow-sm shrink-0 min-w-[50px]">
+                      <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-0.5 opacity-80">RPE</p>
+                      <select
+                        style={rpeStyle}
+                        className="font-black text-[10px] rounded px-1.5 py-0.5 outline-none transition-all border shadow-sm cursor-pointer text-center appearance-none"
+                        value={currentRpe || ""}
+                        onChange={e => onUpdate(exercise.id, { currentRpe: Number(e.target.value) })}
+                      >
+                        <option value="" className="bg-white text-slate-400 font-normal">—</option>
+                        {[...Array(10)].map((_, i) => (
+                          <option key={i+1} value={i+1} style={getRpeStyle(i+1)} className="font-bold">{i+1}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Dolor */}
+                    <div className="flex flex-col items-center justify-center px-2 py-1 bg-white rounded-xl border border-slate-200/80 shadow-sm shrink-0 min-w-[50px]">
+                      <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-0.5 opacity-80">Dolor</p>
+                      <select
+                        style={painStyle}
+                        className="font-black text-[10px] rounded px-1.5 py-0.5 outline-none transition-all border shadow-sm cursor-pointer text-center appearance-none"
+                        value={currentPain || ""}
+                        onChange={e => onUpdate(exercise.id, { currentPain: Number(e.target.value) })}
+                      >
+                        <option value="" className="bg-white text-slate-400 font-normal">—</option>
+                        {[...Array(10)].map((_, i) => (
+                          <option key={i+1} value={i+1} style={getPainStyle(i+1)} className="font-bold">{i+1}</option>
+                        ))}
+                      </select>
+                    </div>
                   </>
                 )}
-                {isTimeBased && <span className="text-slate-400 text-[9px] font-bold uppercase tracking-tighter ml-0.5">Ser</span>}
               </div>
-            </div>
-
-            {/* Carga / Tensión */}
-            <div className="flex flex-col items-center justify-center py-2 px-2 border-r border-slate-200/60 shrink-0 min-w-[75px] flex-1">
-              <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">
-                {isTimeBased ? 'Tiempo' : isTensionBased ? 'Tensión' : 'Carga'}
-              </p>
-              {isTensionBased ? (
-                isLoadReadOnly ? (
-                  <span className="text-xs font-black text-slate-900 leading-none bg-purple-50 text-purple-700 px-2 py-1 rounded-md border border-purple-100/50">
-                    {targetLoad === 1 ? 'Baja' : targetLoad === 2 ? 'Media' : targetLoad === 3 ? 'Alta' : 'Media'}
-                  </span>
-                ) : (
-                  <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 shadow-sm shrink-0">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 1 }); }}
-                      className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all ${targetLoad === 1 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                      Baja
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 2 }); }}
-                      className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all ${targetLoad === 2 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                      Media
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onUpdate(exercise.id, { targetLoad: 3 }); }}
-                      className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase transition-all ${targetLoad === 3 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                      Alta
-                    </button>
-                  </div>
-                )
-              ) : isLoadReadOnly ? (
-                <span className="text-sm font-black text-slate-900 leading-none">
-                  {targetLoad}<span className="text-[9px] font-bold text-primary-500 ml-1 uppercase">{isTimeBased ? 's' : 'kg'}</span>
-                </span>
-              ) : (
-                <div className="flex items-center gap-1">
-                  <button onClick={(e) => adjustLoad(-0.5, e)} className="w-5 h-5 bg-white rounded-md shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Minus size={10} className="text-slate-600"/></button>
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-baseline gap-0.5">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={targetLoad.toString()}
-                        onChange={e => {
-                          let valStr = e.target.value.replace(/[^0-9.]/g, '');
-                          valStr = valStr.replace(/^0+(?=\d)/, '');
-                          onUpdate(exercise.id, { targetLoad: parseFloat(valStr) || 0 });
-                        }}
-                        className="w-8 text-center font-black text-sm bg-transparent outline-none leading-none focus:text-primary-600 transition-colors touch-none"
-                        onClick={e => e.stopPropagation()}
-                        onWheel={(e) => {
-                          e.preventDefault();
-                          const step = isTimeBased ? 5 : 0.5;
-                          let newLoad = Math.max(0, Math.round((targetLoad + (e.deltaY < 0 ? step : -step)) * 100) / 100);
-                          onUpdate(exercise.id, { targetLoad: newLoad });
-                        }}
-                        onTouchStart={(e) => {
-                          e.currentTarget.dataset.startY = e.touches[0].clientY.toString();
-                          e.currentTarget.dataset.startLoad = targetLoad.toString();
-                        }}
-                        onTouchMove={(e) => {
-                          const startY = parseFloat(e.currentTarget.dataset.startY || '0');
-                          const startLoad = parseFloat(e.currentTarget.dataset.startLoad || '0');
-                          const currentY = e.touches[0].clientY;
-                          const deltaY = startY - currentY;
-                          
-                          if (Math.abs(deltaY) > 10) {
-                            const steps = Math.sign(deltaY) * Math.floor(Math.abs(deltaY) / 15);
-                            const stepValue = isTimeBased ? 5 : 0.5;
-                            const newLoad = Math.max(0, Math.round((startLoad + steps * stepValue) * 100) / 100);
-                            if (newLoad !== targetLoad) {
-                                onUpdate(exercise.id, { targetLoad: newLoad });
-                            }
-                          }
-                        }}
-                      />
-                      <span className="text-[8px] font-black text-slate-400 uppercase leading-none">{isTimeBased ? 's' : 'kg'}</span>
-                    </div>
-                  </div>
-                  <button onClick={(e) => adjustLoad(0.5, e)} className="w-5 h-5 bg-white rounded-md shadow-sm border border-slate-200 flex items-center justify-center shrink-0 active:scale-90 transition-transform"><Plus size={10} className="text-slate-600"/></button>
+              
+              {/* Fila Opcional: Observaciones */}
+              {role !== UserRole.RECEPCION && (
+                <div className={`mt-2 ${supersetLabel ? 'ml-3' : ''}`}>
+                  <textarea
+                    placeholder="Añadir una observación o comentario..."
+                    className="w-full bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none shadow-inner"
+                    rows={2}
+                    value={exercise.notes || ''}
+                    onChange={(e) => onUpdate(exercise.id, { notes: e.target.value })}
+                    onClick={(e) => e.stopPropagation()}
+                  />
                 </div>
               )}
-            </div>
 
-            {role !== UserRole.RECEPCION && (
-              <>
-                {/* RPE */}
-                <div className="flex flex-col items-center justify-center py-2 px-1.5 border-r border-slate-200/60 shrink-0 min-w-[45px]">
-                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">RPE</p>
-                  <select
-                    style={rpeStyle}
-                    className="font-black text-[10px] rounded w-[38px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center appearance-none"
-                    value={currentRpe || ""}
-                    onChange={e => onUpdate(exercise.id, { currentRpe: Number(e.target.value) })}
-                  >
-                    <option value="" className="bg-white text-slate-400 font-normal">—</option>
-                    {[...Array(10)].map((_, i) => (
-                      <option key={i+1} value={i+1} style={getRpeStyle(i+1)} className="font-bold">{i+1}</option>
-                    ))}
-                  </select>
-                </div>
+              {/* Botón opcional para desplegar desglose de series / Drop Sets */}
+              {role !== UserRole.RECEPCION && (
+                <div className={`mt-3 ${supersetLabel ? 'ml-3' : ''}`}>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!setsDetail || setsDetail.length === 0) {
+                          handleInitializeSetsDetail();
+                        }
+                        setShowSetsDetail(!showSetsDetail);
+                      }}
+                      className="flex items-center gap-1.5 text-xs font-extrabold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl border border-indigo-100/80 transition-all shadow-sm active:scale-95"
+                    >
+                      <Layers size={14} />
+                      <span>
+                        {showSetsDetail
+                          ? 'Ocultar Series'
+                          : setsDetail && setsDetail.length > 0
+                          ? `Ver/Editar ${setsDetail.length} Series (Drop-Sets)`
+                          : 'Detallar Series / Drop Sets (Opcional)'}
+                      </span>
+                      {showSetsDetail ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
 
-                {/* Dolor */}
-                <div className="flex flex-col items-center justify-center py-2 px-1.5 shrink-0 min-w-[45px]">
-                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1 opacity-80">Dolor</p>
-                  <select
-                    style={painStyle}
-                    className="font-black text-[10px] rounded w-[38px] py-1 outline-none transition-all border shadow-sm cursor-pointer text-center appearance-none"
-                    value={currentPain || ""}
-                    onChange={e => onUpdate(exercise.id, { currentPain: Number(e.target.value) })}
-                  >
-                    <option value="" className="bg-white text-slate-400 font-normal">—</option>
-                    {[...Array(10)].map((_, i) => (
-                      <option key={i+1} value={i+1} style={getPainStyle(i+1)} className="font-bold">{i+1}</option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )}
-          </div>
-          
-          {/* Fila Opcional: Observaciones */}
-          {role !== UserRole.RECEPCION && (
-            <div className={`mt-2 ${supersetLabel ? 'ml-3' : ''}`}>
-              <textarea
-                placeholder="Añadir una observación o comentario..."
-                className="w-full bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none shadow-inner"
-                rows={2}
-                value={exercise.notes || ''}
-                onChange={(e) => onUpdate(exercise.id, { notes: e.target.value })}
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-          )}
-
-          {/* Botón opcional para desplegar desglose de series / Drop Sets */}
-          {role !== UserRole.RECEPCION && (
-            <div className={`mt-3 ${supersetLabel ? 'ml-3' : ''}`}>
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!setsDetail || setsDetail.length === 0) {
-                      handleInitializeSetsDetail();
-                    }
-                    setShowSetsDetail(!showSetsDetail);
-                  }}
-                  className="flex items-center gap-1.5 text-xs font-extrabold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl border border-indigo-100/80 transition-all shadow-sm active:scale-95"
-                >
-                  <Layers size={14} />
-                  <span>
-                    {showSetsDetail
-                      ? 'Ocultar Series'
-                      : setsDetail && setsDetail.length > 0
-                      ? `Ver/Editar ${setsDetail.length} Series (Drop-Sets)`
-                      : 'Detallar Series / Drop Sets (Opcional)'}
-                  </span>
-                  {showSetsDetail ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </button>
-
-                {!canEditValues && (
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide bg-slate-100 px-2 py-0.5 rounded-md">
-                    Solo Lectura (Etapa Kine)
-                  </span>
-                )}
-              </div>
-
-              {/* Panel desplegable de Series / Drop Sets */}
-              {showSetsDetail && (
-                <div className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 animate-in fade-in duration-200">
-                  <div className="flex items-center justify-between">
-                    <h5 className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
-                      <Layers size={14} className="text-indigo-600"/> Desglose por Series y Drop-Sets
-                    </h5>
-                    {canEditValues && (
-                      <button
-                        type="button"
-                        onClick={handleAddSet}
-                        className="text-[10px] font-black text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm transition-all active:scale-95"
-                      >
-                        <Plus size={12}/> Agregar Serie
-                      </button>
+                    {!canEditValues && (
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide bg-slate-100 px-2 py-0.5 rounded-md">
+                        Solo Lectura (Etapa Kine)
+                      </span>
                     )}
                   </div>
 
-                  {(!setsDetail || setsDetail.length === 0) ? (
-                    <p className="text-xs text-slate-400 font-medium text-center py-2">Sin series detalladas aún.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {setsDetail.map((setEntry, sIdx) => (
-                        <div key={sIdx} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-2">
-                          <div className="flex items-center justify-between pb-1 border-b border-slate-100">
-                            <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                              Serie {setEntry.setNumber || sIdx + 1}
-                            </span>
-                            {canEditValues && (
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => handleAddSegment(sIdx)}
-                                  className="text-[9px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-md border border-indigo-100 flex items-center gap-0.5 transition-colors"
-                                  title="Añadir bajada de peso o tramo adicional en esta misma serie"
-                                >
-                                  <Plus size={10}/> + Drop Set
-                                </button>
-                                {setsDetail.length > 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveSet(sIdx)}
-                                    className="text-slate-400 hover:text-red-500 p-1 transition-colors"
-                                    title="Eliminar Serie"
-                                  >
-                                    <Trash2 size={12}/>
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                  {/* Panel desplegable de Series / Drop Sets */}
+                  {showSetsDetail && (
+                    <div className="mt-3 p-4 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-3 animate-in fade-in duration-200 shadow-inner">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <h5 className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                          <Layers size={14} className="text-indigo-600"/> Desglose por Series y Drop-Sets
+                        </h5>
+                        {canEditValues && (
+                          <button
+                            type="button"
+                            onClick={handleAddSet}
+                            className="text-[10px] font-black text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm transition-all active:scale-95"
+                          >
+                            <Plus size={12}/> Agregar Serie
+                          </button>
+                        )}
+                      </div>
 
-                          {/* Segmentos de la serie */}
-                          <div className="space-y-1.5">
-                            {setEntry.segments.map((seg, segIdx) => (
-                              <div key={segIdx} className="flex items-center justify-between gap-2 bg-slate-50/80 p-2 rounded-lg border border-slate-100">
-                                <div className="flex items-center gap-2 flex-1">
-                                  <span className="text-[10px] font-black text-slate-400 uppercase shrink-0">
-                                    {segIdx === 0 ? 'Tramo 1:' : `Drop ${segIdx}:`}
-                                  </span>
-                                  {canEditValues ? (
-                                    <div className="flex items-center gap-2">
-                                      <div className="flex items-baseline gap-1">
-                                        <input
-                                          type="number"
-                                          min="0"
-                                          className="w-12 text-center font-black text-xs bg-white rounded-lg border border-slate-200 py-1 outline-none focus:border-indigo-500"
-                                          value={seg.reps}
-                                          onChange={e => handleUpdateSegment(sIdx, segIdx, 'reps', parseInt(e.target.value) || 0)}
-                                        />
-                                        <span className="text-[9px] font-bold text-slate-500">reps</span>
-                                      </div>
-                                      <span className="text-slate-300 font-bold">@</span>
-                                      <div className="flex items-baseline gap-1">
-                                        <input
-                                          type="number"
-                                          min="0"
-                                          step="0.5"
-                                          className="w-14 text-center font-black text-xs bg-white rounded-lg border border-slate-200 py-1 outline-none focus:border-indigo-500"
-                                          value={seg.load}
-                                          onChange={e => handleUpdateSegment(sIdx, segIdx, 'load', parseFloat(e.target.value) || 0)}
-                                        />
-                                        <span className="text-[9px] font-bold text-slate-500">{isTimeBased ? 's' : 'kg'}</span>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <span className="text-xs font-black text-slate-800">
-                                      {seg.reps} reps @ {seg.load} {isTimeBased ? 's' : 'kg'}
-                                    </span>
-                                  )}
-                                </div>
-                                {canEditValues && setEntry.segments.length > 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveSegment(sIdx, segIdx)}
-                                    className="text-slate-300 hover:text-red-500 text-xs px-1 font-bold"
-                                  >
-                                    ✕
-                                  </button>
+                      {(!setsDetail || setsDetail.length === 0) ? (
+                        <p className="text-xs text-slate-400 font-medium text-center py-2">Sin series detalladas aún.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {setsDetail.map((setEntry, sIdx) => (
+                            <div key={sIdx} className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                              {/* Header de la Serie */}
+                              <div className="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
+                                <span className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1">
+                                  Serie {setEntry.setNumber || sIdx + 1}
+                                </span>
+                                {canEditValues && (
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAddSegment(sIdx)}
+                                      className="text-[10px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 px-2.5 py-1 rounded-lg border border-purple-200 flex items-center gap-1 transition-all shadow-sm active:scale-95"
+                                      title="Añadir bajada de peso (Drop Set) a esta serie"
+                                    >
+                                      <Plus size={12}/> + Drop Set
+                                    </button>
+                                    {setsDetail.length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveSet(sIdx)}
+                                        className="text-slate-400 hover:text-red-600 hover:bg-red-50 px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
+                                        title="Eliminar toda la Serie"
+                                      >
+                                        <Trash2 size={12}/>
+                                        <span>Eliminar Serie</span>
+                                      </button>
+                                    )}
+                                  </div>
                                 )}
                               </div>
-                            ))}
-                          </div>
+
+                              {/* Segmentos / Drop Sets de la serie */}
+                              <div className="space-y-2">
+                                {setEntry.segments.map((seg, segIdx) => (
+                                  <div key={segIdx} className="flex items-center justify-between gap-2 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 flex-wrap sm:flex-nowrap">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${segIdx === 0 ? 'bg-slate-200 text-slate-700' : 'bg-purple-100 text-purple-700 border border-purple-200'}`}>
+                                        {segIdx === 0 ? 'Tramo Base' : `Drop Set ${segIdx}`}
+                                      </span>
+                                      {canEditValues ? (
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <div className="flex items-baseline gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-sm">
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              className="w-12 text-center font-black text-xs bg-transparent outline-none focus:text-indigo-600"
+                                              value={seg.reps}
+                                              onChange={e => handleUpdateSegment(sIdx, segIdx, 'reps', parseInt(e.target.value) || 0)}
+                                            />
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase">reps</span>
+                                          </div>
+                                          <span className="text-slate-400 font-bold text-xs">@</span>
+                                          <div className="flex items-baseline gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-sm">
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              step="0.5"
+                                              className="w-14 text-center font-black text-xs bg-transparent outline-none focus:text-indigo-600"
+                                              value={seg.load}
+                                              onChange={e => handleUpdateSegment(sIdx, segIdx, 'load', parseFloat(e.target.value) || 0)}
+                                            />
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase">{isTimeBased ? 's' : 'kg'}</span>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <span className="text-xs font-black text-slate-800">
+                                          {seg.reps} reps @ {seg.load} {isTimeBased ? 's' : 'kg'}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Botón para eliminar ÚNICAMENTE este Drop Set */}
+                                    {canEditValues && setEntry.segments.length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveSegment(sIdx, segIdx)}
+                                        className="flex items-center gap-1 text-[10px] font-bold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-lg border border-red-100 transition-all shrink-0 ml-auto"
+                                        title="Eliminar solo este Drop Set"
+                                      >
+                                        <Trash2 size={12} />
+                                        <span>Quitar Drop</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
                 </div>
               )}
-            </div>
-          )}
 
             </div>
           </div>
