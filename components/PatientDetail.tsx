@@ -404,7 +404,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
   const handleExerciseUpdate = (exerciseId: string, updates: Partial<RoutineExercise>) => {
     const routineKey = routineType === 'CLINIC' ? 'routine' : 'homeRoutine';
     const currentRoutine = patient[routineKey] || { days: [] };
-    const currentWeekNum = currentRoutine.currentWeek || 1;
+    const currentWeekNum = (currentRoutine as any).currentWeek || 1;
     
     const newDays = currentRoutine.days.map(day => ({
         ...day,

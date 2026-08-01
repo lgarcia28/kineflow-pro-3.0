@@ -20,7 +20,7 @@ export const generateAIPortion = async (
   objectives: string,
   progressionStyle: string
 ): Promise<RoutineDay[]> => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("El servicio de IA no está disponible o la clave de API de Gemini no está configurada.");
   }

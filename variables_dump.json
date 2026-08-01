@@ -1,0 +1,1962 @@
+[
+  {
+    "rowIndex": 0,
+    "excelRow": 1,
+    "colA": "Variables",
+    "colB": null,
+    "colC": "Datos"
+  },
+  {
+    "rowIndex": 1,
+    "excelRow": 2,
+    "colA": "Nombre y Apellido",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 2,
+    "excelRow": 3,
+    "colA": "Fecha",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 3,
+    "excelRow": 4,
+    "colA": "Entrenamiento previo a la sesión",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 4,
+    "excelRow": 5,
+    "colA": "Edad ",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 5,
+    "excelRow": 6,
+    "colA": "Altura en cm",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 6,
+    "excelRow": 7,
+    "colA": "Peso en kg",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 7,
+    "excelRow": 8,
+    "colA": "Pierna dominante",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 8,
+    "excelRow": 9,
+    "colA": "Pierna lesionada",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 9,
+    "excelRow": 10,
+    "colA": "Tipo de lesión",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 10,
+    "excelRow": 11,
+    "colA": "Comentarios de la lesión",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 11,
+    "excelRow": 12,
+    "colA": "Antecedentes",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 12,
+    "excelRow": 13,
+    "colA": "Médico derivante",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 13,
+    "excelRow": 14,
+    "colA": "Dolor durante la evaluación",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 14,
+    "excelRow": 15,
+    "colA": "Rotación interna de cadera 90º",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 15,
+    "excelRow": 16,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 16,
+    "excelRow": 17,
+    "colA": "Rotación externa de cadera 90º",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 17,
+    "excelRow": 18,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 18,
+    "excelRow": 19,
+    "colA": "Extensión pasiva de rodilla",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 19,
+    "excelRow": 20,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 20,
+    "excelRow": 21,
+    "colA": "Flexión activa de rodilla",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 21,
+    "excelRow": 22,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 22,
+    "excelRow": 23,
+    "colA": "Flexión pasiva de rodilla",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 23,
+    "excelRow": 24,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 24,
+    "excelRow": 25,
+    "colA": "Flexión dorsal de tobillo",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 25,
+    "excelRow": 26,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 26,
+    "excelRow": 27,
+    "colA": "Rotación interna de hombro",
+    "colB": "Derecho",
+    "colC": null
+  },
+  {
+    "rowIndex": 27,
+    "excelRow": 28,
+    "colA": null,
+    "colB": "Izquierdo",
+    "colC": null
+  },
+  {
+    "rowIndex": 28,
+    "excelRow": 29,
+    "colA": "Rotación externa de hombro",
+    "colB": "Derecho",
+    "colC": null
+  },
+  {
+    "rowIndex": 29,
+    "excelRow": 30,
+    "colA": null,
+    "colB": "Izquierdo",
+    "colC": null
+  },
+  {
+    "rowIndex": 30,
+    "excelRow": 31,
+    "colA": "Perímetro de muslo",
+    "colB": "Derecho",
+    "colC": null
+  },
+  {
+    "rowIndex": 31,
+    "excelRow": 32,
+    "colA": null,
+    "colB": "Izquierdo",
+    "colC": null
+  },
+  {
+    "rowIndex": 32,
+    "excelRow": 33,
+    "colA": "Perímetro de pantorrilla",
+    "colB": "Derecho",
+    "colC": null
+  },
+  {
+    "rowIndex": 33,
+    "excelRow": 34,
+    "colA": null,
+    "colB": "Izquierdo",
+    "colC": null
+  },
+  {
+    "rowIndex": 34,
+    "excelRow": 35,
+    "colA": "Thomas derecha",
+    "colB": "Psoas Iíaco",
+    "colC": null
+  },
+  {
+    "rowIndex": 35,
+    "excelRow": 36,
+    "colA": null,
+    "colB": "Recto Anterior",
+    "colC": null
+  },
+  {
+    "rowIndex": 36,
+    "excelRow": 37,
+    "colA": null,
+    "colB": "Sartorio",
+    "colC": null
+  },
+  {
+    "rowIndex": 37,
+    "excelRow": 38,
+    "colA": "Thomas izquierda",
+    "colB": "Psoas Iíaco",
+    "colC": null
+  },
+  {
+    "rowIndex": 38,
+    "excelRow": 39,
+    "colA": null,
+    "colB": "Recto Anterior",
+    "colC": null
+  },
+  {
+    "rowIndex": 39,
+    "excelRow": 40,
+    "colA": null,
+    "colB": "Sartorio",
+    "colC": null
+  },
+  {
+    "rowIndex": 40,
+    "excelRow": 41,
+    "colA": "AKE",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 41,
+    "excelRow": 42,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 42,
+    "excelRow": 43,
+    "colA": "Askling test",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 43,
+    "excelRow": 44,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 44,
+    "excelRow": 45,
+    "colA": "Slump test",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 45,
+    "excelRow": 46,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 46,
+    "excelRow": 47,
+    "colA": "BKFO test",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 47,
+    "excelRow": 48,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 48,
+    "excelRow": 49,
+    "colA": "Psoas derecha",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 49,
+    "excelRow": 50,
+    "colA": null,
+    "colB": "Contracción ",
+    "colC": null
+  },
+  {
+    "rowIndex": 50,
+    "excelRow": 51,
+    "colA": null,
+    "colB": "Estiramiento",
+    "colC": null
+  },
+  {
+    "rowIndex": 51,
+    "excelRow": 52,
+    "colA": "Psoas izquierda",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 52,
+    "excelRow": 53,
+    "colA": null,
+    "colB": "Contracción ",
+    "colC": null
+  },
+  {
+    "rowIndex": 53,
+    "excelRow": 54,
+    "colA": null,
+    "colB": "Estiramiento",
+    "colC": null
+  },
+  {
+    "rowIndex": 54,
+    "excelRow": 55,
+    "colA": "Pubis derecha",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 55,
+    "excelRow": 56,
+    "colA": null,
+    "colB": "Contracción ",
+    "colC": null
+  },
+  {
+    "rowIndex": 56,
+    "excelRow": 57,
+    "colA": null,
+    "colB": "Estiramiento",
+    "colC": null
+  },
+  {
+    "rowIndex": 57,
+    "excelRow": 58,
+    "colA": "Pubis izquierda",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 58,
+    "excelRow": 59,
+    "colA": null,
+    "colB": "Contracción ",
+    "colC": null
+  },
+  {
+    "rowIndex": 59,
+    "excelRow": 60,
+    "colA": null,
+    "colB": "Estiramiento",
+    "colC": null
+  },
+  {
+    "rowIndex": 60,
+    "excelRow": 61,
+    "colA": "Abdominales derecha",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 61,
+    "excelRow": 62,
+    "colA": null,
+    "colB": "Contracción ",
+    "colC": null
+  },
+  {
+    "rowIndex": 62,
+    "excelRow": 63,
+    "colA": null,
+    "colB": "Estiramiento",
+    "colC": null
+  },
+  {
+    "rowIndex": 63,
+    "excelRow": 64,
+    "colA": "Abdominales izquierda",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 64,
+    "excelRow": 65,
+    "colA": null,
+    "colB": "Contracción ",
+    "colC": null
+  },
+  {
+    "rowIndex": 65,
+    "excelRow": 66,
+    "colA": null,
+    "colB": "Estiramiento",
+    "colC": null
+  },
+  {
+    "rowIndex": 66,
+    "excelRow": 67,
+    "colA": "Aductor derecha",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 67,
+    "excelRow": 68,
+    "colA": null,
+    "colB": "Contracción ",
+    "colC": null
+  },
+  {
+    "rowIndex": 68,
+    "excelRow": 69,
+    "colA": null,
+    "colB": "Estiramiento",
+    "colC": null
+  },
+  {
+    "rowIndex": 69,
+    "excelRow": 70,
+    "colA": "Aductor izquierda",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 70,
+    "excelRow": 71,
+    "colA": null,
+    "colB": "Contracción ",
+    "colC": null
+  },
+  {
+    "rowIndex": 71,
+    "excelRow": 72,
+    "colA": null,
+    "colB": "Estiramiento",
+    "colC": null
+  },
+  {
+    "rowIndex": 72,
+    "excelRow": 73,
+    "colA": "Glúteo medio derecha",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 73,
+    "excelRow": 74,
+    "colA": "Glúteo medio izquierda",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 74,
+    "excelRow": 75,
+    "colA": "Cuadrado lumbar derecha",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 75,
+    "excelRow": 76,
+    "colA": "Cuadrado lumbar izquierda",
+    "colB": "Palpación",
+    "colC": null
+  },
+  {
+    "rowIndex": 76,
+    "excelRow": 77,
+    "colA": "Cadera: impingement ",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 77,
+    "excelRow": 78,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 78,
+    "excelRow": 79,
+    "colA": "Cadera: labrum anterior ",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 79,
+    "excelRow": 80,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 80,
+    "excelRow": 81,
+    "colA": "Columna: flexión",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 81,
+    "excelRow": 82,
+    "colA": "Columna: extensión",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 82,
+    "excelRow": 83,
+    "colA": "Columna: inclinación derecha",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 83,
+    "excelRow": 84,
+    "colA": "Columna: inclinación izquierda",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 84,
+    "excelRow": 85,
+    "colA": "Sacroilíaca",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 85,
+    "excelRow": 86,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 86,
+    "excelRow": 87,
+    "colA": "Largo en cm del miembro inferior",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 87,
+    "excelRow": 88,
+    "colA": "Y Balance derecha",
+    "colB": "Anterior",
+    "colC": null
+  },
+  {
+    "rowIndex": 88,
+    "excelRow": 89,
+    "colA": null,
+    "colB": "Posteromedial",
+    "colC": null
+  },
+  {
+    "rowIndex": 89,
+    "excelRow": 90,
+    "colA": null,
+    "colB": "Posterolateral",
+    "colC": null
+  },
+  {
+    "rowIndex": 90,
+    "excelRow": 91,
+    "colA": "Y Balance izquierda",
+    "colB": "Anterior",
+    "colC": null
+  },
+  {
+    "rowIndex": 91,
+    "excelRow": 92,
+    "colA": null,
+    "colB": "Posteromedial",
+    "colC": null
+  },
+  {
+    "rowIndex": 92,
+    "excelRow": 93,
+    "colA": null,
+    "colB": "Posterolateral",
+    "colC": null
+  },
+  {
+    "rowIndex": 93,
+    "excelRow": 94,
+    "colA": "Prueba de balance: derecha",
+    "colB": "Ojos abiertos",
+    "colC": null
+  },
+  {
+    "rowIndex": 94,
+    "excelRow": 95,
+    "colA": null,
+    "colB": "Ojos cerrados",
+    "colC": null
+  },
+  {
+    "rowIndex": 95,
+    "excelRow": 96,
+    "colA": "Prueba de balance: izquierda",
+    "colB": "Ojos abiertos",
+    "colC": null
+  },
+  {
+    "rowIndex": 96,
+    "excelRow": 97,
+    "colA": null,
+    "colB": "Ojos cerrados",
+    "colC": null
+  },
+  {
+    "rowIndex": 97,
+    "excelRow": 98,
+    "colA": "Prueba de balance vestibular: derecha",
+    "colB": "Lado a lado",
+    "colC": null
+  },
+  {
+    "rowIndex": 98,
+    "excelRow": 99,
+    "colA": null,
+    "colB": "Arriba y abajo",
+    "colC": null
+  },
+  {
+    "rowIndex": 99,
+    "excelRow": 100,
+    "colA": "Prueba de balance vestibular: izquierda",
+    "colB": "Lado a lado",
+    "colC": null
+  },
+  {
+    "rowIndex": 100,
+    "excelRow": 101,
+    "colA": null,
+    "colB": "Arriba y abajo",
+    "colC": null
+  },
+  {
+    "rowIndex": 101,
+    "excelRow": 102,
+    "colA": "Mc Gill",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 102,
+    "excelRow": 103,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 103,
+    "excelRow": 104,
+    "colA": "Mc Gill",
+    "colB": "Flexores",
+    "colC": null
+  },
+  {
+    "rowIndex": 104,
+    "excelRow": 105,
+    "colA": null,
+    "colB": "Extensores",
+    "colC": null
+  },
+  {
+    "rowIndex": 105,
+    "excelRow": 106,
+    "colA": "Puente glúteo a 1p",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 106,
+    "excelRow": 107,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 107,
+    "excelRow": 108,
+    "colA": "Puente glúteo a 1p VAS",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 108,
+    "excelRow": 109,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 109,
+    "excelRow": 110,
+    "colA": "Elevación gemelo a 1p",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 110,
+    "excelRow": 111,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 111,
+    "excelRow": 112,
+    "colA": "Elevación gemelo a 1p VAS",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 112,
+    "excelRow": 113,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 113,
+    "excelRow": 114,
+    "colA": "Sentadilla a 1p",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 114,
+    "excelRow": 115,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 115,
+    "excelRow": 116,
+    "colA": "Sentadilla a 1p VAS",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 116,
+    "excelRow": 117,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 117,
+    "excelRow": 118,
+    "colA": "Press de hombro",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 118,
+    "excelRow": 119,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 119,
+    "excelRow": 120,
+    "colA": "Press de hombro VAS",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 120,
+    "excelRow": 121,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 121,
+    "excelRow": 122,
+    "colA": "Press de banca",
+    "colB": "Reps",
+    "colC": null
+  },
+  {
+    "rowIndex": 122,
+    "excelRow": 123,
+    "colA": null,
+    "colB": "VAS",
+    "colC": null
+  },
+  {
+    "rowIndex": 123,
+    "excelRow": 124,
+    "colA": "Dominadas",
+    "colB": "Reps",
+    "colC": null
+  },
+  {
+    "rowIndex": 124,
+    "excelRow": 125,
+    "colA": null,
+    "colB": "VAS",
+    "colC": null
+  },
+  {
+    "rowIndex": 125,
+    "excelRow": 126,
+    "colA": "Fuerza muscular: flexores cadera 0-0º",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 126,
+    "excelRow": 127,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 127,
+    "excelRow": 128,
+    "colA": "VAS flexores cadera 0-0º",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 128,
+    "excelRow": 129,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 129,
+    "excelRow": 130,
+    "colA": "Fuerza muscular: flexores cadera 0-90º",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 130,
+    "excelRow": 131,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 131,
+    "excelRow": 132,
+    "colA": "VAS flexores cadera 0-90º",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 132,
+    "excelRow": 133,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 133,
+    "excelRow": 134,
+    "colA": "Squezze Test",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 134,
+    "excelRow": 135,
+    "colA": "VAS Squezze",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 135,
+    "excelRow": 136,
+    "colA": "Fuerza muscular: aductores",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 136,
+    "excelRow": 137,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 137,
+    "excelRow": 138,
+    "colA": "VAS aductores",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 138,
+    "excelRow": 139,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 139,
+    "excelRow": 140,
+    "colA": "Fuerza muscular: abductores",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 140,
+    "excelRow": 141,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 141,
+    "excelRow": 142,
+    "colA": "VAS abductores",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 142,
+    "excelRow": 143,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 143,
+    "excelRow": 144,
+    "colA": "Fuerza muscular: cuádriceps",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 144,
+    "excelRow": 145,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 145,
+    "excelRow": 146,
+    "colA": "VAS cuádriceps",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 146,
+    "excelRow": 147,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 147,
+    "excelRow": 148,
+    "colA": "Fuerza muscular: isquiosurales",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 148,
+    "excelRow": 149,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 149,
+    "excelRow": 150,
+    "colA": "VAS isquiotibiales",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 150,
+    "excelRow": 151,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 151,
+    "excelRow": 152,
+    "colA": "Fuerza muscular: tríceps sural",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 152,
+    "excelRow": 153,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 153,
+    "excelRow": 154,
+    "colA": "VAS tríceps sural",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 154,
+    "excelRow": 155,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 155,
+    "excelRow": 156,
+    "colA": "Fuerza muscular: abductores tobillo",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 156,
+    "excelRow": 157,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 157,
+    "excelRow": 158,
+    "colA": "VAS abductores tobillo",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 158,
+    "excelRow": 159,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 159,
+    "excelRow": 160,
+    "colA": "Fuerza muscular: aductores tobillo",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 160,
+    "excelRow": 161,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 161,
+    "excelRow": 162,
+    "colA": "VAS aductores tobillo",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 162,
+    "excelRow": 163,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 163,
+    "excelRow": 164,
+    "colA": "IMTP",
+    "colB": "Fuerza pico",
+    "colC": null
+  },
+  {
+    "rowIndex": 164,
+    "excelRow": 165,
+    "colA": null,
+    "colB": "Fuerza derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 165,
+    "excelRow": 166,
+    "colA": null,
+    "colB": "Fuerza izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 166,
+    "excelRow": 167,
+    "colA": "Fuerza muscular: rotación interna hombro",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 167,
+    "excelRow": 168,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 168,
+    "excelRow": 169,
+    "colA": "VAS RI hombro",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 169,
+    "excelRow": 170,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 170,
+    "excelRow": 171,
+    "colA": "Fuerza muscular: rotación externa hombro",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 171,
+    "excelRow": 172,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 172,
+    "excelRow": 173,
+    "colA": "VAS RE hombro",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 173,
+    "excelRow": 174,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 174,
+    "excelRow": 175,
+    "colA": "Ash I",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 175,
+    "excelRow": 176,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 176,
+    "excelRow": 177,
+    "colA": "VAS Ash I",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 177,
+    "excelRow": 178,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 178,
+    "excelRow": 179,
+    "colA": "Ash Y",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 179,
+    "excelRow": 180,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 180,
+    "excelRow": 181,
+    "colA": "VAS Ash Y",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 181,
+    "excelRow": 182,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 182,
+    "excelRow": 183,
+    "colA": "Ash T",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 183,
+    "excelRow": 184,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 184,
+    "excelRow": 185,
+    "colA": "VAS Ash T",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 185,
+    "excelRow": 186,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 186,
+    "excelRow": 187,
+    "colA": "Handrip",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 187,
+    "excelRow": 188,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 188,
+    "excelRow": 189,
+    "colA": "Cuádriceps derecho",
+    "colB": "Evaluación 1",
+    "colC": null
+  },
+  {
+    "rowIndex": 189,
+    "excelRow": 190,
+    "colA": null,
+    "colB": "Evaluación 2",
+    "colC": null
+  },
+  {
+    "rowIndex": 190,
+    "excelRow": 191,
+    "colA": "Cuádriceps izquierdo",
+    "colB": "Evaluación 1",
+    "colC": null
+  },
+  {
+    "rowIndex": 191,
+    "excelRow": 192,
+    "colA": null,
+    "colB": "Evaluación 2",
+    "colC": null
+  },
+  {
+    "rowIndex": 192,
+    "excelRow": 193,
+    "colA": "Isquiotibiales derecho",
+    "colB": "Evaluación 1",
+    "colC": null
+  },
+  {
+    "rowIndex": 193,
+    "excelRow": 194,
+    "colA": null,
+    "colB": "Evaluación 2",
+    "colC": null
+  },
+  {
+    "rowIndex": 194,
+    "excelRow": 195,
+    "colA": "Isquiotibiales izquierdo",
+    "colB": "Evaluación 1",
+    "colC": null
+  },
+  {
+    "rowIndex": 195,
+    "excelRow": 196,
+    "colA": null,
+    "colB": "Evaluación 2",
+    "colC": null
+  },
+  {
+    "rowIndex": 196,
+    "excelRow": 197,
+    "colA": "VBT Sentadilla",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 197,
+    "excelRow": 198,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 198,
+    "excelRow": 199,
+    "colA": "Peso utilizado sentadilla",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 199,
+    "excelRow": 200,
+    "colA": "VBT Peso muerto",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 200,
+    "excelRow": 201,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 201,
+    "excelRow": 202,
+    "colA": "Peso utilizado peso muerto",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 202,
+    "excelRow": 203,
+    "colA": "VBT Puente glúteo",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 203,
+    "excelRow": 204,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 204,
+    "excelRow": 205,
+    "colA": "Peso utilizado puente glúteo",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 205,
+    "excelRow": 206,
+    "colA": "VBT Sentadilla búlgara",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 206,
+    "excelRow": 207,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 207,
+    "excelRow": 208,
+    "colA": "Peso utilizado sentadilla búlgara",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 208,
+    "excelRow": 209,
+    "colA": "CMJ 2 p",
+    "colB": "Altura del salto",
+    "colC": null
+  },
+  {
+    "rowIndex": 209,
+    "excelRow": 210,
+    "colA": "CMJ 2 p: frenado",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 210,
+    "excelRow": 211,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 211,
+    "excelRow": 212,
+    "colA": "CMJ 2 p: propulsión",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 212,
+    "excelRow": 213,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 213,
+    "excelRow": 214,
+    "colA": "CMJ 2 p: aterrizaje",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 214,
+    "excelRow": 215,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 215,
+    "excelRow": 216,
+    "colA": "CMJ 2 p: RSI",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 216,
+    "excelRow": 217,
+    "colA": "CMJ 1 p: altura del salto",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 217,
+    "excelRow": 218,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 218,
+    "excelRow": 219,
+    "colA": "CMJ 1 p: frenado",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 219,
+    "excelRow": 220,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 220,
+    "excelRow": 221,
+    "colA": "CMJ 1 p: propulsión",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 221,
+    "excelRow": 222,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 222,
+    "excelRow": 223,
+    "colA": "CMJ 1 p: aterrizaje",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 223,
+    "excelRow": 224,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 224,
+    "excelRow": 225,
+    "colA": "CMJ 1 p: RSI",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 225,
+    "excelRow": 226,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 226,
+    "excelRow": 227,
+    "colA": "DJ a 2 p altura del salto",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 227,
+    "excelRow": 228,
+    "colA": "DJ a 2 p: fuerza pico",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 228,
+    "excelRow": 229,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 229,
+    "excelRow": 230,
+    "colA": "DJ a 2 p RSI",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 230,
+    "excelRow": 231,
+    "colA": "DJ a 1 p altura del salto",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 231,
+    "excelRow": 232,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 232,
+    "excelRow": 233,
+    "colA": "DJ a 1 p: tiempo de contacto",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 233,
+    "excelRow": 234,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 234,
+    "excelRow": 235,
+    "colA": "DJ a 1 p: RSI",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 235,
+    "excelRow": 236,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 236,
+    "excelRow": 237,
+    "colA": "Single Hop Test",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 237,
+    "excelRow": 238,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 238,
+    "excelRow": 239,
+    "colA": "Triple Hop Test: distancia cm",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 239,
+    "excelRow": 240,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 240,
+    "excelRow": 241,
+    "colA": "Triple Hop Test: tiempo de contacto",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 241,
+    "excelRow": 242,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 242,
+    "excelRow": 243,
+    "colA": "Crossover Hop Test: distancia cm",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 243,
+    "excelRow": 244,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 244,
+    "excelRow": 245,
+    "colA": "Crossover Hop Test: tiempo de contacto",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 245,
+    "excelRow": 246,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 246,
+    "excelRow": 247,
+    "colA": "Medial Side Triple Hop Test: distancia cm",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 247,
+    "excelRow": 248,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 248,
+    "excelRow": 249,
+    "colA": "90 Medial Rotation Hop Test: distancia cm",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 249,
+    "excelRow": 250,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 250,
+    "excelRow": 251,
+    "colA": "Side Hop Test",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 251,
+    "excelRow": 252,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 252,
+    "excelRow": 253,
+    "colA": "Sentadilla a 1 pierna: vista frontal derecha",
+    "colB": "Déficit de tronco",
+    "colC": null
+  },
+  {
+    "rowIndex": 253,
+    "excelRow": 254,
+    "colA": null,
+    "colB": "Déficit de pelvis",
+    "colC": null
+  },
+  {
+    "rowIndex": 254,
+    "excelRow": 255,
+    "colA": null,
+    "colB": "Déficit de cadera",
+    "colC": null
+  },
+  {
+    "rowIndex": 255,
+    "excelRow": 256,
+    "colA": null,
+    "colB": "Déficit de rodilla",
+    "colC": null
+  },
+  {
+    "rowIndex": 256,
+    "excelRow": 257,
+    "colA": "Sentadilla a 1 pierna: vista frontal izquierda",
+    "colB": "Déficit de tronco",
+    "colC": null
+  },
+  {
+    "rowIndex": 257,
+    "excelRow": 258,
+    "colA": null,
+    "colB": "Déficit de pelvis",
+    "colC": null
+  },
+  {
+    "rowIndex": 258,
+    "excelRow": 259,
+    "colA": null,
+    "colB": "Déficit de cadera",
+    "colC": null
+  },
+  {
+    "rowIndex": 259,
+    "excelRow": 260,
+    "colA": null,
+    "colB": "Déficit de rodilla",
+    "colC": null
+  },
+  {
+    "rowIndex": 260,
+    "excelRow": 261,
+    "colA": "Sentadilla a 1 pierna: vista sagital",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 261,
+    "excelRow": 262,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 262,
+    "excelRow": 263,
+    "colA": "Sentadilla bipodal",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 263,
+    "excelRow": 264,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 264,
+    "excelRow": 265,
+    "colA": "Bisagra de cadera",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 265,
+    "excelRow": 266,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 266,
+    "excelRow": 267,
+    "colA": "Estocada - FMS",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 267,
+    "excelRow": 268,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 268,
+    "excelRow": 269,
+    "colA": "Paso de valla - FMS",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 269,
+    "excelRow": 270,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 270,
+    "excelRow": 271,
+    "colA": "Prueba de Frenado ",
+    "colB": "-",
+    "colC": null
+  },
+  {
+    "rowIndex": 271,
+    "excelRow": 272,
+    "colA": "T Test",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 272,
+    "excelRow": 273,
+    "colA": "Edgren Side Step Test",
+    "colB": null,
+    "colC": null
+  },
+  {
+    "rowIndex": 273,
+    "excelRow": 274,
+    "colA": "CMAS 45º",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 274,
+    "excelRow": 275,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 275,
+    "excelRow": 276,
+    "colA": "CMAS 90º",
+    "colB": "Derecha",
+    "colC": null
+  },
+  {
+    "rowIndex": 276,
+    "excelRow": 277,
+    "colA": null,
+    "colB": "Izquierda",
+    "colC": null
+  },
+  {
+    "rowIndex": 277,
+    "excelRow": 278,
+    "colA": "Cuestionarios autoinformados",
+    "colB": "IKDC",
+    "colC": null
+  },
+  {
+    "rowIndex": 278,
+    "excelRow": 279,
+    "colA": null,
+    "colB": "LCA RSI",
+    "colC": null
+  },
+  {
+    "rowIndex": 279,
+    "excelRow": 280,
+    "colA": null,
+    "colB": "HAGOS",
+    "colC": null
+  }
+]

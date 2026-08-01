@@ -1,0 +1,2322 @@
+[
+  {
+    "cell": "C8",
+    "formula": "'A completar'!C2",
+    "value": ""
+  },
+  {
+    "cell": "E8",
+    "formula": "'A completar'!C3",
+    "value": ""
+  },
+  {
+    "cell": "I8",
+    "formula": "'A completar'!C4",
+    "value": ""
+  },
+  {
+    "cell": "C9",
+    "formula": "'A completar'!C5",
+    "value": ""
+  },
+  {
+    "cell": "E9",
+    "formula": "'A completar'!C6",
+    "value": ""
+  },
+  {
+    "cell": "I9",
+    "formula": "'A completar'!C7",
+    "value": ""
+  },
+  {
+    "cell": "C10",
+    "formula": "'A completar'!C8",
+    "value": ""
+  },
+  {
+    "cell": "E10",
+    "formula": "'A completar'!C9",
+    "value": ""
+  },
+  {
+    "cell": "G10",
+    "formula": "'A completar'!C10",
+    "value": ""
+  },
+  {
+    "cell": "B11",
+    "formula": "'A completar'!C11",
+    "value": ""
+  },
+  {
+    "cell": "C12",
+    "formula": "'A completar'!C12",
+    "value": ""
+  },
+  {
+    "cell": "C13",
+    "formula": "'A completar'!C13",
+    "value": ""
+  },
+  {
+    "cell": "B14",
+    "formula": "IF(G13=\"No\", \"Todas las pruebas fueron realizadas sin dolor y a continuaci├│n se destacan los aspectos m├ís relevantes.\", \"El paciente present├│ dolor a lo largo de las evaluaciones y a continuaci├│n se destacan los aspectos m├ís relevantes.\")",
+    "value": "Todas las pruebas fueron realizadas sin dolor y a continuaci├│n se destacan los aspectos m├ís relevantes."
+  },
+  {
+    "cell": "D17",
+    "formula": "'A completar'!C15",
+    "value": ""
+  },
+  {
+    "cell": "E17",
+    "formula": "'A completar'!C16",
+    "value": ""
+  },
+  {
+    "cell": "D18",
+    "formula": "'A completar'!C17",
+    "value": ""
+  },
+  {
+    "cell": "E18",
+    "formula": "'A completar'!C18",
+    "value": ""
+  },
+  {
+    "cell": "D19",
+    "formula": "D17+D18",
+    "value": "0"
+  },
+  {
+    "cell": "E19",
+    "formula": "E17+E18",
+    "value": "0"
+  },
+  {
+    "cell": "B21",
+    "formula": "IF(AND(D19>=85,E19>=85),\n   \"El rango de movimiento total de cadera en ambas piernas se encuentra normal.\",\n   IF(AND(D19<85,E19>=85),\n      \"El rango de movimiento total de cadera en la pierna derecha se encuentra disminuido.\",\n      IF(AND(D19>=85,E19<85),\n         \"El rango de movimiento total de cadera en la pierna izquierda se encuentra disminuido.\",\n         \"El rango de movimiento total de cadera en ambas piernas se encuentra disminuido.\")))",
+    "value": "El rango de movimiento total de cadera en ambas piernas se encuentra disminuido."
+  },
+  {
+    "cell": "D24",
+    "formula": "'A completar'!C19",
+    "value": ""
+  },
+  {
+    "cell": "E24",
+    "formula": "'A completar'!C20",
+    "value": ""
+  },
+  {
+    "cell": "D27",
+    "formula": "'A completar'!C21",
+    "value": ""
+  },
+  {
+    "cell": "E27",
+    "formula": "'A completar'!C22",
+    "value": ""
+  },
+  {
+    "cell": "F27",
+    "formula": "E27-D27",
+    "value": "0"
+  },
+  {
+    "cell": "D28",
+    "formula": "'A completar'!C23",
+    "value": ""
+  },
+  {
+    "cell": "E28",
+    "formula": "'A completar'!C24",
+    "value": ""
+  },
+  {
+    "cell": "F28",
+    "formula": "E28-D28",
+    "value": "0"
+  },
+  {
+    "cell": "B30",
+    "formula": "IF(AND(D24=0,E24=0),\n\"No presenta d├®ficit de extensi├│n.\",\n\"Se presenta d├®ficit de extensi├│n de la rodilla.\")",
+    "value": "No presenta d├®ficit de extensi├│n."
+  },
+  {
+    "cell": "B31",
+    "formula": "IF(OR(F27<-10,F27>10),\n\"Se presenta un d├®ficit de flexi├│n activa de la rodilla.\",\n\"La flexi├│n activa de rodilla se encuentra normal.\")",
+    "value": "La flexi├│n activa de rodilla se encuentra normal."
+  },
+  {
+    "cell": "B32",
+    "formula": "IF(OR(F28<-10,F28>10),\n\"Se presenta un d├®ficit de flexi├│n pasiva de la rodilla.\",\n\"La flexi├│n pasiva de rodilla se encuentra normal.\")",
+    "value": "La flexi├│n pasiva de rodilla se encuentra normal."
+  },
+  {
+    "cell": "D35",
+    "formula": "'A completar'!C25",
+    "value": ""
+  },
+  {
+    "cell": "E35",
+    "formula": "'A completar'!C26",
+    "value": ""
+  },
+  {
+    "cell": "B37",
+    "formula": "IF(AND(D35<39, E35<39), \"Presenta un d├®ficit de flexi├│n dorsal del tobillo de ambas piernas.\", \nIF(D35<39, \"Presenta un d├®ficit de flexi├│n dorsal del tobillo de la pierna derecha.\", \nIF(E35<39, \"Presenta un d├®ficit de flexi├│n dorsal del tobillo de la pierna izquierda.\", \n\"No presenta d├®ficit en la flexi├│n dorsal del tobillo.\")))",
+    "value": "Presenta un d├®ficit de flexi├│n dorsal del tobillo de ambas piernas."
+  },
+  {
+    "cell": "D40",
+    "formula": "'A completar'!C27",
+    "value": ""
+  },
+  {
+    "cell": "E40",
+    "formula": "'A completar'!C28",
+    "value": ""
+  },
+  {
+    "cell": "F40",
+    "formula": "E40-D40",
+    "value": "0"
+  },
+  {
+    "cell": "D41",
+    "formula": "'A completar'!C29",
+    "value": ""
+  },
+  {
+    "cell": "E41",
+    "formula": "'A completar'!C30",
+    "value": ""
+  },
+  {
+    "cell": "F41",
+    "formula": "E41-D41",
+    "value": "0"
+  },
+  {
+    "cell": "D42",
+    "formula": "D40+D41",
+    "value": "0"
+  },
+  {
+    "cell": "E42",
+    "formula": "E40+E41",
+    "value": "0"
+  },
+  {
+    "cell": "F42",
+    "formula": "E42-D42",
+    "value": "0"
+  },
+  {
+    "cell": "B44",
+    "formula": "IF(OR(F40<-18,F40>18),\n\"Se presenta un d├®ficit de rotaci├│n interna del hombro.\",\n\"No se presenta un d├®ficit de rotaci├│n interna del hombro.\")",
+    "value": "No se presenta un d├®ficit de rotaci├│n interna del hombro."
+  },
+  {
+    "cell": "B45",
+    "formula": "IF(AND(F42>=-5,F42<=5),\n\"Se presenta un normal arco total del movimiento del hombro\",\n\"Se presenta un d├®ficit del arco total del movimiento del hombro\")",
+    "value": "Se presenta un normal arco total del movimiento del hombro"
+  },
+  {
+    "cell": "C48",
+    "formula": "'A completar'!C31",
+    "value": ""
+  },
+  {
+    "cell": "D48",
+    "formula": "'A completar'!C32",
+    "value": ""
+  },
+  {
+    "cell": "E48",
+    "formula": "D48-C48",
+    "value": "0"
+  },
+  {
+    "cell": "C49",
+    "formula": "'A completar'!C33",
+    "value": ""
+  },
+  {
+    "cell": "D49",
+    "formula": "'A completar'!C34",
+    "value": ""
+  },
+  {
+    "cell": "E49",
+    "formula": "D49-C49",
+    "value": "0"
+  },
+  {
+    "cell": "B51",
+    "formula": "IF(E48=0,\n\"No se presenta un d├®ficit en el per├¡metro de muslo.\",\n\"Se presenta un d├®ficit en el per├¡metro de muslo de \"&E48&\" cm.\")",
+    "value": "No se presenta un d├®ficit en el per├¡metro de muslo."
+  },
+  {
+    "cell": "B52",
+    "formula": "IF(E49=0,\n\"No se presenta un d├®ficit en el per├¡metro de pantorilla\",\n\"Se presenta un d├®ficit en el per├¡metro de pantorilla de \"&E49&\" cm\")",
+    "value": "No se presenta un d├®ficit en el per├¡metro de pantorilla"
+  },
+  {
+    "cell": "E55",
+    "formula": "'A completar'!C35",
+    "value": ""
+  },
+  {
+    "cell": "F55",
+    "formula": "'A completar'!C36",
+    "value": ""
+  },
+  {
+    "cell": "G55",
+    "formula": "'A completar'!C37",
+    "value": ""
+  },
+  {
+    "cell": "E56",
+    "formula": "'A completar'!C38",
+    "value": ""
+  },
+  {
+    "cell": "F56",
+    "formula": "'A completar'!C39",
+    "value": ""
+  },
+  {
+    "cell": "G56",
+    "formula": "'A completar'!C40",
+    "value": ""
+  },
+  {
+    "cell": "D59",
+    "formula": "'A completar'!C41",
+    "value": ""
+  },
+  {
+    "cell": "E59",
+    "formula": "'A completar'!C42",
+    "value": ""
+  },
+  {
+    "cell": "D60",
+    "formula": "'A completar'!C43",
+    "value": ""
+  },
+  {
+    "cell": "E60",
+    "formula": "'A completar'!C44",
+    "value": ""
+  },
+  {
+    "cell": "D61",
+    "formula": "'A completar'!C45",
+    "value": ""
+  },
+  {
+    "cell": "E61",
+    "formula": "'A completar'!C46",
+    "value": ""
+  },
+  {
+    "cell": "D64",
+    "formula": "'A completar'!C47",
+    "value": ""
+  },
+  {
+    "cell": "E64",
+    "formula": "'A completar'!C48",
+    "value": ""
+  },
+  {
+    "cell": "B66",
+    "formula": "IF(AND(E55=\"X\", F55=\"OK\", G55=\"OK\"), \"En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco.\",\nIF(AND(E55=\"X\", F55=\"X\", G55=\"OK\"), \"En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco y del Recto Anterior.\",\nIF(AND(E55=\"X\", F55=\"X\", G55=\"X\"), \"En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco, del Recto Anterior y del Sartorio.\",\nIF(AND(E55=\"X\", F55=\"OK\", G55=\"X\"), \"En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco y del Sartorio.\",\nIF(AND(E55=\"OK\", F55=\"X\", G55=\"OK\"), \"En la pierna derecha, se presenta un acortamiento del Recto Anterior.\",\nIF(AND(E55=\"OK\", F55=\"X\", G55=\"X\"), \"En la pierna derecha, se presenta un acortamiento del Recto Anterior y del Sartorio.\",\nIF(AND(E55=\"OK\", F55=\"OK\", G55=\"X\"), \"En la pierna derecha, se presenta un acortamiento del Sartorio.\",\nIF(AND(E55=\"OK\", F55=\"OK\", G55=\"OK\"), \"En la pierna derecha, no se presenta un acortamiento de los flexores de cadera.\",\n\"\"))))))))",
+    "value": ""
+  },
+  {
+    "cell": "B67",
+    "formula": "IF(AND(E56=\"X\", F56=\"OK\", G56=\"OK\"), \"En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco.\",\nIF(AND(E56=\"X\", F56=\"X\", G56=\"OK\"), \"En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco y del Recto Anterior.\",\nIF(AND(E56=\"X\", F56=\"X\", G56=\"X\"), \"En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco, del Recto Anterior y del Sartorio.\",\nIF(AND(E56=\"X\", F56=\"OK\", G56=\"X\"), \"En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco y del Sartorio.\",\nIF(AND(E56=\"OK\", F56=\"X\", G56=\"OK\"), \"En la pierna izquierda, se presenta un acortamiento del Recto Anterior.\",\nIF(AND(E56=\"OK\", F56=\"X\", G56=\"X\"), \"En la pierna izquierda, se presenta un acortamiento del Recto Anterior y del Sartorio.\",\nIF(AND(E56=\"OK\", F56=\"OK\", G56=\"X\"), \"En la pierna izquierda, se presenta un acortamiento del Sartorio.\",\nIF(AND(E56=\"OK\", F56=\"OK\", G56=\"OK\"), \"En la pierna izquierda, no se presenta un acortamiento de los flexores de cadera.\",\n\"\"))))))))",
+    "value": ""
+  },
+  {
+    "cell": "B68",
+    "formula": "IF(AND(D59>=70, E59>=70), \"No se presenta acortamiento de los isquiotibiales.\",\nIF(AND(D59<70, E59>=70), \"Se presenta un acortamiento del isquiotibial de la pierna derecha.\",\nIF(AND(D59>=70, E59<70), \"Se presenta un acortamiento del isquiotibial de la pierna izquierda.\",\nIF(AND(D59<70, E59<70), \"Se presenta un acortamiento de los isquiotibiales en ambas piernas.\",\n\"\"))))",
+    "value": "Se presenta un acortamiento de los isquiotibiales en ambas piernas."
+  },
+  {
+    "cell": "B69",
+    "formula": "IF(AND(D60=\"OK\",E60=\"OK\"),\n   \"No se refiere dolor o inseguridad durante el Askling H-test en ninguna de las piernas.\",\n   IF(AND(D60=\"X\",E60=\"OK\"),\n      \"Refiere dolor o inseguridad en la pierna derecha durante el Askling H-test.\",\n      IF(AND(D60=\"OK\",E60=\"X\"),\n         \"Refiere dolor o inseguridad en la pierna izquierda durante el Askling H-test.\",\n         \"Refiere dolor o inseguridad en ambas piernas durante el Askling H-test.\")))",
+    "value": "Refiere dolor o inseguridad en ambas piernas durante el Askling H-test."
+  },
+  {
+    "cell": "B70",
+    "formula": "IF(AND(D61=\"OK\",E61=\"OK\"),\n   \"No se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en ninguna de las piernas mediante la prueba de Slump test.\",\n   IF(AND(D61=\"X\",E61=\"OK\"),\n      \"Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en la pierna derecha mediante la prueba de Slump test.\",\n      IF(AND(D61=\"OK\",E61=\"X\"),\n         \"Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en la pierna izquierda mediante la prueba de Slump test.\",\n         \"Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en ambos miembros mediante la prueba de Slump test.\")))",
+    "value": "Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en ambos miembros mediante la prueba de Slump test."
+  },
+  {
+    "cell": "B71",
+    "formula": "IF(AND(D64<=17.4,E64<=17.4),\n\"No se presenta acortamiento de aductores\",\nIF(AND(D64>17.4,E64<=17.4),\n\"Se presenta acortamiento de aductor de la pierna derecha\",\nIF(AND(D64<=17.4,E64>17.4),\n\"Se presenta acortamiento de aductor de la pierna izquierda\",\n\"Se presenta acortamiento de aductores de ambas piernas\")))",
+    "value": "No se presenta acortamiento de aductores"
+  },
+  {
+    "cell": "C75",
+    "formula": "'A completar'!C49",
+    "value": ""
+  },
+  {
+    "cell": "D75",
+    "formula": "'A completar'!C50",
+    "value": ""
+  },
+  {
+    "cell": "E75",
+    "formula": "'A completar'!C51",
+    "value": ""
+  },
+  {
+    "cell": "F75",
+    "formula": "'A completar'!C52",
+    "value": ""
+  },
+  {
+    "cell": "G75",
+    "formula": "'A completar'!C53",
+    "value": ""
+  },
+  {
+    "cell": "H75",
+    "formula": "'A completar'!C54",
+    "value": ""
+  },
+  {
+    "cell": "C76",
+    "formula": "'A completar'!C55",
+    "value": ""
+  },
+  {
+    "cell": "D76",
+    "formula": "'A completar'!C56",
+    "value": ""
+  },
+  {
+    "cell": "E76",
+    "formula": "'A completar'!C57",
+    "value": ""
+  },
+  {
+    "cell": "F76",
+    "formula": "'A completar'!C58",
+    "value": ""
+  },
+  {
+    "cell": "G76",
+    "formula": "'A completar'!C59",
+    "value": ""
+  },
+  {
+    "cell": "H76",
+    "formula": "'A completar'!C60",
+    "value": ""
+  },
+  {
+    "cell": "C77",
+    "formula": "'A completar'!C61",
+    "value": ""
+  },
+  {
+    "cell": "D77",
+    "formula": "'A completar'!C62",
+    "value": ""
+  },
+  {
+    "cell": "E77",
+    "formula": "'A completar'!C63",
+    "value": ""
+  },
+  {
+    "cell": "F77",
+    "formula": "'A completar'!C64",
+    "value": ""
+  },
+  {
+    "cell": "G77",
+    "formula": "'A completar'!C65",
+    "value": ""
+  },
+  {
+    "cell": "H77",
+    "formula": "'A completar'!C66",
+    "value": ""
+  },
+  {
+    "cell": "C78",
+    "formula": "'A completar'!C67",
+    "value": ""
+  },
+  {
+    "cell": "D78",
+    "formula": "'A completar'!C68",
+    "value": ""
+  },
+  {
+    "cell": "E78",
+    "formula": "'A completar'!C69",
+    "value": ""
+  },
+  {
+    "cell": "F78",
+    "formula": "'A completar'!C70",
+    "value": ""
+  },
+  {
+    "cell": "G78",
+    "formula": "'A completar'!C71",
+    "value": ""
+  },
+  {
+    "cell": "H78",
+    "formula": "'A completar'!C72",
+    "value": ""
+  },
+  {
+    "cell": "C79",
+    "formula": "'A completar'!C73",
+    "value": ""
+  },
+  {
+    "cell": "F79",
+    "formula": "'A completar'!C74",
+    "value": ""
+  },
+  {
+    "cell": "C80",
+    "formula": "'A completar'!C75",
+    "value": ""
+  },
+  {
+    "cell": "F80",
+    "formula": "'A completar'!C76",
+    "value": ""
+  },
+  {
+    "cell": "C83",
+    "formula": "'A completar'!C77",
+    "value": ""
+  },
+  {
+    "cell": "D83",
+    "formula": "'A completar'!C78",
+    "value": ""
+  },
+  {
+    "cell": "C84",
+    "formula": "'A completar'!C79",
+    "value": ""
+  },
+  {
+    "cell": "D84",
+    "formula": "'A completar'!C80",
+    "value": ""
+  },
+  {
+    "cell": "C85",
+    "formula": "'A completar'!C85",
+    "value": ""
+  },
+  {
+    "cell": "D85",
+    "formula": "'A completar'!C86",
+    "value": ""
+  },
+  {
+    "cell": "E86",
+    "formula": "'A completar'!C81",
+    "value": ""
+  },
+  {
+    "cell": "F86",
+    "formula": "'A completar'!C82",
+    "value": ""
+  },
+  {
+    "cell": "G86",
+    "formula": "'A completar'!C83",
+    "value": ""
+  },
+  {
+    "cell": "H86",
+    "formula": "'A completar'!C84",
+    "value": ""
+  },
+  {
+    "cell": "D89",
+    "formula": "'A completar'!C88",
+    "value": ""
+  },
+  {
+    "cell": "E89",
+    "formula": "'A completar'!C91",
+    "value": ""
+  },
+  {
+    "cell": "F89",
+    "formula": "E89-D89",
+    "value": "0"
+  },
+  {
+    "cell": "D90",
+    "formula": "'A completar'!C89",
+    "value": ""
+  },
+  {
+    "cell": "E90",
+    "formula": "'A completar'!C92",
+    "value": ""
+  },
+  {
+    "cell": "F90",
+    "formula": "E90-D90",
+    "value": "0"
+  },
+  {
+    "cell": "D91",
+    "formula": "'A completar'!C90",
+    "value": ""
+  },
+  {
+    "cell": "E91",
+    "formula": "'A completar'!C93",
+    "value": ""
+  },
+  {
+    "cell": "F91",
+    "formula": "E91-D91",
+    "value": "0"
+  },
+  {
+    "cell": "D92",
+    "formula": "((D89+D90+D91)/(3*'A completar'!C87))*100",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "E92",
+    "formula": "((E89+E90+E91)/(3*'A completar'!C87))*100",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D95",
+    "formula": "'A completar'!C94",
+    "value": ""
+  },
+  {
+    "cell": "F95",
+    "formula": "'A completar'!C96",
+    "value": ""
+  },
+  {
+    "cell": "D96",
+    "formula": "'A completar'!C95",
+    "value": ""
+  },
+  {
+    "cell": "F96",
+    "formula": "'A completar'!C97",
+    "value": ""
+  },
+  {
+    "cell": "D97",
+    "formula": "'A completar'!C98",
+    "value": ""
+  },
+  {
+    "cell": "F97",
+    "formula": "'A completar'!C100",
+    "value": ""
+  },
+  {
+    "cell": "D98",
+    "formula": "'A completar'!C99",
+    "value": ""
+  },
+  {
+    "cell": "F98",
+    "formula": "'A completar'!C101",
+    "value": ""
+  },
+  {
+    "cell": "B100",
+    "formula": "IF(AND(F89>=-4,F89<=4),\n\"El alcance anterior se encuentra normal.\",\n\"El alcance anterior se encuentra en d├®ficit.\")",
+    "value": "El alcance anterior se encuentra normal."
+  },
+  {
+    "cell": "B101",
+    "formula": "IF(AND(F90>=-4,F90<=4),\n\"El alcance posteromedial se encuentra normal.\",\n\"El alcance posteromedial se encuentra en d├®ficit.\")",
+    "value": "El alcance posteromedial se encuentra normal."
+  },
+  {
+    "cell": "B102",
+    "formula": "IF(AND(F91>=-4,F91<=4),\n\"El alcance posterolateral se encuentra normal.\",\n\"El alcance posterolateral se encuentra en d├®ficit.\")",
+    "value": "El alcance posterolateral se encuentra normal."
+  },
+  {
+    "cell": "B103",
+    "formula": "IF(AND(D92>=94, E92>=94), \n   \"El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) se encuentra dentro de los valores de referencia.\",\nIF(AND(D92<94, E92>=94), \n   \"El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) de la pierna derecha se encuentra por debajo de los valores de referencia.\",\nIF(AND(D92>=94, E92<94), \n   \"El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) de la pierna izquierda se encuentra por debajo de los valores de referencia.\",\nIF(AND(D92<94, E92<94), \n   \"El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) de ambas piernas se encuentran por debajo de los valores de referencia.\",\n\"\"))))",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B104",
+    "formula": "IF(AND(D95>=45,F95>=45),\n\"Se presenta un correcto balance monopodal con ojos abiertos\",\nIF(AND(D95<45,F95>=45),\n\"Se presenta un d├®ficit en el balance monopodal con ojos abiertos de la pierna derecha\",\nIF(AND(D95>=45,F95<45),\n\"Se presenta un d├®ficit en el balance monopodal con ojos abiertos de la pierna izquierda\",\n\"Se presenta un d├®ficit en el balance monopodal con ojos abiertos de ambas piernas\")))",
+    "value": "Se presenta un d├®ficit en el balance monopodal con ojos abiertos de ambas piernas"
+  },
+  {
+    "cell": "B105",
+    "formula": "IF(AND(D96>=9,F96>=9),\n\"Se presenta un correcto balance monopodal con ojos cerrados\",\nIF(AND(D96<9,F96>=9),\n\"Se presenta un d├®ficit en el balance monopodal con ojos cerrados de la pierna derecha\",\nIF(AND(D96>=9,F96<9),\n\"Se presenta un d├®ficit en el balance monopodal con ojos cerrados de la pierna izquierda\",\n\"Se presenta un d├®ficit en el balance monopodal con ojos cerrados de ambas piernas\")))",
+    "value": "Se presenta un d├®ficit en el balance monopodal con ojos cerrados de ambas piernas"
+  },
+  {
+    "cell": "B106",
+    "formula": "IF(AND(D97=\"OK\", D98=\"OK\", F97=\"OK\", F98=\"OK\"),\n\"La prueba de balance vestibular fue satisfactoria en ambas piernas en ambos movimientos.\",\nIF(AND(D97=\"X\", D98=\"X\", F97=\"OK\", F98=\"OK\"),\n\"Se presenta un d├®ficit vestibular en la pierna derecha en ambos movimientos.\",\nIF(AND(F97=\"X\", F98=\"X\", D97=\"OK\", D98=\"OK\"),\n\"Se presenta un d├®ficit vestibular en la pierna izquierda en ambos movimientos.\",\nIF(AND(D97=\"X\", F97=\"X\", D98=\"OK\", F98=\"OK\"),\n\"Se presenta un d├®ficit de balance vestibular en movimiento lateral en ambas piernas.\",\nIF(AND(D98=\"X\", F98=\"X\", D97=\"OK\", F97=\"OK\"),\n\"Se presenta un d├®ficit de balance vestibular en movimiento vertical en ambas piernas.\",\nIF(AND(D97=\"X\", D98=\"OK\", F97=\"OK\", F98=\"OK\"),\n\"Se presenta un d├®ficit vestibular en movimiento lateral de la pierna derecha.\",\nIF(AND(D97=\"OK\", D98=\"X\", F97=\"OK\", F98=\"OK\"),\n\"Se presenta un d├®ficit vestibular en movimiento vertical de la pierna izquierda.\",\nIF(AND(F97=\"X\", F98=\"OK\", D97=\"OK\", D98=\"OK\"),\n\"Se presenta un d├®ficit vestibular en movimiento lateral de la pierna derecha.\",\nIF(AND(F97=\"OK\", F98=\"X\", D97=\"OK\", D98=\"OK\"),\n\"Se presenta un d├®ficit vestibular en movimiento vertical de la pierna izquierda.\",\n\"Se presenta d├®ficit vestibular en m├║ltiples combinaciones.\")))))))))",
+    "value": "Se presenta d├®ficit vestibular en m├║ltiples combinaciones."
+  },
+  {
+    "cell": "D109",
+    "formula": "'A completar'!C102",
+    "value": ""
+  },
+  {
+    "cell": "E109",
+    "formula": "'A completar'!C103",
+    "value": ""
+  },
+  {
+    "cell": "G109",
+    "formula": "(D109*100)/E109",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D110",
+    "formula": "'A completar'!C104",
+    "value": ""
+  },
+  {
+    "cell": "D111",
+    "formula": "'A completar'!C105",
+    "value": ""
+  },
+  {
+    "cell": "D112",
+    "formula": "D110/D111",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D113",
+    "formula": "'A completar'!C106",
+    "value": ""
+  },
+  {
+    "cell": "E113",
+    "formula": "'A completar'!C107",
+    "value": ""
+  },
+  {
+    "cell": "G113",
+    "formula": "(D113*100)/E113",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D114",
+    "formula": "'A completar'!C108",
+    "value": ""
+  },
+  {
+    "cell": "E114",
+    "formula": "'A completar'!C109",
+    "value": ""
+  },
+  {
+    "cell": "D115",
+    "formula": "'A completar'!C110",
+    "value": ""
+  },
+  {
+    "cell": "E115",
+    "formula": "'A completar'!C111",
+    "value": ""
+  },
+  {
+    "cell": "G115",
+    "formula": "(D115*100)/E115",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D116",
+    "formula": "'A completar'!C112",
+    "value": ""
+  },
+  {
+    "cell": "E116",
+    "formula": "'A completar'!C113",
+    "value": ""
+  },
+  {
+    "cell": "D117",
+    "formula": "'A completar'!C114",
+    "value": ""
+  },
+  {
+    "cell": "E117",
+    "formula": "'A completar'!C115",
+    "value": ""
+  },
+  {
+    "cell": "G117",
+    "formula": "(D117*100)/E117",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D118",
+    "formula": "'A completar'!C116",
+    "value": ""
+  },
+  {
+    "cell": "E118",
+    "formula": "'A completar'!C117",
+    "value": ""
+  },
+  {
+    "cell": "B120",
+    "formula": "IF(OR(D109<85, E109<85), \n   \"Se presenta un d├®ficit de fuerza resistencia en los inclinadores laterales de tronco.\", \n   \"Se presenta buena fuerza resistencia de inclinadores laterales de tronco alcanzando los valores de referencia.\")",
+    "value": "Se presenta un d├®ficit de fuerza resistencia en los inclinadores laterales de tronco."
+  },
+  {
+    "cell": "B121",
+    "formula": "IF(OR(D110<130), \n   \"Se presenta un d├®ficit de fuerza resistencia en los flexores de tronco.\", \n   \"Se presenta buena fuerza resistencia de flexores de tronco alcanzando los valores de referencia.\")",
+    "value": "Se presenta un d├®ficit de fuerza resistencia en los flexores de tronco."
+  },
+  {
+    "cell": "B122",
+    "formula": "IF(OR(D111<170), \n   \"Se presenta un d├®ficit de fuerza resistencia en los extensores de tronco.\", \n   \"Se presenta buena fuerza resistencia de extensores de tronco alcanzando los valores de referencia.\")",
+    "value": "Se presenta un d├®ficit de fuerza resistencia en los extensores de tronco."
+  },
+  {
+    "cell": "B123",
+    "formula": "IF(AND(D112>=0.75,D112<=0.77),\n\"La relaci├│n flexores - extensores de tronco se encuentra normal.\",\n\"La relaci├│n flexores - extensores de tronco se encuentra alterada.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B124",
+    "formula": "IF(AND(D113<20, E113>=20), \"Se presenta un d├®ficit de fuerza resistencia de gl├║teo de la pierna derecha.\",\nIF(AND(D113>=20, E113<20), \"Se presenta un d├®ficit de fuerza resistencia de gl├║teo de la pierna izquierda.\",\nIF(AND(D113<20, E113<20), \"Se presenta un d├®ficit de fuerza resistencia de gl├║teo en ambas piernas.\",\n\"Se presenta buena fuerza resistencia de gl├║teo alcanzando los valores de referencia.\")))",
+    "value": "Se presenta un d├®ficit de fuerza resistencia de gl├║teo en ambas piernas."
+  },
+  {
+    "cell": "B125",
+    "formula": "IF(AND(D115<20, E115>=20), \"Se presenta un d├®ficit de fuerza resistencia de gemelo de la pierna derecha.\",\nIF(AND(D115>=20, E115<20), \"Se presenta un d├®ficit de fuerza resistencia de gemelo de la pierna izquierda.\",\nIF(AND(D115<20, E115<20), \"Se presenta un d├®ficit de fuerza resistencia de los gemelos en ambas piernas.\",\n\"Se presenta buena fuerza resistencia de los gemelos alcanzando los valores de referencia.\")))",
+    "value": "Se presenta un d├®ficit de fuerza resistencia de los gemelos en ambas piernas."
+  },
+  {
+    "cell": "B126",
+    "formula": "IF(AND(D117<20, E117>=20), \"Se presenta un d├®ficit de fuerza resistencia de cu├ídriceps de la pierna derecha.\",\nIF(AND(D117>=20, E117<20), \"Se presenta un d├®ficit de fuerza resistencia de cu├ídriceps de la pierna izquierda.\",\nIF(AND(D117<20, E117<20), \"Se presenta un d├®ficit de fuerza resistencia del cu├ídriceps en ambas piernas.\",\n\"Se presenta buena fuerza resistencia del cu├ídriceps alcanzando los valores de referencia.\")))",
+    "value": "Se presenta un d├®ficit de fuerza resistencia del cu├ídriceps en ambas piernas."
+  },
+  {
+    "cell": "D129",
+    "formula": "'A completar'!C118",
+    "value": ""
+  },
+  {
+    "cell": "E129",
+    "formula": "'A completar'!C119",
+    "value": ""
+  },
+  {
+    "cell": "F129",
+    "formula": "(D129*100)/E129",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D130",
+    "formula": "'A completar'!C120",
+    "value": ""
+  },
+  {
+    "cell": "E130",
+    "formula": "'A completar'!C121",
+    "value": ""
+  },
+  {
+    "cell": "D131",
+    "formula": "'A completar'!C122",
+    "value": ""
+  },
+  {
+    "cell": "D132",
+    "formula": "'A completar'!C123",
+    "value": ""
+  },
+  {
+    "cell": "D133",
+    "formula": "'A completar'!C124",
+    "value": ""
+  },
+  {
+    "cell": "D134",
+    "formula": "'A completar'!C125",
+    "value": ""
+  },
+  {
+    "cell": "B136",
+    "formula": "IF(AND(F128>=90,F128<=110),\n\"Se presenta una correcta simetr├¡a de fuerza resistencia en el ejercicio press de hombro\",\n\"Se presenta una asimetr├¡a de fuerza resistencia en el ejercicio press de hombro\")",
+    "value": "Se presenta una asimetr├¡a de fuerza resistencia en el ejercicio press de hombro"
+  },
+  {
+    "cell": "C139",
+    "formula": "'A completar'!C126",
+    "value": ""
+  },
+  {
+    "cell": "D139",
+    "formula": "'A completar'!C127",
+    "value": ""
+  },
+  {
+    "cell": "E139",
+    "formula": "C139/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H139",
+    "formula": "(C139*100)/D139",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C140",
+    "formula": "'A completar'!C128",
+    "value": ""
+  },
+  {
+    "cell": "D140",
+    "formula": "'A completar'!C129",
+    "value": ""
+  },
+  {
+    "cell": "C141",
+    "formula": "'A completar'!C130",
+    "value": ""
+  },
+  {
+    "cell": "D141",
+    "formula": "'A completar'!C131",
+    "value": ""
+  },
+  {
+    "cell": "E141",
+    "formula": "C141/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H141",
+    "formula": "(C141*100)/D141",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C142",
+    "formula": "'A completar'!C132",
+    "value": ""
+  },
+  {
+    "cell": "D142",
+    "formula": "'A completar'!C133",
+    "value": ""
+  },
+  {
+    "cell": "C143",
+    "formula": "'A completar'!C134",
+    "value": ""
+  },
+  {
+    "cell": "E143",
+    "formula": "C143/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C144",
+    "formula": "'A completar'!C135",
+    "value": ""
+  },
+  {
+    "cell": "C145",
+    "formula": "'A completar'!C136",
+    "value": ""
+  },
+  {
+    "cell": "D145",
+    "formula": "'A completar'!C137",
+    "value": ""
+  },
+  {
+    "cell": "E145",
+    "formula": "C145/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F145",
+    "formula": "D145/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H145",
+    "formula": "(C145*100)/D145",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C146",
+    "formula": "'A completar'!C138",
+    "value": ""
+  },
+  {
+    "cell": "D146",
+    "formula": "'A completar'!C139",
+    "value": ""
+  },
+  {
+    "cell": "C147",
+    "formula": "'A completar'!C140",
+    "value": ""
+  },
+  {
+    "cell": "D147",
+    "formula": "'A completar'!C141",
+    "value": ""
+  },
+  {
+    "cell": "E147",
+    "formula": "C147/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F147",
+    "formula": "D147/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H147",
+    "formula": "(C147*100)/D147",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C148",
+    "formula": "'A completar'!C142",
+    "value": ""
+  },
+  {
+    "cell": "D148",
+    "formula": "'A completar'!C143",
+    "value": ""
+  },
+  {
+    "cell": "C149",
+    "formula": "C145/C147",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D149",
+    "formula": "D145/D147",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B151",
+    "formula": "IF(AND(H139>=90,H139<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular de flexores de cadera en la prueba de 0-0┬║.\",\n\"Se presenta una asimetr├¡a de de flexores de cadera en la prueba de 0-0┬║.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B152",
+    "formula": "IF(AND(H141>=90,H141<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular de flexores de cadera en la prueba de 0-90┬║.\",\n\"Se presenta una asimetr├¡a de de flexores de cadera en la prueba de 0-90┬║.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B153",
+    "formula": "IF(E143<3.6,\n\"Los valores de fuerza muscular de aductores en el Squeeze test est├ín por debajo de los valores de referencia.\",\n\"Los valores de fuerza muscular de aductores en el Squeeze test alcanzan los valores de referencia.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B154",
+    "formula": "IF(AND(H145>=90,H145<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular de aductores.\",\n\"Se presenta una asimetr├¡a de fuerza muscular de aductores.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B155",
+    "formula": "IF(AND(E145>=2.99,F145>=2.99),\n\"Los valores de fuerza muscular unilateral de aductores alcanzan los valores de referencia.\",\nIF(AND(E145<2.99,E146>=2.99),\n\"Los valores de fuerza muscular unilateral de aductores del lado derecho est├ín por debajo de los valores de referencia.\",\nIF(AND(E145>=2.99,E146<2.99),\n\"Los valores de fuerza muscular unilateral de aductores del lado izquierdo est├ín por debajo de los valores de referencia.\",\n\"Los valores de fuerza muscular unilateral de aductores de ambos lados est├ín por debajo de los valores de referencia.\")))",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B156",
+    "formula": "IF(AND(H147>=90,H147<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular de abductores.\",\n\"Se presenta una asimetr├¡a de fuerza muscular de abductores.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B157",
+    "formula": "IF(AND(E147>=2.59,F147>=2.59),\n\"Los valores de fuerza muscular unilateral de aductores alcanzan los valores de referencia.\",\nIF(AND(E147<2.99,E148>=2.99),\n\"Los valores de fuerza muscular unilateral de aductores del lado derecho est├ín por debajo de los valores de referencia.\",\nIF(AND(E147>=2.99,E148<2.99),\n\"Los valores de fuerza muscular unilateral de aductores del lado izquierdo est├ín por debajo de los valores de referencia.\",\n\"Los valores de fuerza muscular unilateral de aductores de ambos lados est├ín por debajo de los valores de referencia.\")))",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B158",
+    "formula": "IF(AND(C149>=1.16,C149<=1.18),\n\"La relaci├│n aductores - abductores de la pierna derecha se encuentra normal.\",\n\"La relaci├│n aductores - abductores de la pierna derecha se encuentra alterada.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B159",
+    "formula": "IF(AND(D149>=1.16,D149<=1.18),\n\"La relaci├│n aductores - abductores de la pierna izquierda se encuentra normal.\",\n\"La relaci├│n aductores - abductores de la pierna izquierda se encuentra alterada.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C162",
+    "formula": "'A completar'!C144",
+    "value": ""
+  },
+  {
+    "cell": "D162",
+    "formula": "'A completar'!C145",
+    "value": ""
+  },
+  {
+    "cell": "E162",
+    "formula": "C162/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F162",
+    "formula": "D162/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H162",
+    "formula": "(C162*100)/D162",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C163",
+    "formula": "'A completar'!C146",
+    "value": ""
+  },
+  {
+    "cell": "D163",
+    "formula": "'A completar'!C147",
+    "value": ""
+  },
+  {
+    "cell": "C164",
+    "formula": "'A completar'!C148",
+    "value": ""
+  },
+  {
+    "cell": "D164",
+    "formula": "'A completar'!C149",
+    "value": ""
+  },
+  {
+    "cell": "E164",
+    "formula": "C164/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F164",
+    "formula": "D164/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H164",
+    "formula": "(C164*100)/D164",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C165",
+    "formula": "'A completar'!C150",
+    "value": ""
+  },
+  {
+    "cell": "D165",
+    "formula": "'A completar'!C151",
+    "value": ""
+  },
+  {
+    "cell": "C166",
+    "formula": "C164/C162",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D166",
+    "formula": "D164/D162",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B168",
+    "formula": "IF(AND(H162>=90,H162<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular de cu├ídriceps.\",\n\"Se presenta una asimetr├¡a de fuerza muscular de cu├ídriceps.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B169",
+    "formula": "IF(AND(H164>=90,H164<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular de isquiotibiales.\",\n\"Se presenta una asimetr├¡a de fuerza muscular de isquiotibiales.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C172",
+    "formula": "'A completar'!C152",
+    "value": ""
+  },
+  {
+    "cell": "D172",
+    "formula": "'A completar'!C153",
+    "value": ""
+  },
+  {
+    "cell": "E172",
+    "formula": "C172/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F172",
+    "formula": "D172/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H172",
+    "formula": "(C172*100)/D172",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C173",
+    "formula": "'A completar'!C154",
+    "value": ""
+  },
+  {
+    "cell": "D173",
+    "formula": "'A completar'!C155",
+    "value": ""
+  },
+  {
+    "cell": "C174",
+    "formula": "'A completar'!C156",
+    "value": ""
+  },
+  {
+    "cell": "D174",
+    "formula": "'A completar'!C157",
+    "value": ""
+  },
+  {
+    "cell": "E174",
+    "formula": "C174/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F174",
+    "formula": "D174/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H174",
+    "formula": "(C174*100)/D174",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C175",
+    "formula": "'A completar'!C158",
+    "value": ""
+  },
+  {
+    "cell": "D175",
+    "formula": "'A completar'!C159",
+    "value": ""
+  },
+  {
+    "cell": "C176",
+    "formula": "'A completar'!C160",
+    "value": ""
+  },
+  {
+    "cell": "D176",
+    "formula": "'A completar'!C161",
+    "value": ""
+  },
+  {
+    "cell": "E176",
+    "formula": "C176/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F176",
+    "formula": "D176/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H176",
+    "formula": "(C176*100)/D176",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C177",
+    "formula": "'A completar'!C162",
+    "value": ""
+  },
+  {
+    "cell": "D177",
+    "formula": "'A completar'!C163",
+    "value": ""
+  },
+  {
+    "cell": "C178",
+    "formula": "C176/C174",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D178",
+    "formula": "D176/D174",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B180",
+    "formula": "IF(AND(H172>=90,H172<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular del tr├¡ceps sural.\",\n\"Se presenta una asimetr├¡a de fuerza muscular del tr├¡ceps sural.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B181",
+    "formula": "IF(AND(H174>=90,H174<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular de abductores de tobillo.\",\n\"Se presenta una asimetr├¡a de fuerza muscular de abductores de tobillo.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B182",
+    "formula": "IF(AND(H176>=90,H176<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular de aductores de tobillo.\",\n\"Se presenta una asimetr├¡a de fuerza muscular de aductores de tobillo.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D185",
+    "formula": "'A completar'!C164",
+    "value": ""
+  },
+  {
+    "cell": "D186",
+    "formula": "D185/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D187",
+    "formula": "'A completar'!C165",
+    "value": ""
+  },
+  {
+    "cell": "E187",
+    "formula": "'A completar'!C166",
+    "value": ""
+  },
+  {
+    "cell": "F187",
+    "formula": "(D187*100)/E187",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B189",
+    "formula": "IF(AND(F187>=90,F187<=110),\n\"Se presenta una correcta simetr├¡a de fuerza pico unilateral.\",\n\"Se presenta una asimetr├¡a de fuerza pico unilateral.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C192",
+    "formula": "'A completar'!C167",
+    "value": ""
+  },
+  {
+    "cell": "D192",
+    "formula": "'A completar'!C168",
+    "value": ""
+  },
+  {
+    "cell": "E192",
+    "formula": "C192/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F192",
+    "formula": "D192/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H192",
+    "formula": "(C192*100)/D192",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C193",
+    "formula": "'A completar'!C169",
+    "value": ""
+  },
+  {
+    "cell": "D193",
+    "formula": "'A completar'!C170",
+    "value": ""
+  },
+  {
+    "cell": "C194",
+    "formula": "'A completar'!C171",
+    "value": ""
+  },
+  {
+    "cell": "D194",
+    "formula": "'A completar'!C172",
+    "value": ""
+  },
+  {
+    "cell": "E194",
+    "formula": "C194/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F194",
+    "formula": "D194/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H194",
+    "formula": "(C194*100)/D194",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C195",
+    "formula": "'A completar'!C173",
+    "value": ""
+  },
+  {
+    "cell": "D195",
+    "formula": "'A completar'!C174",
+    "value": ""
+  },
+  {
+    "cell": "C196",
+    "formula": "C192/C194",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D196",
+    "formula": "D192/D194",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C197",
+    "formula": "'A completar'!C175",
+    "value": ""
+  },
+  {
+    "cell": "D197",
+    "formula": "'A completar'!C176",
+    "value": ""
+  },
+  {
+    "cell": "E197",
+    "formula": "C197/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F197",
+    "formula": "D197/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H197",
+    "formula": "(C197*100)/D197",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C198",
+    "formula": "'A completar'!C177",
+    "value": ""
+  },
+  {
+    "cell": "D198",
+    "formula": "'A completar'!C178",
+    "value": ""
+  },
+  {
+    "cell": "C199",
+    "formula": "'A completar'!C179",
+    "value": ""
+  },
+  {
+    "cell": "D199",
+    "formula": "'A completar'!C180",
+    "value": ""
+  },
+  {
+    "cell": "E199",
+    "formula": "C199/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F199",
+    "formula": "D199/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H199",
+    "formula": "(C199*100)/D199",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C200",
+    "formula": "'A completar'!C181",
+    "value": ""
+  },
+  {
+    "cell": "D200",
+    "formula": "'A completar'!C182",
+    "value": ""
+  },
+  {
+    "cell": "C201",
+    "formula": "'A completar'!C183",
+    "value": ""
+  },
+  {
+    "cell": "D201",
+    "formula": "'A completar'!C184",
+    "value": ""
+  },
+  {
+    "cell": "E201",
+    "formula": "C201/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "F201",
+    "formula": "D201/I9",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H201",
+    "formula": "(C201*100)/D201",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "C202",
+    "formula": "'A completar'!C185",
+    "value": ""
+  },
+  {
+    "cell": "D202",
+    "formula": "'A completar'!C186",
+    "value": ""
+  },
+  {
+    "cell": "B204",
+    "formula": "IF(AND(H192>=90,H192<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular de rotadores internos de hombro.\",\n\"Se presenta una asimetr├¡a de fuerza muscular de rotadores internos de hombro.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B205",
+    "formula": "IF(AND(H194>=90,H194<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular de rotadores externos de hombro.\",\n\"Se presenta una asimetr├¡a de fuerza muscular de rotadores externos de hombro.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B206",
+    "formula": "IF(AND(H197>=90,H197<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular en el Ash Test I.\",\n\"Se presenta una asimetr├¡a de fuerza muscular en el Ash Test I.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B207",
+    "formula": "IF(AND(H199>=90,H199<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular en el Ash Test Y.\",\n\"Se presenta una asimetr├¡a de fuerza muscular en el Ash Test Y.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B208",
+    "formula": "IF(AND(H200>=90,H200<=110),\n\"Se presenta una correcta simetr├¡a de fuerza muscular en el Ash Test T.\",\n\"Se presenta una asimetr├¡a de fuerza muscular en el Ash Test T.\")",
+    "value": "Se presenta una asimetr├¡a de fuerza muscular en el Ash Test T."
+  },
+  {
+    "cell": "D211",
+    "formula": "'A completar'!C187",
+    "value": ""
+  },
+  {
+    "cell": "E211",
+    "formula": "'A completar'!C188",
+    "value": ""
+  },
+  {
+    "cell": "F211",
+    "formula": "(D211*100)/E211",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B213",
+    "formula": "IF(AND(F211>=90,F211<=110),\n\"Se presenta una correcta simetr├¡a de fuerza en el handrip.\",\n\"Se presenta una asimetr├¡a de fuerza en el handrip.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B216",
+    "formula": "'A completar'!A189",
+    "value": "Cu├ídriceps derecho"
+  },
+  {
+    "cell": "C216",
+    "formula": "'A completar'!C189",
+    "value": ""
+  },
+  {
+    "cell": "D216",
+    "formula": "'A completar'!C190",
+    "value": ""
+  },
+  {
+    "cell": "E216",
+    "formula": "(D216-C216)/C216*100",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B217",
+    "formula": "'A completar'!A191",
+    "value": "Cu├ídriceps izquierdo"
+  },
+  {
+    "cell": "C217",
+    "formula": "'A completar'!C191",
+    "value": ""
+  },
+  {
+    "cell": "D217",
+    "formula": "'A completar'!C192",
+    "value": ""
+  },
+  {
+    "cell": "E217",
+    "formula": "(D217-C217)/C217*100",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B218",
+    "formula": "'A completar'!A193",
+    "value": "Isquiotibiales derecho"
+  },
+  {
+    "cell": "C218",
+    "formula": "'A completar'!C193",
+    "value": ""
+  },
+  {
+    "cell": "D218",
+    "formula": "'A completar'!C194",
+    "value": ""
+  },
+  {
+    "cell": "E218",
+    "formula": "(D218-C218)/C218*100",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B219",
+    "formula": "'A completar'!A195",
+    "value": "Isquiotibiales izquierdo"
+  },
+  {
+    "cell": "C219",
+    "formula": "'A completar'!C195",
+    "value": ""
+  },
+  {
+    "cell": "D219",
+    "formula": "'A completar'!C196",
+    "value": ""
+  },
+  {
+    "cell": "E219",
+    "formula": "(D219-C219)/C219*100",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B221",
+    "formula": "\"Se presenta una mejora en \"&B216&\" de un \"&TEXT(E216/100,\"0%\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B222",
+    "formula": "\"Se presenta una mejora en \"&B217&\" de un \"&TEXT(E217/100,\"0%\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B223",
+    "formula": "\"Se presenta una mejora en \"&B218&\" de un \"&TEXT(E218/100,\"0%\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B224",
+    "formula": "\"Se presenta una mejora en \"&B219&\" de un \"&TEXT(E219/100,\"0%\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D227",
+    "formula": "'A completar'!C197",
+    "value": ""
+  },
+  {
+    "cell": "E227",
+    "formula": "'A completar'!C198",
+    "value": ""
+  },
+  {
+    "cell": "F227",
+    "formula": "(D227*100)/E227",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H227",
+    "formula": "'A completar'!C199",
+    "value": ""
+  },
+  {
+    "cell": "D228",
+    "formula": "'A completar'!C200",
+    "value": ""
+  },
+  {
+    "cell": "E228",
+    "formula": "'A completar'!C201",
+    "value": ""
+  },
+  {
+    "cell": "F228",
+    "formula": "(D228*100)/E228",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H228",
+    "formula": "'A completar'!C202",
+    "value": ""
+  },
+  {
+    "cell": "D229",
+    "formula": "'A completar'!C203",
+    "value": ""
+  },
+  {
+    "cell": "E229",
+    "formula": "'A completar'!C204",
+    "value": ""
+  },
+  {
+    "cell": "F229",
+    "formula": "(D229*100)/E229",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H229",
+    "formula": "'A completar'!C205",
+    "value": ""
+  },
+  {
+    "cell": "D230",
+    "formula": "'A completar'!C206",
+    "value": ""
+  },
+  {
+    "cell": "E230",
+    "formula": "'A completar'!C207",
+    "value": ""
+  },
+  {
+    "cell": "F230",
+    "formula": "(D230*100)/E230",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "H230",
+    "formula": "'A completar'!C208",
+    "value": ""
+  },
+  {
+    "cell": "B232",
+    "formula": "IF(AND(F227>=90,F227<=110),\n\"En la Sentadilla, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.\",\n\"En la Sentadilla, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B233",
+    "formula": "IF(AND(F228>=90,F228<=110),\n\"En el Peso Muerto, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.\",\n\"En el Peso Muerto, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B234",
+    "formula": "IF(AND(F229>=90,F229<=110),\n\"En el Puente Gl├║teo, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.\",\n\"En el Puente Gl├║teo, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B235",
+    "formula": "IF(AND(F230>=90,F230<=110),\n\"En la sentadilla b├║lgara, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.\",\n\"En la sentadilla b├╣lgara, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D238",
+    "formula": "'A completar'!C209",
+    "value": ""
+  },
+  {
+    "cell": "D239",
+    "formula": "'A completar'!C210",
+    "value": ""
+  },
+  {
+    "cell": "E239",
+    "formula": "'A completar'!C211",
+    "value": ""
+  },
+  {
+    "cell": "F239",
+    "formula": "(D239*100)/E239",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D240",
+    "formula": "'A completar'!C212",
+    "value": ""
+  },
+  {
+    "cell": "E240",
+    "formula": "'A completar'!C213",
+    "value": ""
+  },
+  {
+    "cell": "F240",
+    "formula": "(D240*100)/E240",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D241",
+    "formula": "'A completar'!C214",
+    "value": ""
+  },
+  {
+    "cell": "E241",
+    "formula": "'A completar'!C215",
+    "value": ""
+  },
+  {
+    "cell": "F241",
+    "formula": "(D241*100)/E241",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D242",
+    "formula": "'A completar'!C216",
+    "value": ""
+  },
+  {
+    "cell": "D243",
+    "formula": "'A completar'!C217",
+    "value": ""
+  },
+  {
+    "cell": "E243",
+    "formula": "'A completar'!C218",
+    "value": ""
+  },
+  {
+    "cell": "F243",
+    "formula": "(D243*100)/E243",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D244",
+    "formula": "'A completar'!C219",
+    "value": ""
+  },
+  {
+    "cell": "E244",
+    "formula": "'A completar'!C220",
+    "value": ""
+  },
+  {
+    "cell": "F244",
+    "formula": "(D244*100)/E244",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D245",
+    "formula": "'A completar'!C221",
+    "value": ""
+  },
+  {
+    "cell": "E245",
+    "formula": "'A completar'!C222",
+    "value": ""
+  },
+  {
+    "cell": "F245",
+    "formula": "(D245*100)/E245",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D246",
+    "formula": "'A completar'!C223",
+    "value": ""
+  },
+  {
+    "cell": "E246",
+    "formula": "'A completar'!C224",
+    "value": ""
+  },
+  {
+    "cell": "F246",
+    "formula": "(D246*100)/E246",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D247",
+    "formula": "'A completar'!C225",
+    "value": ""
+  },
+  {
+    "cell": "E247",
+    "formula": "'A completar'!C226",
+    "value": ""
+  },
+  {
+    "cell": "F247",
+    "formula": "(D247*100)/E247",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D248",
+    "formula": "'A completar'!C227",
+    "value": ""
+  },
+  {
+    "cell": "D249",
+    "formula": "'A completar'!C228",
+    "value": ""
+  },
+  {
+    "cell": "E249",
+    "formula": "'A completar'!C229",
+    "value": ""
+  },
+  {
+    "cell": "F249",
+    "formula": "(D249*100)/E249",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D250",
+    "formula": "'A completar'!C230",
+    "value": ""
+  },
+  {
+    "cell": "D251",
+    "formula": "'A completar'!C231",
+    "value": ""
+  },
+  {
+    "cell": "E251",
+    "formula": "'A completar'!C232",
+    "value": ""
+  },
+  {
+    "cell": "F251",
+    "formula": "(D251*100)/E251",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D252",
+    "formula": "'A completar'!C233",
+    "value": ""
+  },
+  {
+    "cell": "E252",
+    "formula": "'A completar'!C234",
+    "value": ""
+  },
+  {
+    "cell": "F252",
+    "formula": "(E252*100)/D252",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D253",
+    "formula": "'A completar'!C235",
+    "value": ""
+  },
+  {
+    "cell": "E253",
+    "formula": "'A completar'!C236",
+    "value": ""
+  },
+  {
+    "cell": "F253",
+    "formula": "(D253*100)/E253",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B255",
+    "formula": "IF(AND(F239>=90,F239<=110),\n\"En el CMJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza de frenado.\",\n\"En el CMJ a 2 piernas, se presenta una asimetr├¡a en la fuerza de frenado.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B256",
+    "formula": "IF(AND(F240>=90,F240<=110),\n\"En el CMJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza propulsiva.\",\n\"En el CMJ a 2 piernas, se presenta una asimetr├¡a en la fuerza propulsiva.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B257",
+    "formula": "IF(AND(F241>=90,F241<=110),\n\"En el CMJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza de aterrizaje.\",\n\"En el CMJ a 2 piernas, se presenta una asimetr├¡a en la fuerza de aterrizaje.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B258",
+    "formula": "IF(AND(F243>=90,F243<=110),\n\"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la altura del salto.\",\n\"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la altura del salto.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B259",
+    "formula": "IF(AND(F244>=90,F244<=110),\n\"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la fuerza de frenado.\",\n\"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la fuerza de frenado.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B260",
+    "formula": "IF(AND(F245>=90,F245<=110),\n\"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la fuerza propulsiva.\",\n\"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la fuerza propulsiva.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B261",
+    "formula": "IF(AND(F246>=90,F246<=110),\n\"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la fuerza de aterrizaje.\",\n\"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la fuerza de aterrizaje.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B262",
+    "formula": "IF(AND(F249>=90,F249<=110),\n\"En el DJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza pico de contacto.\",\n\"En el DJ a 2 piernas, se presenta una asimetr├¡a en la fuerza pico de contacto.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B263",
+    "formula": "IF(AND(F251>=90,F251<=110),\n\"En el DJ a 1 pierna, se presenta una correcta simetr├¡a en la altura del salto.\",\n\"En el DJ a 1 pierna, se presenta una asimetr├¡a en la altura del salto.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B264",
+    "formula": "IF(AND(F252>=90,F252<=110),\n\"En el DJ a 1 pierna, se presenta una correcta simetr├¡a en el tiempo de contacto.\",\n\"En el DJ a 1 pierna, se presenta una asimetr├¡a en el tiempo de contacto.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D267",
+    "formula": "'A completar'!C237",
+    "value": ""
+  },
+  {
+    "cell": "E267",
+    "formula": "'A completar'!C238",
+    "value": ""
+  },
+  {
+    "cell": "F267",
+    "formula": "(D267*100)/E267",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D268",
+    "formula": "'A completar'!C239",
+    "value": ""
+  },
+  {
+    "cell": "E268",
+    "formula": "'A completar'!C240",
+    "value": ""
+  },
+  {
+    "cell": "F268",
+    "formula": "(D268*100)/E268",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D269",
+    "formula": "'A completar'!C241",
+    "value": ""
+  },
+  {
+    "cell": "E269",
+    "formula": "'A completar'!C242",
+    "value": ""
+  },
+  {
+    "cell": "F269",
+    "formula": "(E269*100)/D269",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D270",
+    "formula": "'A completar'!C243",
+    "value": ""
+  },
+  {
+    "cell": "E270",
+    "formula": "'A completar'!C244",
+    "value": ""
+  },
+  {
+    "cell": "F270",
+    "formula": "(D270*100)/E270",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D271",
+    "formula": "'A completar'!C245",
+    "value": ""
+  },
+  {
+    "cell": "E271",
+    "formula": "'A completar'!C246",
+    "value": ""
+  },
+  {
+    "cell": "F271",
+    "formula": "(E271*100)/D271",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D272",
+    "formula": "'A completar'!C247",
+    "value": ""
+  },
+  {
+    "cell": "E272",
+    "formula": "'A completar'!C248",
+    "value": ""
+  },
+  {
+    "cell": "F272",
+    "formula": "(D272*100)/E272",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D273",
+    "formula": "'A completar'!C249",
+    "value": ""
+  },
+  {
+    "cell": "E273",
+    "formula": "'A completar'!C250",
+    "value": ""
+  },
+  {
+    "cell": "F273",
+    "formula": "(D273*100)/E273",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D274",
+    "formula": "'A completar'!C251",
+    "value": ""
+  },
+  {
+    "cell": "E274",
+    "formula": "'A completar'!C252",
+    "value": ""
+  },
+  {
+    "cell": "F274",
+    "formula": "(D274*100)/E274",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B276",
+    "formula": "IF(AND(F267>=90,F267<=110),\n\"En el Single Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.\",\n\"En el Single Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B277",
+    "formula": "IF(AND(F268>=90,F268<=110),\n\"En el Triple Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.\",\n\"En el Triple Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B278",
+    "formula": "IF(AND(F269>=90,F269<=110),\n\"En el Triple Hop Test, se presenta una correcta simetr├¡a en el tiempo de contacto con el suelo.\",\n\"En el Triple Hop Test, se presenta una asimetr├¡a en el tiempo de contacto con el suelo.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B279",
+    "formula": "IF(AND(F270>=90,F270<=110),\n\"En el Crossover Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.\",\n\"En el Crossover Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B280",
+    "formula": "IF(AND(F271>=90,F271<=110),\n\"En el Crossover Hop Test, se presenta una correcta simetr├¡a en el tiempo de contacto con el suelo.\",\n\"En el Crossover Hop Test, se presenta una asimetr├¡a en el tiempo de contacto con el suelo.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B281",
+    "formula": "IF(AND(F272>=90,F272<=110),\n\"En el Medial Side Triple Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.\",\n\"En el Medial Side Triple Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B282",
+    "formula": "IF(AND(F273>=90,F273<=110),\n\"En el 90 Medial Rotation Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.\",\n\"En el 90 Medial Rotation Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "B283",
+    "formula": "IF(AND(F274>=90,F274<=110),\n\"En el Side Hop Test, se presenta una correcta simetr├¡a en la cantidad de saltos.\",\n\"En el Side Hop Test, se presenta una asimetr├¡a en la cantidad de saltos.\")",
+    "value": "#DIV/0!"
+  },
+  {
+    "cell": "D286",
+    "formula": "'A completar'!C253",
+    "value": ""
+  },
+  {
+    "cell": "E286",
+    "formula": "'A completar'!C254",
+    "value": ""
+  },
+  {
+    "cell": "F286",
+    "formula": "'A completar'!C255",
+    "value": ""
+  },
+  {
+    "cell": "G286",
+    "formula": "'A completar'!C256",
+    "value": ""
+  },
+  {
+    "cell": "D287",
+    "formula": "'A completar'!C257",
+    "value": ""
+  },
+  {
+    "cell": "E287",
+    "formula": "'A completar'!C258",
+    "value": ""
+  },
+  {
+    "cell": "F287",
+    "formula": "'A completar'!C259",
+    "value": ""
+  },
+  {
+    "cell": "G287",
+    "formula": "'A completar'!C260",
+    "value": ""
+  },
+  {
+    "cell": "D288",
+    "formula": "'A completar'!C261",
+    "value": ""
+  },
+  {
+    "cell": "D290",
+    "formula": "'A completar'!C263",
+    "value": ""
+  },
+  {
+    "cell": "D292",
+    "formula": "'A completar'!C265",
+    "value": ""
+  },
+  {
+    "cell": "D294",
+    "formula": "'A completar'!C267",
+    "value": ""
+  },
+  {
+    "cell": "D296",
+    "formula": "'A completar'!C269",
+    "value": ""
+  },
+  {
+    "cell": "B299",
+    "formula": "IF(AND(D286=\"OK\", E286=\"OK\", F286=\"OK\", G286=\"OK\"),\n   \"En la vista frontal, no se detectan d├®ficits en la pierna lesionada.\",\n   \"En la vista frontal de la pierna lesionada presenta un d├®ficit de\" &\n   IF(D286=\"X\", \" tronco\", \"\") &\n   IF(AND(D286=\"X\", OR(E286=\"X\", F286=\"X\", G286=\"X\")), \",\", \"\") &\n   IF(E286=\"X\", \" pelvis\", \"\") &\n   IF(AND(E286=\"X\", OR(F286=\"X\", G286=\"X\")), \",\", \"\") &\n   IF(F286=\"X\", \" cadera\", \"\") &\n   IF(AND(F286=\"X\", G286=\"X\"), \",\", \"\") &\n   IF(G286=\"X\", \" rodilla\", \"\") & \".\"\n)",
+    "value": "En la vista frontal de la pierna lesionada presenta un d├®ficit de."
+  },
+  {
+    "cell": "B300",
+    "formula": "IF(AND(D287=\"OK\", E287=\"OK\", F287=\"OK\", G287=\"OK\"),\n   \"En la vista frontal, no se detectan d├®ficits en la pierna sana.\",\n   \"En la vista frontal de la pierna sana presenta un d├®ficit de\" &\n   IF(D287=\"X\", \" tronco\", \"\") &\n   IF(AND(D287=\"X\", OR(E287=\"X\", F287=\"X\", G287=\"X\")), \",\", \"\") &\n   IF(E287=\"X\", \" pelvis\", \"\") &\n   IF(AND(E287=\"X\", OR(F287=\"X\", G287=\"X\")), \",\", \"\") &\n   IF(F287=\"X\", \" cadera\", \"\") &\n   IF(AND(F287=\"X\", G287=\"X\"), \",\", \"\") &\n   IF(G287=\"X\", \" rodilla\", \"\") & \".\"\n)",
+    "value": "En la vista frontal de la pierna sana presenta un d├®ficit de."
+  },
+  {
+    "cell": "C303",
+    "formula": "'A completar'!C271",
+    "value": ""
+  },
+  {
+    "cell": "C304",
+    "formula": "'A completar'!C272",
+    "value": ""
+  },
+  {
+    "cell": "C305",
+    "formula": "'A completar'!C273",
+    "value": ""
+  },
+  {
+    "cell": "C306",
+    "formula": "'A completar'!C274",
+    "value": ""
+  },
+  {
+    "cell": "D306",
+    "formula": "'A completar'!C275",
+    "value": ""
+  },
+  {
+    "cell": "C307",
+    "formula": "'A completar'!C276",
+    "value": ""
+  },
+  {
+    "cell": "D307",
+    "formula": "'A completar'!C277",
+    "value": ""
+  },
+  {
+    "cell": "B309",
+    "formula": "IF(C303=\"OK\",\n\"Se realiza una correcta prueba de frenado.\",\n\"Se presenta un d├®ficit en la prueba de frenado.\")",
+    "value": "Se presenta un d├®ficit en la prueba de frenado."
+  },
+  {
+    "cell": "B310",
+    "formula": "IF(C304<=9.5,\n\"Se presenta una correcta prueba de agilidad T Test.\",\n\"Se presenta un d├®ficit en la prueba de agilidad T Test.\")",
+    "value": "Se presenta una correcta prueba de agilidad T Test."
+  },
+  {
+    "cell": "B311",
+    "formula": "IF(AND(C306<=3,D306<=3),\n\"Se presenta un correcto cambio de direcci├│n a 45┬║ en ambas piernas.\",\nIF(AND(C306>3,D306<=3),\n\"Se presenta un d├®ficit en el cambio de direcci├│n a 45┬║ en la pierna derecha.\",\nIF(AND(C306<=3,D306>3),\n\"Se presenta un d├®ficit en el cambio de direcci├│n a 45┬║ en la pierna izquierda.\",\n\"Se presenta un d├®ficit en el cambio de direcci├│n a 45┬║ en ambas piernas.\")))",
+    "value": "Se presenta un correcto cambio de direcci├│n a 45┬║ en ambas piernas."
+  },
+  {
+    "cell": "B312",
+    "formula": "IF(AND(C307<=3,D307<=3),\n\"Se presenta un correcto cambio de direcci├│n a 90┬║ en ambas piernas.\",\nIF(AND(C307>3,D307<=3),\n\"Se presenta un d├®ficit en el cambio de direcci├│n a 90┬║ en la pierna derecha.\",\nIF(AND(C307<=3,D307>3),\n\"Se presenta un d├®ficit en el cambio de direcci├│n a 90┬║ en la pierna izquierda.\",\n\"Se presenta un d├®ficit en el cambio de direcci├│n a 90┬║ en ambas piernas.\")))",
+    "value": "Se presenta un correcto cambio de direcci├│n a 90┬║ en ambas piernas."
+  },
+  {
+    "cell": "C315",
+    "formula": "'A completar'!C280",
+    "value": ""
+  },
+  {
+    "cell": "C316",
+    "formula": "'A completar'!C278",
+    "value": ""
+  },
+  {
+    "cell": "C317",
+    "formula": "'A completar'!C279",
+    "value": ""
+  },
+  {
+    "cell": "B319",
+    "formula": "IF(C315>=81, \"La puntuaci├│n del cuestionario auto reportado se encuentra normal, lo que demuestra una sensaci├│n de seguridad y confianza en la funci├│n de los isquiotibiales.\"\n   ,\"La puntuaci├│n del cuestionario auto reportado se encuentra disminuida, lo que demuestra una falta de seguridad y confianza en la funci├│n de los isquiotibiales.\"\n   )",
+    "value": "La puntuaci├│n del cuestionario auto reportado se encuentra disminuida, lo que demuestra una falta de seguridad y confianza en la funci├│n de los isquiotibiales."
+  },
+  {
+    "cell": "B320",
+    "formula": "IF(OR(C316<85, C317<65), \n\"La puntuaci├│n en los cuestionarios se encuentran bajos, esto se traduce a todav├¡a falta sensaci├│n de seguridad, confianza y funci├│n de la rodilla.\", \n\"La puntuaci├│n en los cuestionarios auto reportados se encuentran normales, lo que demuestra una sensaci├│n de seguridad y confianza en la funci├│n de la rodilla.\")",
+    "value": "La puntuaci├│n en los cuestionarios se encuentran bajos, esto se traduce a todav├¡a falta sensaci├│n de seguridad, confianza y funci├│n de la rodilla.\n\n=== SHEET: Definici├│n operativa ===\nDumping first 15 rows:\n[\n  [\n    \"3 minutos en cinta caminata, rodilla al pecho en caminata, elongacion de cuadriceps en caminata, rodillas al pecho, talones a la cola, todos ida y vuelta del espacio verde\"\n  ],\n  [\n    \"Rotaci├│n interna de cadera 90┬║\",\n    \"PASIVO. \"\n  ],\n  [],\n  [\n    \"Rotaci├│n externa de cadera 90┬║\"\n  ],\n  [],\n  [\n    \"Extensi├│n pasiva de rodilla\",\n    \"Inclin├│metro (regla L), buscar superficie dura\"\n  ],\n  [],\n  [\n    \"Flexi├│n activa de rodilla\",\n    \"Dec├║bito prono, inclin├│metro en la tibia, sin entrada en calor\"\n  ],\n  [],\n  [\n    \"Flexi├│n pasiva de rodilla\",\n    \"Dec├║bito prono, inclin├│metro en la tibia, sin entrada en calor\"\n  ],\n  [],\n  [\n    \"Flexi├│n dorsal de tobillo\",\n    \"Incl├¡nometro borde anterior de tibia, moverlo 3 veces antes, no puede levantar tal├│n, una sola medici├│n, sin apoyar rodilla contraria en el suelo\"\n  ],\n  [],\n  [\n    \"Rotaci├│n interna de hombro\",\n    \"Fijaci├│n a la antepulsi├│n con mano del evaluador, inclin├│metro parte dorsal del antebrazo, dec├║bito supino completamente\"\n  ],\n  []\n]\n\nFormulas found in Definici├│n operativa:"
+  }
+]

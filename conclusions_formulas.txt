@@ -1,0 +1,668 @@
+=== CLINICAL CONCLUSION FORMULAS IN EXCEL ===
+
+Cell B11:
+Formula: 'A completar'!C11
+Default Value: 
+
+Cell B14:
+Formula: IF(G13="No", "Todas las pruebas fueron realizadas sin dolor y a continuaci├│n se destacan los aspectos m├ís relevantes.", "El paciente present├│ dolor a lo largo de las evaluaciones y a continuaci├│n se destacan los aspectos m├ís relevantes.")
+Default Value: Todas las pruebas fueron realizadas sin dolor y a continuaci├│n se destacan los aspectos m├ís relevantes.
+
+Cell B21:
+Formula: IF(AND(D19>=85,E19>=85),
+   "El rango de movimiento total de cadera en ambas piernas se encuentra normal.",
+   IF(AND(D19<85,E19>=85),
+      "El rango de movimiento total de cadera en la pierna derecha se encuentra disminuido.",
+      IF(AND(D19>=85,E19<85),
+         "El rango de movimiento total de cadera en la pierna izquierda se encuentra disminuido.",
+         "El rango de movimiento total de cadera en ambas piernas se encuentra disminuido.")))
+Default Value: El rango de movimiento total de cadera en ambas piernas se encuentra disminuido.
+
+Cell B30:
+Formula: IF(AND(D24=0,E24=0),
+"No presenta d├®ficit de extensi├│n.",
+"Se presenta d├®ficit de extensi├│n de la rodilla.")
+Default Value: No presenta d├®ficit de extensi├│n.
+
+Cell B31:
+Formula: IF(OR(F27<-10,F27>10),
+"Se presenta un d├®ficit de flexi├│n activa de la rodilla.",
+"La flexi├│n activa de rodilla se encuentra normal.")
+Default Value: La flexi├│n activa de rodilla se encuentra normal.
+
+Cell B32:
+Formula: IF(OR(F28<-10,F28>10),
+"Se presenta un d├®ficit de flexi├│n pasiva de la rodilla.",
+"La flexi├│n pasiva de rodilla se encuentra normal.")
+Default Value: La flexi├│n pasiva de rodilla se encuentra normal.
+
+Cell B37:
+Formula: IF(AND(D35<39, E35<39), "Presenta un d├®ficit de flexi├│n dorsal del tobillo de ambas piernas.", 
+IF(D35<39, "Presenta un d├®ficit de flexi├│n dorsal del tobillo de la pierna derecha.", 
+IF(E35<39, "Presenta un d├®ficit de flexi├│n dorsal del tobillo de la pierna izquierda.", 
+"No presenta d├®ficit en la flexi├│n dorsal del tobillo.")))
+Default Value: Presenta un d├®ficit de flexi├│n dorsal del tobillo de ambas piernas.
+
+Cell B44:
+Formula: IF(OR(F40<-18,F40>18),
+"Se presenta un d├®ficit de rotaci├│n interna del hombro.",
+"No se presenta un d├®ficit de rotaci├│n interna del hombro.")
+Default Value: No se presenta un d├®ficit de rotaci├│n interna del hombro.
+
+Cell B45:
+Formula: IF(AND(F42>=-5,F42<=5),
+"Se presenta un normal arco total del movimiento del hombro",
+"Se presenta un d├®ficit del arco total del movimiento del hombro")
+Default Value: Se presenta un normal arco total del movimiento del hombro
+
+Cell B51:
+Formula: IF(E48=0,
+"No se presenta un d├®ficit en el per├¡metro de muslo.",
+"Se presenta un d├®ficit en el per├¡metro de muslo de "&E48&" cm.")
+Default Value: No se presenta un d├®ficit en el per├¡metro de muslo.
+
+Cell B52:
+Formula: IF(E49=0,
+"No se presenta un d├®ficit en el per├¡metro de pantorilla",
+"Se presenta un d├®ficit en el per├¡metro de pantorilla de "&E49&" cm")
+Default Value: No se presenta un d├®ficit en el per├¡metro de pantorilla
+
+Cell B66:
+Formula: IF(AND(E55="X", F55="OK", G55="OK"), "En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco.",
+IF(AND(E55="X", F55="X", G55="OK"), "En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco y del Recto Anterior.",
+IF(AND(E55="X", F55="X", G55="X"), "En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco, del Recto Anterior y del Sartorio.",
+IF(AND(E55="X", F55="OK", G55="X"), "En la pierna derecha, se presenta un acortamiento del Psoas Il├¡aco y del Sartorio.",
+IF(AND(E55="OK", F55="X", G55="OK"), "En la pierna derecha, se presenta un acortamiento del Recto Anterior.",
+IF(AND(E55="OK", F55="X", G55="X"), "En la pierna derecha, se presenta un acortamiento del Recto Anterior y del Sartorio.",
+IF(AND(E55="OK", F55="OK", G55="X"), "En la pierna derecha, se presenta un acortamiento del Sartorio.",
+IF(AND(E55="OK", F55="OK", G55="OK"), "En la pierna derecha, no se presenta un acortamiento de los flexores de cadera.",
+""))))))))
+Default Value: 
+
+Cell B67:
+Formula: IF(AND(E56="X", F56="OK", G56="OK"), "En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco.",
+IF(AND(E56="X", F56="X", G56="OK"), "En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco y del Recto Anterior.",
+IF(AND(E56="X", F56="X", G56="X"), "En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco, del Recto Anterior y del Sartorio.",
+IF(AND(E56="X", F56="OK", G56="X"), "En la pierna izquierda, se presenta un acortamiento del Psoas Il├¡aco y del Sartorio.",
+IF(AND(E56="OK", F56="X", G56="OK"), "En la pierna izquierda, se presenta un acortamiento del Recto Anterior.",
+IF(AND(E56="OK", F56="X", G56="X"), "En la pierna izquierda, se presenta un acortamiento del Recto Anterior y del Sartorio.",
+IF(AND(E56="OK", F56="OK", G56="X"), "En la pierna izquierda, se presenta un acortamiento del Sartorio.",
+IF(AND(E56="OK", F56="OK", G56="OK"), "En la pierna izquierda, no se presenta un acortamiento de los flexores de cadera.",
+""))))))))
+Default Value: 
+
+Cell B68:
+Formula: IF(AND(D59>=70, E59>=70), "No se presenta acortamiento de los isquiotibiales.",
+IF(AND(D59<70, E59>=70), "Se presenta un acortamiento del isquiotibial de la pierna derecha.",
+IF(AND(D59>=70, E59<70), "Se presenta un acortamiento del isquiotibial de la pierna izquierda.",
+IF(AND(D59<70, E59<70), "Se presenta un acortamiento de los isquiotibiales en ambas piernas.",
+""))))
+Default Value: Se presenta un acortamiento de los isquiotibiales en ambas piernas.
+
+Cell B69:
+Formula: IF(AND(D60="OK",E60="OK"),
+   "No se refiere dolor o inseguridad durante el Askling H-test en ninguna de las piernas.",
+   IF(AND(D60="X",E60="OK"),
+      "Refiere dolor o inseguridad en la pierna derecha durante el Askling H-test.",
+      IF(AND(D60="OK",E60="X"),
+         "Refiere dolor o inseguridad en la pierna izquierda durante el Askling H-test.",
+         "Refiere dolor o inseguridad en ambas piernas durante el Askling H-test.")))
+Default Value: Refiere dolor o inseguridad en ambas piernas durante el Askling H-test.
+
+Cell B70:
+Formula: IF(AND(D61="OK",E61="OK"),
+   "No se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en ninguna de las piernas mediante la prueba de Slump test.",
+   IF(AND(D61="X",E61="OK"),
+      "Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en la pierna derecha mediante la prueba de Slump test.",
+      IF(AND(D61="OK",E61="X"),
+         "Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en la pierna izquierda mediante la prueba de Slump test.",
+         "Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en ambos miembros mediante la prueba de Slump test.")))
+Default Value: Se comprob├│ tensi├│n neural mec├ínica del nervio ci├ítico en ambos miembros mediante la prueba de Slump test.
+
+Cell B71:
+Formula: IF(AND(D64<=17.4,E64<=17.4),
+"No se presenta acortamiento de aductores",
+IF(AND(D64>17.4,E64<=17.4),
+"Se presenta acortamiento de aductor de la pierna derecha",
+IF(AND(D64<=17.4,E64>17.4),
+"Se presenta acortamiento de aductor de la pierna izquierda",
+"Se presenta acortamiento de aductores de ambas piernas")))
+Default Value: No se presenta acortamiento de aductores
+
+Cell B100:
+Formula: IF(AND(F89>=-4,F89<=4),
+"El alcance anterior se encuentra normal.",
+"El alcance anterior se encuentra en d├®ficit.")
+Default Value: El alcance anterior se encuentra normal.
+
+Cell B101:
+Formula: IF(AND(F90>=-4,F90<=4),
+"El alcance posteromedial se encuentra normal.",
+"El alcance posteromedial se encuentra en d├®ficit.")
+Default Value: El alcance posteromedial se encuentra normal.
+
+Cell B102:
+Formula: IF(AND(F91>=-4,F91<=4),
+"El alcance posterolateral se encuentra normal.",
+"El alcance posterolateral se encuentra en d├®ficit.")
+Default Value: El alcance posterolateral se encuentra normal.
+
+Cell B103:
+Formula: IF(AND(D92>=94, E92>=94), 
+   "El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) se encuentra dentro de los valores de referencia.",
+IF(AND(D92<94, E92>=94), 
+   "El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) de la pierna derecha se encuentra por debajo de los valores de referencia.",
+IF(AND(D92>=94, E92<94), 
+   "El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) de la pierna izquierda se encuentra por debajo de los valores de referencia.",
+IF(AND(D92<94, E92<94), 
+   "El composite (relaci├│n entre la distancia alcanzada y la longitud de la pierna) de ambas piernas se encuentran por debajo de los valores de referencia.",
+""))))
+Default Value: #DIV/0!
+
+Cell B104:
+Formula: IF(AND(D95>=45,F95>=45),
+"Se presenta un correcto balance monopodal con ojos abiertos",
+IF(AND(D95<45,F95>=45),
+"Se presenta un d├®ficit en el balance monopodal con ojos abiertos de la pierna derecha",
+IF(AND(D95>=45,F95<45),
+"Se presenta un d├®ficit en el balance monopodal con ojos abiertos de la pierna izquierda",
+"Se presenta un d├®ficit en el balance monopodal con ojos abiertos de ambas piernas")))
+Default Value: Se presenta un d├®ficit en el balance monopodal con ojos abiertos de ambas piernas
+
+Cell B105:
+Formula: IF(AND(D96>=9,F96>=9),
+"Se presenta un correcto balance monopodal con ojos cerrados",
+IF(AND(D96<9,F96>=9),
+"Se presenta un d├®ficit en el balance monopodal con ojos cerrados de la pierna derecha",
+IF(AND(D96>=9,F96<9),
+"Se presenta un d├®ficit en el balance monopodal con ojos cerrados de la pierna izquierda",
+"Se presenta un d├®ficit en el balance monopodal con ojos cerrados de ambas piernas")))
+Default Value: Se presenta un d├®ficit en el balance monopodal con ojos cerrados de ambas piernas
+
+Cell B106:
+Formula: IF(AND(D97="OK", D98="OK", F97="OK", F98="OK"),
+"La prueba de balance vestibular fue satisfactoria en ambas piernas en ambos movimientos.",
+IF(AND(D97="X", D98="X", F97="OK", F98="OK"),
+"Se presenta un d├®ficit vestibular en la pierna derecha en ambos movimientos.",
+IF(AND(F97="X", F98="X", D97="OK", D98="OK"),
+"Se presenta un d├®ficit vestibular en la pierna izquierda en ambos movimientos.",
+IF(AND(D97="X", F97="X", D98="OK", F98="OK"),
+"Se presenta un d├®ficit de balance vestibular en movimiento lateral en ambas piernas.",
+IF(AND(D98="X", F98="X", D97="OK", F97="OK"),
+"Se presenta un d├®ficit de balance vestibular en movimiento vertical en ambas piernas.",
+IF(AND(D97="X", D98="OK", F97="OK", F98="OK"),
+"Se presenta un d├®ficit vestibular en movimiento lateral de la pierna derecha.",
+IF(AND(D97="OK", D98="X", F97="OK", F98="OK"),
+"Se presenta un d├®ficit vestibular en movimiento vertical de la pierna izquierda.",
+IF(AND(F97="X", F98="OK", D97="OK", D98="OK"),
+"Se presenta un d├®ficit vestibular en movimiento lateral de la pierna derecha.",
+IF(AND(F97="OK", F98="X", D97="OK", D98="OK"),
+"Se presenta un d├®ficit vestibular en movimiento vertical de la pierna izquierda.",
+"Se presenta d├®ficit vestibular en m├║ltiples combinaciones.")))))))))
+Default Value: Se presenta d├®ficit vestibular en m├║ltiples combinaciones.
+
+Cell B120:
+Formula: IF(OR(D109<85, E109<85), 
+   "Se presenta un d├®ficit de fuerza resistencia en los inclinadores laterales de tronco.", 
+   "Se presenta buena fuerza resistencia de inclinadores laterales de tronco alcanzando los valores de referencia.")
+Default Value: Se presenta un d├®ficit de fuerza resistencia en los inclinadores laterales de tronco.
+
+Cell B121:
+Formula: IF(OR(D110<130), 
+   "Se presenta un d├®ficit de fuerza resistencia en los flexores de tronco.", 
+   "Se presenta buena fuerza resistencia de flexores de tronco alcanzando los valores de referencia.")
+Default Value: Se presenta un d├®ficit de fuerza resistencia en los flexores de tronco.
+
+Cell B122:
+Formula: IF(OR(D111<170), 
+   "Se presenta un d├®ficit de fuerza resistencia en los extensores de tronco.", 
+   "Se presenta buena fuerza resistencia de extensores de tronco alcanzando los valores de referencia.")
+Default Value: Se presenta un d├®ficit de fuerza resistencia en los extensores de tronco.
+
+Cell B123:
+Formula: IF(AND(D112>=0.75,D112<=0.77),
+"La relaci├│n flexores - extensores de tronco se encuentra normal.",
+"La relaci├│n flexores - extensores de tronco se encuentra alterada.")
+Default Value: #DIV/0!
+
+Cell B124:
+Formula: IF(AND(D113<20, E113>=20), "Se presenta un d├®ficit de fuerza resistencia de gl├║teo de la pierna derecha.",
+IF(AND(D113>=20, E113<20), "Se presenta un d├®ficit de fuerza resistencia de gl├║teo de la pierna izquierda.",
+IF(AND(D113<20, E113<20), "Se presenta un d├®ficit de fuerza resistencia de gl├║teo en ambas piernas.",
+"Se presenta buena fuerza resistencia de gl├║teo alcanzando los valores de referencia.")))
+Default Value: Se presenta un d├®ficit de fuerza resistencia de gl├║teo en ambas piernas.
+
+Cell B125:
+Formula: IF(AND(D115<20, E115>=20), "Se presenta un d├®ficit de fuerza resistencia de gemelo de la pierna derecha.",
+IF(AND(D115>=20, E115<20), "Se presenta un d├®ficit de fuerza resistencia de gemelo de la pierna izquierda.",
+IF(AND(D115<20, E115<20), "Se presenta un d├®ficit de fuerza resistencia de los gemelos en ambas piernas.",
+"Se presenta buena fuerza resistencia de los gemelos alcanzando los valores de referencia.")))
+Default Value: Se presenta un d├®ficit de fuerza resistencia de los gemelos en ambas piernas.
+
+Cell B126:
+Formula: IF(AND(D117<20, E117>=20), "Se presenta un d├®ficit de fuerza resistencia de cu├ídriceps de la pierna derecha.",
+IF(AND(D117>=20, E117<20), "Se presenta un d├®ficit de fuerza resistencia de cu├ídriceps de la pierna izquierda.",
+IF(AND(D117<20, E117<20), "Se presenta un d├®ficit de fuerza resistencia del cu├ídriceps en ambas piernas.",
+"Se presenta buena fuerza resistencia del cu├ídriceps alcanzando los valores de referencia.")))
+Default Value: Se presenta un d├®ficit de fuerza resistencia del cu├ídriceps en ambas piernas.
+
+Cell B136:
+Formula: IF(AND(F128>=90,F128<=110),
+"Se presenta una correcta simetr├¡a de fuerza resistencia en el ejercicio press de hombro",
+"Se presenta una asimetr├¡a de fuerza resistencia en el ejercicio press de hombro")
+Default Value: Se presenta una asimetr├¡a de fuerza resistencia en el ejercicio press de hombro
+
+Cell B151:
+Formula: IF(AND(H139>=90,H139<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de flexores de cadera en la prueba de 0-0┬║.",
+"Se presenta una asimetr├¡a de de flexores de cadera en la prueba de 0-0┬║.")
+Default Value: #DIV/0!
+
+Cell B152:
+Formula: IF(AND(H141>=90,H141<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de flexores de cadera en la prueba de 0-90┬║.",
+"Se presenta una asimetr├¡a de de flexores de cadera en la prueba de 0-90┬║.")
+Default Value: #DIV/0!
+
+Cell B153:
+Formula: IF(E143<3.6,
+"Los valores de fuerza muscular de aductores en el Squeeze test est├ín por debajo de los valores de referencia.",
+"Los valores de fuerza muscular de aductores en el Squeeze test alcanzan los valores de referencia.")
+Default Value: #DIV/0!
+
+Cell B154:
+Formula: IF(AND(H145>=90,H145<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de aductores.",
+"Se presenta una asimetr├¡a de fuerza muscular de aductores.")
+Default Value: #DIV/0!
+
+Cell B155:
+Formula: IF(AND(E145>=2.99,F145>=2.99),
+"Los valores de fuerza muscular unilateral de aductores alcanzan los valores de referencia.",
+IF(AND(E145<2.99,E146>=2.99),
+"Los valores de fuerza muscular unilateral de aductores del lado derecho est├ín por debajo de los valores de referencia.",
+IF(AND(E145>=2.99,E146<2.99),
+"Los valores de fuerza muscular unilateral de aductores del lado izquierdo est├ín por debajo de los valores de referencia.",
+"Los valores de fuerza muscular unilateral de aductores de ambos lados est├ín por debajo de los valores de referencia.")))
+Default Value: #DIV/0!
+
+Cell B156:
+Formula: IF(AND(H147>=90,H147<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de abductores.",
+"Se presenta una asimetr├¡a de fuerza muscular de abductores.")
+Default Value: #DIV/0!
+
+Cell B157:
+Formula: IF(AND(E147>=2.59,F147>=2.59),
+"Los valores de fuerza muscular unilateral de aductores alcanzan los valores de referencia.",
+IF(AND(E147<2.99,E148>=2.99),
+"Los valores de fuerza muscular unilateral de aductores del lado derecho est├ín por debajo de los valores de referencia.",
+IF(AND(E147>=2.99,E148<2.99),
+"Los valores de fuerza muscular unilateral de aductores del lado izquierdo est├ín por debajo de los valores de referencia.",
+"Los valores de fuerza muscular unilateral de aductores de ambos lados est├ín por debajo de los valores de referencia.")))
+Default Value: #DIV/0!
+
+Cell B158:
+Formula: IF(AND(C149>=1.16,C149<=1.18),
+"La relaci├│n aductores - abductores de la pierna derecha se encuentra normal.",
+"La relaci├│n aductores - abductores de la pierna derecha se encuentra alterada.")
+Default Value: #DIV/0!
+
+Cell B159:
+Formula: IF(AND(D149>=1.16,D149<=1.18),
+"La relaci├│n aductores - abductores de la pierna izquierda se encuentra normal.",
+"La relaci├│n aductores - abductores de la pierna izquierda se encuentra alterada.")
+Default Value: #DIV/0!
+
+Cell B168:
+Formula: IF(AND(H162>=90,H162<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de cu├ídriceps.",
+"Se presenta una asimetr├¡a de fuerza muscular de cu├ídriceps.")
+Default Value: #DIV/0!
+
+Cell B169:
+Formula: IF(AND(H164>=90,H164<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de isquiotibiales.",
+"Se presenta una asimetr├¡a de fuerza muscular de isquiotibiales.")
+Default Value: #DIV/0!
+
+Cell B180:
+Formula: IF(AND(H172>=90,H172<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular del tr├¡ceps sural.",
+"Se presenta una asimetr├¡a de fuerza muscular del tr├¡ceps sural.")
+Default Value: #DIV/0!
+
+Cell B181:
+Formula: IF(AND(H174>=90,H174<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de abductores de tobillo.",
+"Se presenta una asimetr├¡a de fuerza muscular de abductores de tobillo.")
+Default Value: #DIV/0!
+
+Cell B182:
+Formula: IF(AND(H176>=90,H176<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de aductores de tobillo.",
+"Se presenta una asimetr├¡a de fuerza muscular de aductores de tobillo.")
+Default Value: #DIV/0!
+
+Cell B189:
+Formula: IF(AND(F187>=90,F187<=110),
+"Se presenta una correcta simetr├¡a de fuerza pico unilateral.",
+"Se presenta una asimetr├¡a de fuerza pico unilateral.")
+Default Value: #DIV/0!
+
+Cell B204:
+Formula: IF(AND(H192>=90,H192<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de rotadores internos de hombro.",
+"Se presenta una asimetr├¡a de fuerza muscular de rotadores internos de hombro.")
+Default Value: #DIV/0!
+
+Cell B205:
+Formula: IF(AND(H194>=90,H194<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular de rotadores externos de hombro.",
+"Se presenta una asimetr├¡a de fuerza muscular de rotadores externos de hombro.")
+Default Value: #DIV/0!
+
+Cell B206:
+Formula: IF(AND(H197>=90,H197<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular en el Ash Test I.",
+"Se presenta una asimetr├¡a de fuerza muscular en el Ash Test I.")
+Default Value: #DIV/0!
+
+Cell B207:
+Formula: IF(AND(H199>=90,H199<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular en el Ash Test Y.",
+"Se presenta una asimetr├¡a de fuerza muscular en el Ash Test Y.")
+Default Value: #DIV/0!
+
+Cell B208:
+Formula: IF(AND(H200>=90,H200<=110),
+"Se presenta una correcta simetr├¡a de fuerza muscular en el Ash Test T.",
+"Se presenta una asimetr├¡a de fuerza muscular en el Ash Test T.")
+Default Value: Se presenta una asimetr├¡a de fuerza muscular en el Ash Test T.
+
+Cell B213:
+Formula: IF(AND(F211>=90,F211<=110),
+"Se presenta una correcta simetr├¡a de fuerza en el handrip.",
+"Se presenta una asimetr├¡a de fuerza en el handrip.")
+Default Value: #DIV/0!
+
+Cell B216:
+Formula: 'A completar'!A189
+Default Value: Cu├ídriceps derecho
+
+Cell B217:
+Formula: 'A completar'!A191
+Default Value: Cu├ídriceps izquierdo
+
+Cell B218:
+Formula: 'A completar'!A193
+Default Value: Isquiotibiales derecho
+
+Cell B219:
+Formula: 'A completar'!A195
+Default Value: Isquiotibiales izquierdo
+
+Cell B221:
+Formula: "Se presenta una mejora en "&B216&" de un "&TEXT(E216/100,"0%")
+Default Value: #DIV/0!
+
+Cell B222:
+Formula: "Se presenta una mejora en "&B217&" de un "&TEXT(E217/100,"0%")
+Default Value: #DIV/0!
+
+Cell B223:
+Formula: "Se presenta una mejora en "&B218&" de un "&TEXT(E218/100,"0%")
+Default Value: #DIV/0!
+
+Cell B224:
+Formula: "Se presenta una mejora en "&B219&" de un "&TEXT(E219/100,"0%")
+Default Value: #DIV/0!
+
+Cell B232:
+Formula: IF(AND(F227>=90,F227<=110),
+"En la Sentadilla, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.",
+"En la Sentadilla, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.")
+Default Value: #DIV/0!
+
+Cell B233:
+Formula: IF(AND(F228>=90,F228<=110),
+"En el Peso Muerto, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.",
+"En el Peso Muerto, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.")
+Default Value: #DIV/0!
+
+Cell B234:
+Formula: IF(AND(F229>=90,F229<=110),
+"En el Puente Gl├║teo, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.",
+"En el Puente Gl├║teo, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.")
+Default Value: #DIV/0!
+
+Cell B235:
+Formula: IF(AND(F230>=90,F230<=110),
+"En la sentadilla b├║lgara, se presenta una correcta simetr├¡a en la velocidad de ejecuci├│n.",
+"En la sentadilla b├╣lgara, se presenta una asimetr├¡a en la velocidad de ejecuci├│n.")
+Default Value: #DIV/0!
+
+Cell B255:
+Formula: IF(AND(F239>=90,F239<=110),
+"En el CMJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza de frenado.",
+"En el CMJ a 2 piernas, se presenta una asimetr├¡a en la fuerza de frenado.")
+Default Value: #DIV/0!
+
+Cell B256:
+Formula: IF(AND(F240>=90,F240<=110),
+"En el CMJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza propulsiva.",
+"En el CMJ a 2 piernas, se presenta una asimetr├¡a en la fuerza propulsiva.")
+Default Value: #DIV/0!
+
+Cell B257:
+Formula: IF(AND(F241>=90,F241<=110),
+"En el CMJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza de aterrizaje.",
+"En el CMJ a 2 piernas, se presenta una asimetr├¡a en la fuerza de aterrizaje.")
+Default Value: #DIV/0!
+
+Cell B258:
+Formula: IF(AND(F243>=90,F243<=110),
+"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la altura del salto.",
+"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la altura del salto.")
+Default Value: #DIV/0!
+
+Cell B259:
+Formula: IF(AND(F244>=90,F244<=110),
+"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la fuerza de frenado.",
+"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la fuerza de frenado.")
+Default Value: #DIV/0!
+
+Cell B260:
+Formula: IF(AND(F245>=90,F245<=110),
+"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la fuerza propulsiva.",
+"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la fuerza propulsiva.")
+Default Value: #DIV/0!
+
+Cell B261:
+Formula: IF(AND(F246>=90,F246<=110),
+"En el CMJ a 1 pierna, se presenta una correcta simetr├¡a en la fuerza de aterrizaje.",
+"En el CMJ a 1 pierna, se presenta una asimetr├¡a en la fuerza de aterrizaje.")
+Default Value: #DIV/0!
+
+Cell B262:
+Formula: IF(AND(F249>=90,F249<=110),
+"En el DJ a 2 piernas, se presenta una correcta simetr├¡a en la fuerza pico de contacto.",
+"En el DJ a 2 piernas, se presenta una asimetr├¡a en la fuerza pico de contacto.")
+Default Value: #DIV/0!
+
+Cell B263:
+Formula: IF(AND(F251>=90,F251<=110),
+"En el DJ a 1 pierna, se presenta una correcta simetr├¡a en la altura del salto.",
+"En el DJ a 1 pierna, se presenta una asimetr├¡a en la altura del salto.")
+Default Value: #DIV/0!
+
+Cell B264:
+Formula: IF(AND(F252>=90,F252<=110),
+"En el DJ a 1 pierna, se presenta una correcta simetr├¡a en el tiempo de contacto.",
+"En el DJ a 1 pierna, se presenta una asimetr├¡a en el tiempo de contacto.")
+Default Value: #DIV/0!
+
+Cell B276:
+Formula: IF(AND(F267>=90,F267<=110),
+"En el Single Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.",
+"En el Single Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.")
+Default Value: #DIV/0!
+
+Cell B277:
+Formula: IF(AND(F268>=90,F268<=110),
+"En el Triple Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.",
+"En el Triple Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.")
+Default Value: #DIV/0!
+
+Cell B278:
+Formula: IF(AND(F269>=90,F269<=110),
+"En el Triple Hop Test, se presenta una correcta simetr├¡a en el tiempo de contacto con el suelo.",
+"En el Triple Hop Test, se presenta una asimetr├¡a en el tiempo de contacto con el suelo.")
+Default Value: #DIV/0!
+
+Cell B279:
+Formula: IF(AND(F270>=90,F270<=110),
+"En el Crossover Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.",
+"En el Crossover Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.")
+Default Value: #DIV/0!
+
+Cell B280:
+Formula: IF(AND(F271>=90,F271<=110),
+"En el Crossover Hop Test, se presenta una correcta simetr├¡a en el tiempo de contacto con el suelo.",
+"En el Crossover Hop Test, se presenta una asimetr├¡a en el tiempo de contacto con el suelo.")
+Default Value: #DIV/0!
+
+Cell B281:
+Formula: IF(AND(F272>=90,F272<=110),
+"En el Medial Side Triple Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.",
+"En el Medial Side Triple Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.")
+Default Value: #DIV/0!
+
+Cell B282:
+Formula: IF(AND(F273>=90,F273<=110),
+"En el 90 Medial Rotation Hop Test, se presenta una correcta simetr├¡a en la distancia del salto alcanzada.",
+"En el 90 Medial Rotation Hop Test, se presenta una asimetr├¡a en la distancia del salto alcanzada.")
+Default Value: #DIV/0!
+
+Cell B283:
+Formula: IF(AND(F274>=90,F274<=110),
+"En el Side Hop Test, se presenta una correcta simetr├¡a en la cantidad de saltos.",
+"En el Side Hop Test, se presenta una asimetr├¡a en la cantidad de saltos.")
+Default Value: #DIV/0!
+
+Cell B299:
+Formula: IF(AND(D286="OK", E286="OK", F286="OK", G286="OK"),
+   "En la vista frontal, no se detectan d├®ficits en la pierna lesionada.",
+   "En la vista frontal de la pierna lesionada presenta un d├®ficit de" &
+   IF(D286="X", " tronco", "") &
+   IF(AND(D286="X", OR(E286="X", F286="X", G286="X")), ",", "") &
+   IF(E286="X", " pelvis", "") &
+   IF(AND(E286="X", OR(F286="X", G286="X")), ",", "") &
+   IF(F286="X", " cadera", "") &
+   IF(AND(F286="X", G286="X"), ",", "") &
+   IF(G286="X", " rodilla", "") & "."
+)
+Default Value: En la vista frontal de la pierna lesionada presenta un d├®ficit de.
+
+Cell B300:
+Formula: IF(AND(D287="OK", E287="OK", F287="OK", G287="OK"),
+   "En la vista frontal, no se detectan d├®ficits en la pierna sana.",
+   "En la vista frontal de la pierna sana presenta un d├®ficit de" &
+   IF(D287="X", " tronco", "") &
+   IF(AND(D287="X", OR(E287="X", F287="X", G287="X")), ",", "") &
+   IF(E287="X", " pelvis", "") &
+   IF(AND(E287="X", OR(F287="X", G287="X")), ",", "") &
+   IF(F287="X", " cadera", "") &
+   IF(AND(F287="X", G287="X"), ",", "") &
+   IF(G287="X", " rodilla", "") & "."
+)
+Default Value: En la vista frontal de la pierna sana presenta un d├®ficit de.
+
+Cell B309:
+Formula: IF(C303="OK",
+"Se realiza una correcta prueba de frenado.",
+"Se presenta un d├®ficit en la prueba de frenado.")
+Default Value: Se presenta un d├®ficit en la prueba de frenado.
+
+Cell B310:
+Formula: IF(C304<=9.5,
+"Se presenta una correcta prueba de agilidad T Test.",
+"Se presenta un d├®ficit en la prueba de agilidad T Test.")
+Default Value: Se presenta una correcta prueba de agilidad T Test.
+
+Cell B311:
+Formula: IF(AND(C306<=3,D306<=3),
+"Se presenta un correcto cambio de direcci├│n a 45┬║ en ambas piernas.",
+IF(AND(C306>3,D306<=3),
+"Se presenta un d├®ficit en el cambio de direcci├│n a 45┬║ en la pierna derecha.",
+IF(AND(C306<=3,D306>3),
+"Se presenta un d├®ficit en el cambio de direcci├│n a 45┬║ en la pierna izquierda.",
+"Se presenta un d├®ficit en el cambio de direcci├│n a 45┬║ en ambas piernas.")))
+Default Value: Se presenta un correcto cambio de direcci├│n a 45┬║ en ambas piernas.
+
+Cell B312:
+Formula: IF(AND(C307<=3,D307<=3),
+"Se presenta un correcto cambio de direcci├│n a 90┬║ en ambas piernas.",
+IF(AND(C307>3,D307<=3),
+"Se presenta un d├®ficit en el cambio de direcci├│n a 90┬║ en la pierna derecha.",
+IF(AND(C307<=3,D307>3),
+"Se presenta un d├®ficit en el cambio de direcci├│n a 90┬║ en la pierna izquierda.",
+"Se presenta un d├®ficit en el cambio de direcci├│n a 90┬║ en ambas piernas.")))
+Default Value: Se presenta un correcto cambio de direcci├│n a 90┬║ en ambas piernas.
+
+Cell B319:
+Formula: IF(C315>=81, "La puntuaci├│n del cuestionario auto reportado se encuentra normal, lo que demuestra una sensaci├│n de seguridad y confianza en la funci├│n de los isquiotibiales."
+   ,"La puntuaci├│n del cuestionario auto reportado se encuentra disminuida, lo que demuestra una falta de seguridad y confianza en la funci├│n de los isquiotibiales."
+   )
+Default Value: La puntuaci├│n del cuestionario auto reportado se encuentra disminuida, lo que demuestra una falta de seguridad y confianza en la funci├│n de los isquiotibiales.
+
+Cell B320:
+Formula: IF(OR(C316<85, C317<65), 
+"La puntuaci├│n en los cuestionarios se encuentran bajos, esto se traduce a todav├¡a falta sensaci├│n de seguridad, confianza y funci├│n de la rodilla.", 
+"La puntuaci├│n en los cuestionarios auto reportados se encuentran normales, lo que demuestra una sensaci├│n de seguridad y confianza en la funci├│n de la rodilla.")
+Default Value: La puntuaci├│n en los cuestionarios se encuentran bajos, esto se traduce a todav├¡a falta sensaci├│n de seguridad, confianza y funci├│n de la rodilla.
+
+=== SHEET: Definici├│n operativa ===
+Dumping first 15 rows:
+[
+  [
+    "3 minutos en cinta caminata, rodilla al pecho en caminata, elongacion de cuadriceps en caminata, rodillas al pecho, talones a la cola, todos ida y vuelta del espacio verde"
+  ],
+  [
+    "Rotaci├│n interna de cadera 90┬║",
+    "PASIVO. "
+  ],
+  [],
+  [
+    "Rotaci├│n externa de cadera 90┬║"
+  ],
+  [],
+  [
+    "Extensi├│n pasiva de rodilla",
+    "Inclin├│metro (regla L), buscar superficie dura"
+  ],
+  [],
+  [
+    "Flexi├│n activa de rodilla",
+    "Dec├║bito prono, inclin├│metro en la tibia, sin entrada en calor"
+  ],
+  [],
+  [
+    "Flexi├│n pasiva de rodilla",
+    "Dec├║bito prono, inclin├│metro en la tibia, sin entrada en calor"
+  ],
+  [],
+  [
+    "Flexi├│n dorsal de tobillo",
+    "Incl├¡nometro borde anterior de tibia, moverlo 3 veces antes, no puede levantar tal├│n, una sola medici├│n, sin apoyar rodilla contraria en el suelo"
+  ],
+  [],
+  [
+    "Rotaci├│n interna de hombro",
+    "Fijaci├│n a la antepulsi├│n con mano del evaluador, inclin├│metro parte dorsal del antebrazo, dec├║bito supino completamente"
+  ],
+  []
+]
+
+Formulas found in Definici├│n operativa:
+

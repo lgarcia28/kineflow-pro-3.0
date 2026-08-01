@@ -13,7 +13,7 @@ import {
   addDoc
 } from 'firebase/firestore';
 import { MOCK_PATIENTS, EXERCISES as INITIAL_EXERCISES, MOCK_PRODUCTS, MOCK_APPOINTMENTS } from './constants';
-import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment } from './types';
+import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage } from './types';
 import { useAuthStore } from './store/authStore';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
@@ -389,7 +389,7 @@ const App: React.FC = () => {
     setPatients(prev => [...prev, ...safeDataList]);
     if (isConfigValid && db) {
       try {
-        const promises = safeDataList.map(p => setDoc(doc(db, 'patients', p.id), p));
+        const promises = safeDataList.map(p => setDoc(doc(db!, 'patients', p.id), p));
         await Promise.all(promises);
         console.log("Bulk patients saved to Firestore successfully");
       } catch (e: any) { 
