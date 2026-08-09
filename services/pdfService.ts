@@ -50,54 +50,54 @@ export const generateEvaluationPDF = async (evaluation: ClinicalEvaluation, pati
 
   // Logo MRS LAB (a la izquierda)
   try {
-    await addImageAsync('/assets/image7.png', 'PNG', 6, 5, 30, 30);
+    await addImageAsync('/assets/image7.png', 'PNG', 5, 6, 26, 26);
   } catch (e) {
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('MRS LAB', 10, 22);
+    doc.text('MRS LAB', 8, 22);
   }
 
-  // Profesionales (3 bloques distribuidos horizontalmente a la derecha)
+  // Profesionales (3 bloques distribuidos horizontalmente a la derecha con espaciado amplio)
   try {
     // 1. Pedro Costamagna (Foto 1)
-    const p1X = 40;
-    await addImageAsync('/assets/image4.png', 'PNG', p1X, 7, 26, 26);
+    const p1X = 33;
+    await addImageAsync('/assets/image4.png', 'PNG', p1X, 8, 22, 22);
     doc.setTextColor(15, 23, 42); // Slate 900
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text('Pedro Costamagna', p1X + 27, 15);
-    doc.setFontSize(6.5);
+    doc.text('Pedro Costamagna', p1X + 23, 14);
+    doc.setFontSize(6.2);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 116, 139); // Slate 500
-    doc.text('Lic. en Kinesiología y Fisiatría', p1X + 27, 19.5);
-    doc.text('Mat. 3236/2', p1X + 27, 23.5);
+    doc.text('Lic. en Kinesiología y Fisiatría', p1X + 23, 18.5);
+    doc.text('Mat. 3236/2', p1X + 23, 22.5);
 
     // 2. Leandro Pisani (Foto 2)
-    const p2X = 97;
-    await addImageAsync('/assets/image2.png', 'PNG', p2X, 7, 26, 26);
+    const p2X = 91;
+    await addImageAsync('/assets/image2.png', 'PNG', p2X, 8, 22, 22);
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text('Leandro Pisani', p2X + 27, 15);
-    doc.setFontSize(6.5);
+    doc.text('Leandro Pisani', p2X + 23, 14);
+    doc.setFontSize(6.2);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 116, 139);
-    doc.text('Lic. en Kinesiología y Fisiatría', p2X + 27, 19.5);
-    doc.text('Mat. 1664/2', p2X + 27, 23.5);
+    doc.text('Lic. en Kinesiología y Fisiatría', p2X + 23, 18.5);
+    doc.text('Mat. 1664/2', p2X + 23, 22.5);
 
     // 3. Ezequiel Plaza (Foto 3)
-    const p3X = 153;
-    await addImageAsync('/assets/image3.png', 'PNG', p3X, 7, 26, 26);
+    const p3X = 149;
+    await addImageAsync('/assets/image3.png', 'PNG', p3X, 8, 22, 22);
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text('Ezequiel Plaza', p3X + 27, 15);
-    doc.setFontSize(6.5);
+    doc.text('Ezequiel Plaza', p3X + 23, 14);
+    doc.setFontSize(6.2);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 116, 139);
-    doc.text('Lic. en Kinesiología y Fisiatría', p3X + 27, 19.5);
-    doc.text('Mat. 3269/2', p3X + 27, 23.5);
+    doc.text('Lic. en Kinesiología y Fisiatría', p3X + 23, 18.5);
+    doc.text('Mat. 3269/2', p3X + 23, 22.5);
   } catch (e) {}
 
   // --- 2. FICHA DEL PACIENTE Y ANTECEDENTES ---
