@@ -39,59 +39,83 @@ export const generateEvaluationPDF = async (evaluation: ClinicalEvaluation, pati
     });
   };
 
-  // --- 1. HEADER BAR (SIN SUPERPOSICIÓN) ---
-  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.rect(0, 0, pageWidth, 42, 'F');
+  // --- 1. ENCABEZADO INSTITUCIONAL (FONDO BLANCO E IDÉNTICO AL DISEÑO ORIGINAL) ---
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, 40, 'F');
 
-  // Left accent border
-  doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
-  doc.rect(0, 0, 4, pageHeight, 'F');
+  // Línea separadora inferior gris sutil
+  doc.setDrawColor(226, 232, 240); // Slate 200
+  doc.setLineWidth(0.5);
+  doc.line(0, 40, pageWidth, 40);
 
   // Logo MRS LAB (a la izquierda)
   try {
-    await addImageAsync('/assets/image7.png', 'PNG', 10, 6, 30, 30);
+    await addImageAsync('/assets/image7.png', 'PNG', 6, 5, 30, 30);
   } catch (e) {
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('MRS LAB', 12, 24);
+    doc.text('MRS LAB', 10, 22);
   }
 
-  // Título e info principal (espaciado dinámico a la derecha del logo)
-  const titleX = 44;
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.text('INFORME DE EVALUACIÓN CLÍNICA', titleX, 16);
-
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(203, 213, 225); // Slate 300
-  doc.text('Protocolo de Rendimiento y Funcionalidad', titleX, 23);
-
-  doc.setFontSize(7.5);
-  doc.setTextColor(148, 163, 184); // Slate 400
-  const evalDateFormatted = evaluation.date ? new Date(evaluation.date).toLocaleDateString('es-AR') : 'Fecha N/A';
-  doc.text(`Fecha: ${evalDateFormatted}`, titleX, 30);
-
-  // Profesionales (alineados a la derecha con margen exacto)
-  const profsY = 6;
+  // Profesionales (3 bloques distribuidos horizontalmente a la derecha)
   try {
-    await addImageAsync('/assets/image4.png', 'PNG', 125, profsY, 9, 9);
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(5.5);
+    // 1. Leandro Pisani
+    const p1X = 40;
+    await addImageAsync('/assets/image4.png', 'PNG', p1X, 7, 26, 26);
+    doc.setTextColor(15, 23, 42); // Slate 900
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text('Leandro Pisani\nLic. Kinesiología\nMat. 1664/2', 135, profsY + 3);
+    doc.text('Leandro Pisani', p1X + 27, 15);
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139); // Slate 500
+    doc.text('Lic. en Kinesiología y Fisiatría', p1X + 27, 19.5);
+    doc.text('Mat. 1664/2', p1X + 27, 23.5);
 
-    await addImageAsync('/assets/image2.png', 'PNG', 155, profsY, 9, 9);
-    doc.text('Ezequiel Plaza\nLic. Kinesiología\nMat. 3269/2', 165, profsY + 3);
+    // 2. Ezequiel Plaza
+    const p2X = 97;
+    await addImageAsync('/assets/image2.png', 'PNG', p2X, 7, 26, 26);
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Ezequiel Plaza', p2X + 27, 15);
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text('Lic. en Kinesiología y Fisiatría', p2X + 27, 19.5);
+    doc.text('Mat. 3269/2', p2X + 27, 23.5);
 
-    await addImageAsync('/assets/image3.png', 'PNG', 183, profsY, 9, 9);
-    doc.text('Pedro Costamagna\nLic. Kinesiología\nMat. 3236/2', 193, profsY + 3);
+    // 3. Pedro Costamagna
+    const p3X = 153;
+    await addImageAsync('/assets/image3.png', 'PNG', p3X, 7, 26, 26);
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Pedro Costamagna', p3X + 27, 15);
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text('Lic. en Kinesiología y Fisiatría', p3X + 27, 19.5);
+    doc.text('Mat. 3236/2', p3X + 27, 23.5);
   } catch (e) {}
 
   // --- 2. FICHA DEL PACIENTE Y ANTECEDENTES ---
-  let currentY = 48;
+  let currentY = 45;
+  const evalDateFormatted = evaluation.date ? new Date(evaluation.date).toLocaleDateString('es-AR') : 'Fecha N/A';
+
+  // Sub-encabezado con título del informe
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('INFORME DE EVALUACIÓN CLÍNICA', 10, currentY);
+
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Protocolo de Rendimiento y Funcionalidad  |  Fecha: ${evalDateFormatted}`, 10, currentY + 4.5);
+
+  currentY += 9;
   const basic = evaluation.measurements.basic || {};
   const patientWeight = Number(basic.weight) || 55; // Peso fallback si no ingresado
 
