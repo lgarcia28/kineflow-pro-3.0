@@ -60,44 +60,44 @@ export const generateEvaluationPDF = async (evaluation: ClinicalEvaluation, pati
 
   // Profesionales (3 bloques distribuidos horizontalmente a la derecha)
   try {
-    // 1. Leandro Pisani
+    // 1. Pedro Costamagna (Foto 1)
     const p1X = 40;
     await addImageAsync('/assets/image4.png', 'PNG', p1X, 7, 26, 26);
     doc.setTextColor(15, 23, 42); // Slate 900
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text('Leandro Pisani', p1X + 27, 15);
+    doc.text('Pedro Costamagna', p1X + 27, 15);
     doc.setFontSize(6.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 116, 139); // Slate 500
     doc.text('Lic. en Kinesiología y Fisiatría', p1X + 27, 19.5);
-    doc.text('Mat. 1664/2', p1X + 27, 23.5);
+    doc.text('Mat. 3236/2', p1X + 27, 23.5);
 
-    // 2. Ezequiel Plaza
+    // 2. Leandro Pisani (Foto 2)
     const p2X = 97;
     await addImageAsync('/assets/image2.png', 'PNG', p2X, 7, 26, 26);
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text('Ezequiel Plaza', p2X + 27, 15);
+    doc.text('Leandro Pisani', p2X + 27, 15);
     doc.setFontSize(6.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 116, 139);
     doc.text('Lic. en Kinesiología y Fisiatría', p2X + 27, 19.5);
-    doc.text('Mat. 3269/2', p2X + 27, 23.5);
+    doc.text('Mat. 1664/2', p2X + 27, 23.5);
 
-    // 3. Pedro Costamagna
+    // 3. Ezequiel Plaza (Foto 3)
     const p3X = 153;
     await addImageAsync('/assets/image3.png', 'PNG', p3X, 7, 26, 26);
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text('Pedro Costamagna', p3X + 27, 15);
+    doc.text('Ezequiel Plaza', p3X + 27, 15);
     doc.setFontSize(6.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 116, 139);
     doc.text('Lic. en Kinesiología y Fisiatría', p3X + 27, 19.5);
-    doc.text('Mat. 3236/2', p3X + 27, 23.5);
+    doc.text('Mat. 3269/2', p3X + 27, 23.5);
   } catch (e) {}
 
   // --- 2. FICHA DEL PACIENTE Y ANTECEDENTES ---
