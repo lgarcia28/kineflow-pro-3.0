@@ -14,7 +14,9 @@ import {
   AlertCircle,
   LogOut,
   Scan,
-  QrCode
+  QrCode,
+  Sparkles,
+  MousePointerClick
 } from 'lucide-react';
 
 interface TotemKioskViewProps {
@@ -46,6 +48,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
   const [pinError, setPinError] = useState(false);
 
   // --- Estados del Tótem ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'PATIENT' | 'STAFF'>('PATIENT');
   const [dniInput, setDniInput] = useState('');
   const [welcomePatient, setWelcomePatient] = useState<Patient | null>(null);
@@ -55,6 +58,31 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
   const [currentDateStr, setCurrentDateStr] = useState<string>('');
 
   const dniInputRef = useRef<HTMLInputElement>(null);
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const resetIdleTimer = () => {
+    if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+    idleTimeoutRef.current = setTimeout(() => {
+      setIsModalOpen(false);
+      setDniInput('');
+      setErrorMessage(null);
+    }, 30000); // 30 segundos de inactividad vuelve a pantalla completa
+  };
+
+  const openCheckInModal = () => {
+    setIsModalOpen(true);
+    resetIdleTimer();
+    setTimeout(() => {
+      dniInputRef.current?.focus();
+    }, 150);
+  };
+
+  const closeCheckInModal = () => {
+    setIsModalOpen(false);
+    setDniInput('');
+    setErrorMessage(null);
+    if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+  };
 
   // Reloj en vivo
   useEffect(() => {
@@ -68,29 +96,44 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Mantener Autofocus permanente en el input de DNI
+  // Mantener Autofocus permanente en el input de DNI cuando el modal está abierto
   useEffect(() => {
-    if (isAuthorized && activeTab === 'PATIENT' && !welcomePatient) {
+    if (isAuthorized && isModalOpen && activeTab === 'PATIENT' && !welcomePatient) {
       const timer = setTimeout(() => {
         dniInputRef.current?.focus();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isAuthorized, activeTab, welcomePatient, dniInput]);
+  }, [isAuthorized, isModalOpen, activeTab, welcomePatient, dniInput]);
 
   // Listener Global de Teclado Físico / Pad Numérico / Lector QR USB
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isAuthorized || welcomePatient || activeTab !== 'PATIENT') return;
+      if (!isAuthorized || welcomePatient) return;
 
-      if (e.key === 'Enter') {
+      // Si el modal está cerrado y presionan cualquier tecla (o pad numérico)
+      if (!isModalOpen) {
+        if (/^[0-9]$/.test(e.key)) {
+          setDniInput(e.key);
+        }
+        setIsModalOpen(true);
+        resetIdleTimer();
+        return;
+      }
+
+      // Si el modal ya está abierto
+      resetIdleTimer();
+
+      if (e.key === 'Escape') {
+        closeCheckInModal();
+      } else if (e.key === 'Enter' && activeTab === 'PATIENT') {
         e.preventDefault();
         handlePatientCheckIn();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAuthorized, welcomePatient, activeTab, dniInput, patients]);
+  }, [isAuthorized, welcomePatient, isModalOpen, activeTab, dniInput, patients]);
 
   // --- Manejo de Autorización PIN de Dispositivo ---
   const handleVerifyDevicePin = (e?: React.FormEvent) => {
@@ -143,9 +186,10 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
         audio.play().catch(() => {});
       } catch (err) {}
 
-      // Auto-cerrar mensaje de bienvenida después de 4 segundos
+      // Auto-cerrar mensaje de bienvenida después de 4 segundos y volver a pantalla completa
       setTimeout(() => {
         setWelcomePatient(null);
+        setIsModalOpen(false);
       }, 4000);
     } else {
       setErrorMessage(`El DNI ${cleanDni} no figura en el sistema. Por favor acérquese a la recepción.`);
@@ -281,7 +325,12 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
 
   // --- PANTALLA PRINCIPAL DEL TÓTEM (DISPOSITIVO AUTORIZADO) ---
   return (
-    <div className="fixed inset-0 z-[999] bg-slate-950 text-white overflow-hidden select-none flex flex-col font-sans">
+    <div 
+      onClick={!isModalOpen ? openCheckInModal : undefined}
+      className={`fixed inset-0 z-[999] bg-slate-950 text-white overflow-hidden select-none flex flex-col font-sans ${
+        !isModalOpen ? 'cursor-pointer' : ''
+      }`}
+    >
       {/* 1. Video de Fondo Publicitario en Bucle (Soporta YouTube y MP4) */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         {(() => {
@@ -312,12 +361,16 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
             />
           );
         })()}
-        {/* Overlay degradado oscuro para contraste impecable */}
-        <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-[2px]" />
+        {/* Overlay: Sutil cuando está en video, más oscuro cuando el modal está abierto */}
+        <div className={`absolute inset-0 transition-all duration-500 ${
+          isModalOpen 
+            ? 'bg-slate-950/75 backdrop-blur-[3px]' 
+            : 'bg-gradient-to-t from-black/80 via-transparent to-black/30'
+        }`} />
       </div>
 
       {/* 2. Barra Superior Header */}
-      <header className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-white/10 bg-slate-950/40 backdrop-blur-md">
+      <header className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-white/10 bg-slate-950/30 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-600/40 border border-primary-400/30">
             <Tv size={20} className="text-white" />
@@ -342,7 +395,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
         {/* Botones de Control Tótem */}
         <div className="flex items-center gap-2">
           <button
-            onClick={handleDeauthorizeDevice}
+            onClick={(e) => { e.stopPropagation(); handleDeauthorizeDevice(); }}
             title="Desautorizar PIN de esta PC"
             className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-slate-300 transition-all border border-white/10"
           >
@@ -350,7 +403,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
           </button>
           {onExitKiosk && (
             <button
-              onClick={onExitKiosk}
+              onClick={(e) => { e.stopPropagation(); onExitKiosk(); }}
               title="Salir del Modo Tótem"
               className="p-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-xl transition-all border border-rose-500/30"
             >
@@ -360,33 +413,62 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
         </div>
       </header>
 
-      {/* 3. Panel Central Interactivo */}
-      <main className="relative z-10 flex-1 flex items-center justify-center p-6">
-        <div className="max-w-xl w-full bg-slate-900/85 backdrop-blur-xl border border-white/15 rounded-[2.5rem] p-8 shadow-2xl shadow-black/80 space-y-6 animate-in zoom-in-95 duration-300">
-          
-          {/* Tabs Navegación */}
-          <div className="flex bg-slate-950/80 p-1.5 rounded-2xl border border-white/10">
+      {/* 3. MODO REPOSO: BOTÓN FLOTANTE LLAMATIVO EN PARTE INFERIOR */}
+      {!isModalOpen && (
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-end pb-12 md:pb-16 pointer-events-none animate-in fade-in duration-300">
+          <button
+            onClick={(e) => { e.stopPropagation(); openCheckInModal(); }}
+            className="pointer-events-auto px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-500 hover:to-indigo-500 text-white rounded-full font-black text-base md:text-xl uppercase tracking-wider shadow-2xl shadow-primary-500/60 backdrop-blur-md border-2 border-white/40 flex items-center gap-3 animate-bounce hover:scale-105 active:scale-95 transition-all"
+          >
+            <Sparkles size={24} className="text-amber-300 animate-spin" />
+            <span>Toca la pantalla para dar el Presente</span>
+          </button>
+          <p className="text-xs md:text-sm font-bold text-white/90 mt-3 drop-shadow-lg">
+            O presiona cualquier número en el teclado para ingresar
+          </p>
+        </div>
+      )}
+
+      {/* 4. MODO INTERACTIVO: MODAL DE INGRESO (Se abre al tocar o presionar tecla) */}
+      {isModalOpen && (
+        <main 
+          onClick={(e) => { e.stopPropagation(); resetIdleTimer(); }}
+          className="relative z-20 flex-1 flex items-center justify-center p-6"
+        >
+          <div className="max-w-xl w-full bg-slate-900/90 backdrop-blur-2xl border border-white/20 rounded-[2.5rem] p-8 shadow-2xl shadow-black/90 space-y-6 animate-in zoom-in-95 duration-200 relative">
+            
+            {/* Botón Volver / Cerrar */}
             <button
-              onClick={() => setActiveTab('PATIENT')}
-              className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'PATIENT'
-                  ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/40'
-                  : 'text-slate-400 hover:text-white'
-              }`}
+              onClick={closeCheckInModal}
+              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 rounded-full transition-all border border-white/10 flex items-center gap-1 text-xs font-bold px-3 py-1.5"
+              title="Volver al video"
             >
-              <UserCheck size={16} /> Presente Pacientes
+              <X size={16} /> <span>Volver</span>
             </button>
-            <button
-              onClick={() => setActiveTab('STAFF')}
-              className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'STAFF'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/40'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Clock size={16} /> Fichaje Staff / Kines
-            </button>
-          </div>
+            
+            {/* Tabs Navegación */}
+            <div className="flex bg-slate-950/80 p-1.5 rounded-2xl border border-white/10 max-w-sm">
+              <button
+                onClick={() => { setActiveTab('PATIENT'); resetIdleTimer(); }}
+                className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                  activeTab === 'PATIENT'
+                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <UserCheck size={16} /> Pacientes
+              </button>
+              <button
+                onClick={() => { setActiveTab('STAFF'); resetIdleTimer(); }}
+                className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                  activeTab === 'STAFF'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Clock size={16} /> Fichar Staff
+              </button>
+            </div>
 
           {/* CONTENIDO TAB 1: PACIENTES */}
           {activeTab === 'PATIENT' && (
@@ -479,6 +561,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
           )}
         </div>
       </main>
+      )}
 
       {/* 4. MODAL FULLSCREEN DE BIENVENIDA A PACIENTE (4 Segundos) */}
       {welcomePatient && (
