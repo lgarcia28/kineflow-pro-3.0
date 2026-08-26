@@ -216,22 +216,27 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    // Escucha activa de datos, SOLO si está autenticado
-    
-    if (!isConfigValid || !db || !isAuthenticated || !user) {
-      setPatients([]); // No mocks by default to avoid leaks
+    const isTotemRoute = window.location.pathname.includes('totem') || showTotemKiosk;
+
+    if (!isConfigValid || !db || (!isAuthenticated && !isTotemRoute)) {
+      setPatients([]);
       setLoading(false);
       return;
     }
 
-    const { role, tenantId, assignedDni } = user;
-    
+    const urlParams = new URLSearchParams(window.location.search);
+    const tenantFromUrl = urlParams.get('tenant') || (window.location.pathname.includes('/totem/') ? window.location.pathname.split('/totem/')[1] : null);
+    const activeTenantId = tenantFromUrl || localStorage.getItem('kineflow_totem_tenant_id') || user?.tenantId || 'default_tenant';
+
+    const role = user?.role || UserRole.RECEPCION;
+    const assignedDni = user?.assignedDni;
+
     // PATIENTS
     let q = query(collection(db, 'patients'));
     if (role === UserRole.PATIENT) {
       q = query(collection(db, 'patients'), where('dni', '==', assignedDni));
-    } else if (role !== UserRole.SUPER_ADMIN) {
-      q = query(collection(db, 'patients'), where('tenantId', '==', tenantId || 'default_tenant'));
+    } else if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      q = query(collection(db, 'patients'), where('tenantId', '==', activeTenantId));
     }
 
     console.log("Starting Firestore snapshot listener...");
@@ -273,8 +278,8 @@ const App: React.FC = () => {
     });
 
     let staffQ = query(collection(db, 'staff'));
-    if (role !== UserRole.SUPER_ADMIN) {
-      staffQ = query(collection(db, 'staff'), where('tenantId', '==', tenantId || 'default_tenant'));
+    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      staffQ = query(collection(db, 'staff'), where('tenantId', '==', activeTenantId));
     }
     const unsubscribeStaff = onSnapshot(staffQ, (snapshot) => {
       const staffData: StaffMember[] = [];
@@ -285,8 +290,8 @@ const App: React.FC = () => {
     });
 
     let productsQ = query(collection(db, 'products'));
-    if (role !== UserRole.SUPER_ADMIN) {
-      productsQ = query(collection(db, 'products'), where('tenantId', '==', tenantId || 'default_tenant'));
+    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      productsQ = query(collection(db, 'products'), where('tenantId', '==', activeTenantId));
     }
     const unsubscribeProducts = onSnapshot(productsQ, (snapshot) => {
       const productsData: Product[] = [];
@@ -297,8 +302,8 @@ const App: React.FC = () => {
     });
 
     let appointmentsQ = query(collection(db, 'appointments'));
-    if (role !== UserRole.SUPER_ADMIN) {
-      appointmentsQ = query(collection(db, 'appointments'), where('tenantId', '==', tenantId || 'default_tenant'));
+    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      appointmentsQ = query(collection(db, 'appointments'), where('tenantId', '==', activeTenantId));
     }
     const unsubscribeAppointments = onSnapshot(appointmentsQ, (snapshot) => {
       const appointmentsData: Appointment[] = [];
@@ -322,8 +327,8 @@ const App: React.FC = () => {
     });
 
     let timeLogsQ = query(collection(db, 'timeLogs'));
-    if (role !== UserRole.SUPER_ADMIN) {
-      timeLogsQ = query(collection(db, 'timeLogs'), where('tenantId', '==', tenantId || 'default_tenant'));
+    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      timeLogsQ = query(collection(db, 'timeLogs'), where('tenantId', '==', activeTenantId));
     }
     const unsubscribeTimeLogs = onSnapshot(timeLogsQ, (snapshot) => {
       const logsData: StaffTimeLog[] = [];
@@ -333,7 +338,7 @@ const App: React.FC = () => {
       setStaffTimeLogs(logsData);
     });
 
-    const settingsDocRef = doc(db, 'tenantSettings', tenantId || 'default_tenant');
+    const settingsDocRef = doc(db, 'tenantSettings', activeTenantId);
     const unsubscribeSettings = onSnapshot(settingsDocRef, (docSnap) => {
       if (docSnap.exists()) {
         setTenantSettings(docSnap.data() as TenantSettings);
