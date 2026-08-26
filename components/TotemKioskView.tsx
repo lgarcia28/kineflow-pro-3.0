@@ -49,6 +49,9 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
 
   // --- Estados del Tótem ---
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  });
   const [activeTab, setActiveTab] = useState<'PATIENT' | 'STAFF'>('PATIENT');
   const [dniInput, setDniInput] = useState('');
   const [welcomePatient, setWelcomePatient] = useState<Patient | null>(null);
@@ -83,6 +86,13 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
     setErrorMessage(null);
     if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
   };
+
+  // Detectar pantalla táctil dinámicamente si se produce un toque
+  useEffect(() => {
+    const handleTouch = () => setIsTouchDevice(true);
+    window.addEventListener('touchstart', handleTouch, { once: true });
+    return () => window.removeEventListener('touchstart', handleTouch);
+  }, []);
 
   // Reloj en vivo
   useEffect(() => {
@@ -421,10 +431,14 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
             className="pointer-events-auto px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-500 hover:to-indigo-500 text-white rounded-full font-black text-base md:text-xl uppercase tracking-wider shadow-2xl shadow-primary-500/60 backdrop-blur-md border-2 border-white/40 flex items-center gap-3 animate-bounce hover:scale-105 active:scale-95 transition-all"
           >
             <Sparkles size={24} className="text-amber-300 animate-spin" />
-            <span>Toca la pantalla para dar el Presente</span>
+            <span>
+              {isTouchDevice ? 'Toca la pantalla para comenzar' : 'Presiona cualquier tecla para comenzar'}
+            </span>
           </button>
           <p className="text-xs md:text-sm font-bold text-white/90 mt-3 drop-shadow-lg">
-            O presiona cualquier número en el teclado para ingresar
+            {isTouchDevice 
+              ? 'O toca aquí para ingresar tu DNI o dar el presente' 
+              : 'O escribe tu DNI en el teclado numérico / lector'}
           </p>
         </div>
       )}
