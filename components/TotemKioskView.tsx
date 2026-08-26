@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import { Patient, CheckInStatus, StaffMember, StaffTimeLog, TenantSettings } from '../types';
+import { parseMediaUrl } from '../utils/mediaUrl';
 import { 
   CheckCircle, 
   UserCheck, 
@@ -281,16 +282,36 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
   // --- PANTALLA PRINCIPAL DEL TÓTEM (DISPOSITIVO AUTORIZADO) ---
   return (
     <div className="fixed inset-0 z-[999] bg-slate-950 text-white overflow-hidden select-none flex flex-col font-sans">
-      {/* 1. Video de Fondo Publicitario en Bucle */}
-      <div className="absolute inset-0 z-0">
-        <video
-          src={bgVideoUrl}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover"
-        />
+      {/* 1. Video de Fondo Publicitario en Bucle (Soporta YouTube y MP4) */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        {(() => {
+          const media = parseMediaUrl(bgVideoUrl);
+          const ytMatch = bgVideoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([\w-]{11})/);
+          const ytId = ytMatch ? ytMatch[1] : null;
+
+          if (media.type === 'youtube' && ytId) {
+            return (
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1`}
+                className="w-full h-full object-cover scale-[1.35] pointer-events-none border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                title="YouTube Totem Background"
+              />
+            );
+          }
+
+          return (
+            <video
+              key={bgVideoUrl}
+              src={bgVideoUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          );
+        })()}
         {/* Overlay degradado oscuro para contraste impecable */}
         <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-[2px]" />
       </div>

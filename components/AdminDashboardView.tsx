@@ -26,6 +26,7 @@ import {
   Video 
 } from 'lucide-react';
 import { StaffPayrollView } from './StaffPayrollView';
+import { parseMediaUrl } from '../utils/mediaUrl';
 
 export const AdminDashboardView: React.FC = () => {
   const { user } = useAuthStore();
@@ -454,16 +455,18 @@ export const AdminDashboardView: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                      URL del Video Publicitario (Formato MP4)
+                      URL del Video Publicitario (YouTube o MP4)
                     </label>
                     <input
                       type="url"
                       value={tenantSettings.totemVideoUrl || ''}
                       onChange={(e) => setTenantSettings({ ...tenantSettings, totemVideoUrl: e.target.value })}
-                      placeholder="https://servidor.com/video_promocional.mp4"
+                      placeholder="https://www.youtube.com/watch?v=... o https://servidor.com/video.mp4"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium text-slate-900 focus:bg-white focus:border-primary-500 outline-none"
                     />
-                    <p className="text-[11px] text-slate-400 mt-1">Pega aquí el enlace directo al archivo de video de tu clínica.</p>
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Soporta enlaces de <strong>YouTube</strong> (videos normales, Shorts, youtu.be) o archivos directos <strong>.MP4</strong>.
+                    </p>
                   </div>
 
                   <button
@@ -493,16 +496,36 @@ export const AdminDashboardView: React.FC = () => {
                     Previsualización del Video en Vivo
                   </span>
                   <div className="aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-200 relative shadow-inner flex items-center justify-center">
-                    <video
-                      key={tenantSettings.totemVideoUrl || 'default'}
-                      src={tenantSettings.totemVideoUrl || 'https://assets.mixkit.co/videos/preview/mixkit-athlete-stretching-and-preparing-to-run-41315-large.mp4'}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white">
+                    {(() => {
+                      const videoUrl = tenantSettings.totemVideoUrl || 'https://assets.mixkit.co/videos/preview/mixkit-athlete-stretching-and-preparing-to-run-41315-large.mp4';
+                      const media = parseMediaUrl(videoUrl);
+                      const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([\w-]{11})/);
+                      const ytId = ytMatch ? ytMatch[1] : null;
+
+                      if (media.type === 'youtube' && ytId) {
+                        return (
+                          <iframe
+                            src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1`}
+                            className="w-full h-full object-cover scale-[1.35] pointer-events-none border-0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            title="YouTube Preview"
+                          />
+                        );
+                      }
+
+                      return (
+                        <video
+                          key={videoUrl}
+                          src={videoUrl}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      );
+                    })()}
+                    <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white pointer-events-none">
                       {tenantSettings.totemVideoUrl ? 'Video Personalizado' : 'Video por Defecto'}
                     </div>
                   </div>
