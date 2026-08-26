@@ -69,7 +69,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
       setIsModalOpen(false);
       setDniInput('');
       setErrorMessage(null);
-    }, 30000); // 30 segundos de inactividad vuelve a pantalla completa
+    }, 10000); // 10 segundos de inactividad vuelve al video y borra los números
   };
 
   const openCheckInModal = () => {
@@ -212,6 +212,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
 
   // Numpad Táctil en Pantalla
   const handleNumpadPress = (val: string) => {
+    resetIdleTimer();
     if (val === 'CLEAR') {
       setDniInput('');
     } else if (val === 'DELETE') {
@@ -502,7 +503,10 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
                   inputMode="numeric"
                   placeholder="Escribe tu DNI aquí..."
                   value={dniInput}
-                  onChange={(e) => setDniInput(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => {
+                    resetIdleTimer();
+                    setDniInput(e.target.value.replace(/\D/g, ''));
+                  }}
                   className="w-full text-center text-3xl font-black bg-slate-950 border-2 border-primary-500/50 focus:border-primary-400 text-white rounded-2xl py-4 shadow-inner outline-none transition-all placeholder:text-slate-600 placeholder:text-lg"
                 />
               </div>
