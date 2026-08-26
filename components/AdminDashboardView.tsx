@@ -3,12 +3,35 @@ import { collection, query, where, getDocs, doc, setDoc, deleteDoc, getDoc } fro
 import { db, secondaryAuth } from '../firebase';
 import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { useAuthStore } from '../store/authStore';
-import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS, TenantSettings, Appointment } from '../types';
-import { Users, Activity, Target, Settings, Building2, UserPlus, Shield, X, MoreVertical, Trash2, Plus } from 'lucide-react';
+import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS, TenantSettings, Appointment, StaffTimeLog } from '../types';
+import { 
+  Users, 
+  Activity, 
+  Target, 
+  Settings, 
+  Building2, 
+  UserPlus, 
+  Shield, 
+  X, 
+  MoreVertical, 
+  Trash2, 
+  Plus, 
+  Clock, 
+  DollarSign, 
+  Tv, 
+  Copy, 
+  ExternalLink, 
+  Check, 
+  Play, 
+  Video 
+} from 'lucide-react';
+import { StaffPayrollView } from './StaffPayrollView';
 
 export const AdminDashboardView: React.FC = () => {
   const { user } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<'GENERAL' | 'PAYROLL' | 'TOTEM'>('GENERAL');
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
+  const [timeLogs, setTimeLogs] = useState<StaffTimeLog[]>([]);
   const [totalPatients, setTotalPatients] = useState(0);
   const [todaysAppointments, setTodaysAppointments] = useState<Appointment[]>([]);
   const [selectedKineFilter, setSelectedKineFilter] = useState<string>('ALL');
@@ -19,11 +42,15 @@ export const AdminDashboardView: React.FC = () => {
   const [customActivityName, setCustomActivityName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const [tenantSettings, setTenantSettings] = useState<TenantSettings>({
     priceSingleSession: 10000,
     pricePack10: 80000,
-    priceMonthly: 50000
+    priceMonthly: 50000,
+    totemPin: '1234',
+    totemVideoUrl: '',
+    payrollType: 'HOURLY'
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -80,6 +107,13 @@ export const AdminDashboardView: React.FC = () => {
       appSnap.forEach(doc => appData.push(doc.data() as Appointment));
       setTodaysAppointments(appData);
 
+      // 5. Fetch timeLogs for staff payroll
+      const timeLogsQ = query(collection(db, 'timeLogs'), where('tenantId', '==', tenantId));
+      const timeLogsSnap = await getDocs(timeLogsQ);
+      const timeLogsData: StaffTimeLog[] = [];
+      timeLogsSnap.forEach(doc => timeLogsData.push({ id: doc.id, ...doc.data() } as StaffTimeLog));
+      setTimeLogs(timeLogsData);
+
     } catch (e: any) {
       console.error("Error fetching admin data:", e);
     } finally {
@@ -90,6 +124,58 @@ export const AdminDashboardView: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [tenantId]);
+
+  const handleUpdateStaffMember = async (member: StaffMember) => {
+    if (!db) return;
+    try {
+      await setDoc(doc(db, 'staff', member.id), member, { merge: true });
+      setStaffList(prev => prev.map(s => s.id === member.id ? member : s));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAddStaffTimeLog = async (log: StaffTimeLog) => {
+    if (!db) return;
+    try {
+      await setDoc(doc(db, 'timeLogs', log.id), log);
+      setTimeLogs(prev => [...prev, log]);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleUpdateStaffTimeLog = async (log: StaffTimeLog) => {
+    if (!db) return;
+    try {
+      await setDoc(doc(db, 'timeLogs', log.id), log, { merge: true });
+      setTimeLogs(prev => prev.map(l => l.id === log.id ? log : l));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteStaffTimeLog = async (id: string) => {
+    if (!db) return;
+    try {
+      await deleteDoc(doc(db, 'timeLogs', id));
+      setTimeLogs(prev => prev.filter(l => l.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleUpdateTenantSettings = async (settings: Partial<TenantSettings>) => {
+    const updated = { ...tenantSettings, ...settings };
+    setTenantSettings(updated);
+    if (db) {
+      try {
+        await setDoc(doc(db, 'tenantSettings', tenantId), updated, { merge: true });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
 
   const generateEmail = (username: string, role: string) => {
     return `${username.toLowerCase().trim()}@staff.kineflow.com`; // Usamos dominio generico porque el tenant restringe los datos igual.
@@ -228,20 +314,207 @@ export const AdminDashboardView: React.FC = () => {
 
   return (
     <div className="flex-1 bg-slate-50 overflow-y-auto pb-24">
-      <div className="bg-indigo-900 text-white pt-12 pb-24 px-8 md:px-12 relative overflow-hidden">
+      <div className="bg-indigo-900 text-white pt-10 pb-20 px-8 md:px-12 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-[80px] opacity-20 animate-pulse"></div>
         <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-800/50 rounded-full border border-indigo-700/50 backdrop-blur-sm mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-800/50 rounded-full border border-indigo-700/50 backdrop-blur-sm mb-3">
               <Building2 size={14} className="text-indigo-300"/>
               <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">Panel Institucional</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight">Configuración de<br/><span className="text-indigo-400">Personal SaaS</span></h1>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">Panel de Control<br/><span className="text-indigo-400">Gestión de Clínica</span></h1>
+          </div>
+
+          {/* Selector de Pestañas */}
+          <div className="flex bg-indigo-950/70 p-1.5 rounded-2xl border border-indigo-700/60 backdrop-blur-md gap-1 flex-wrap">
+            <button
+              onClick={() => setActiveTab('GENERAL')}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === 'GENERAL'
+                  ? 'bg-white text-indigo-950 shadow-md'
+                  : 'text-indigo-200 hover:text-white'
+              }`}
+            >
+              <Users size={16} /> Personal y Precios
+            </button>
+            <button
+              onClick={() => setActiveTab('PAYROLL')}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === 'PAYROLL'
+                  ? 'bg-white text-indigo-950 shadow-md'
+                  : 'text-indigo-200 hover:text-white'
+              }`}
+            >
+              <Clock size={16} /> Asistencia y Sueldos
+            </button>
+            <button
+              onClick={() => setActiveTab('TOTEM')}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === 'TOTEM'
+                  ? 'bg-white text-indigo-950 shadow-md'
+                  : 'text-indigo-200 hover:text-white'
+              }`}
+            >
+              <Tv size={16} /> Tótem y Publicidad
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-12 -mt-12 relative z-20 space-y-8 animate-slide-up">
+      <div className="max-w-6xl mx-auto px-4 md:px-12 -mt-10 relative z-20 space-y-8 animate-slide-up">
+        {/* PESTAÑA 2: ASISTENCIA Y LIQUIDACIONES */}
+        {activeTab === 'PAYROLL' && (
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <StaffPayrollView
+              staff={staffList}
+              timeLogs={timeLogs}
+              tenantSettings={tenantSettings}
+              onUpdateStaffMember={handleUpdateStaffMember}
+              onAddStaffTimeLog={handleAddStaffTimeLog}
+              onUpdateStaffTimeLog={handleUpdateStaffTimeLog}
+              onDeleteStaffTimeLog={handleDeleteStaffTimeLog}
+              onUpdateTenantSettings={handleUpdateTenantSettings}
+            />
+          </div>
+        )}
+
+        {/* PESTAÑA 3: TÓTEM Y PUBLICIDAD */}
+        {activeTab === 'TOTEM' && (
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            {/* Tarjeta Enlace del Tótem */}
+            <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center">
+                    <Tv size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900">Enlace Oficial de tu Tótem</h2>
+                    <p className="text-xs text-slate-500 font-medium">Abre este link en la PC/pantalla de recepción para activar el auto-ingreso y la publicidad.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const totemUrl = `${window.location.origin}/totem?tenant=${tenantId}`;
+                      navigator.clipboard.writeText(totemUrl);
+                      setCopiedLink(true);
+                      setTimeout(() => setCopiedLink(false), 3000);
+                    }}
+                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all"
+                  >
+                    {copiedLink ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
+                    {copiedLink ? '¡Enlace Copiado!' : 'Copiar Enlace'}
+                  </button>
+
+                  <button
+                    onClick={() => window.open(`/totem?tenant=${tenantId}`, '_blank')}
+                    className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-primary-600/20 active:scale-95 transition-all"
+                  >
+                    <ExternalLink size={16} /> Abrir Pantalla Tótem
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center justify-between text-xs font-mono text-slate-700">
+                <span className="truncate">{window.location.origin}/totem?tenant={tenantId}</span>
+              </div>
+            </div>
+
+            {/* Tarjeta Configuración de Video y PIN */}
+            <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                  <Video size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">Configuración de Video Publicitario y PIN</h3>
+                  <p className="text-xs text-slate-500 font-medium">Personaliza el fondo del monitor y la clave de acceso de recepción.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Formulario */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
+                      PIN de Activación de Recepción
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={tenantSettings.totemPin || '1234'}
+                      onChange={(e) => setTenantSettings({ ...tenantSettings, totemPin: e.target.value })}
+                      placeholder="1234"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-black text-slate-900 focus:bg-white focus:border-primary-500 outline-none"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">PIN requerido la primera vez que se autoriza la PC del monitor.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
+                      URL del Video Publicitario (Formato MP4)
+                    </label>
+                    <input
+                      type="url"
+                      value={tenantSettings.totemVideoUrl || ''}
+                      onChange={(e) => setTenantSettings({ ...tenantSettings, totemVideoUrl: e.target.value })}
+                      placeholder="https://servidor.com/video_promocional.mp4"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium text-slate-900 focus:bg-white focus:border-primary-500 outline-none"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">Pega aquí el enlace directo al archivo de video de tu clínica.</p>
+                  </div>
+
+                  <button
+                    onClick={async () => {
+                      if (!db) return;
+                      setIsSavingSettings(true);
+                      try {
+                        await setDoc(doc(db, 'tenantSettings', tenantId), { ...tenantSettings, id: tenantId }, { merge: true });
+                        alert('Ajustes del Tótem y Publicidad guardados correctamente.');
+                      } catch (e) {
+                        console.error(e);
+                        alert('Error al guardar ajustes.');
+                      } finally {
+                        setIsSavingSettings(false);
+                      }
+                    }}
+                    disabled={isSavingSettings}
+                    className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-primary-600/30 transition-all active:scale-95"
+                  >
+                    {isSavingSettings ? 'Guardando...' : 'Guardar Ajustes del Tótem'}
+                  </button>
+                </div>
+
+                {/* Previsualización del Video */}
+                <div className="space-y-2">
+                  <span className="block text-xs font-black text-slate-800 uppercase tracking-wider">
+                    Previsualización del Video en Vivo
+                  </span>
+                  <div className="aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-200 relative shadow-inner flex items-center justify-center">
+                    <video
+                      key={tenantSettings.totemVideoUrl || 'default'}
+                      src={tenantSettings.totemVideoUrl || 'https://assets.mixkit.co/videos/preview/mixkit-athlete-stretching-and-preparing-to-run-41315-large.mp4'}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white">
+                      {tenantSettings.totemVideoUrl ? 'Video Personalizado' : 'Video por Defecto'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PESTAÑA 1: GENERAL Y PRECIOS */}
+        {activeTab === 'GENERAL' && (
+          <>
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex items-center gap-5">
@@ -450,6 +723,8 @@ export const AdminDashboardView: React.FC = () => {
             </table>
           </div>
         </div>
+        </>
+        )}
       </div>
 
       {/* Add Staff Modal */}
