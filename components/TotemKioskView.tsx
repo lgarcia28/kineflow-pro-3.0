@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import QRCode from 'react-qr-code';
 import { Patient, CheckInStatus, StaffMember, StaffTimeLog, TenantSettings } from '../types';
 import { 
   CheckCircle, 
@@ -8,14 +9,11 @@ import {
   X, 
   Lock, 
   ShieldCheck, 
-  Volume2, 
-  VolumeX, 
   Tv, 
   AlertCircle,
   LogOut,
-  Play,
-  User,
-  LogIn
+  Scan,
+  QrCode
 } from 'lucide-react';
 
 interface TotemKioskViewProps {
@@ -430,63 +428,31 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
             </div>
           )}
 
-          {/* CONTENIDO TAB 2: FICHAJE STAFF */}
+          {/* CONTENIDO TAB 2: FICHAJE STAFF MEDIANTE QR */}
           {activeTab === 'STAFF' && (
-            <div className="space-y-5">
-              <div className="text-center space-y-1">
-                <h2 className="text-xl font-black text-white">Control de Asistencia Staff</h2>
+            <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-200">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-black text-white">Fichaje de Kinesiólogos / Staff</h2>
                 <p className="text-xs text-slate-300 font-medium">
-                  Selecciona tu nombre para marcar Ingreso o Salida de tu turno
+                  Abre la App de Kineflow en tu celular y escanea este código para registrar tu <strong className="text-emerald-400">Ingreso</strong> o <strong className="text-indigo-400">Egreso</strong>.
                 </p>
               </div>
 
-              {staffNotification && (
-                <div className="p-4 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-center text-xs font-black text-emerald-300 animate-in fade-in duration-200">
-                  {staffNotification}
-                </div>
-              )}
+              {/* Código QR Blanco Impecable con bordes redondeados */}
+              <div className="p-5 bg-white rounded-3xl inline-block shadow-2xl shadow-black/90 border-4 border-indigo-500/40 mx-auto">
+                <QRCode
+                  value={`kineflow-clockin:${tenantSettings?.id || 'default_tenant'}`}
+                  size={200}
+                  className="h-auto max-w-full"
+                  viewBox="0 0 256 256"
+                />
+              </div>
 
-              <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                {staff.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-4">No hay miembros del staff cargados.</p>
-                ) : (
-                  staff.map((member) => {
-                    const openLog = timeLogs.find(l => l.staffId === member.id && l.status === 'OPEN' && l.date === todayStr);
-                    return (
-                      <div
-                        key={member.id}
-                        className="bg-slate-950/70 p-3.5 rounded-2xl border border-white/10 flex items-center justify-between gap-3 shadow-md"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm text-white ${
-                            openLog ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-300'
-                          }`}>
-                            <User size={18} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-black text-white">{member.firstName} {member.lastName}</p>
-                            <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5">
-                              <span className={`w-2 h-2 rounded-full ${openLog ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
-                              {openLog ? `En servicio (Ingreso: ${openLog.clockIn})` : 'Fuera de servicio'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => handleStaffClockAction(member)}
-                          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-95 shadow-md flex items-center gap-1.5 ${
-                            openLog
-                              ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20'
-                              : 'bg-emerald-500 hover:bg-emerald-600 text-slate-950 shadow-emerald-500/20'
-                          }`}
-                        >
-                          <Clock size={14} />
-                          {openLog ? 'Marcar Salida' : 'Marcar Ingreso'}
-                        </button>
-                      </div>
-                    );
-                  })
-                )}
+              <div className="p-4 bg-slate-950/80 rounded-2xl border border-white/10 max-w-sm mx-auto flex items-center justify-center gap-3 text-xs text-slate-300 font-medium">
+                <Scan size={20} className="text-indigo-400 shrink-0 animate-pulse" />
+                <span className="text-left leading-tight">
+                  En tu celular, presiona el botón <strong className="text-white">"Fichar Turno (QR)"</strong> y apunta la cámara a esta pantalla.
+                </span>
               </div>
             </div>
           )}

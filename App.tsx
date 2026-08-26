@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { db, isConfigValid } from './firebase';
-import { Download, X, LogOut, Activity, Home, Dumbbell, Settings } from 'lucide-react';
+import { Download, X, LogOut, Activity, Home, Dumbbell, Settings, QrCode } from 'lucide-react';
 import { 
   collection, 
   onSnapshot, 
@@ -31,6 +31,7 @@ const AdminDashboardView = lazy(() => import('./components/AdminDashboardView').
 const SuperAdminDashboardView = lazy(() => import('./components/SuperAdminDashboardView').then(m => ({ default: m.SuperAdminDashboardView })));
 const SoundSettings = lazy(() => import('./components/SoundSettings').then(m => ({ default: m.SoundSettings })));
 const TotemKioskView = lazy(() => import('./components/TotemKioskView').then(m => ({ default: m.TotemKioskView })));
+const StaffQrScannerModal = lazy(() => import('./components/StaffQrScannerModal').then(m => ({ default: m.StaffQrScannerModal })));
 
 // Componente Loading reutilizable para Suspense
 const ViewLoader = () => (
@@ -57,6 +58,7 @@ const App: React.FC = () => {
     payrollType: 'HOURLY'
   });
   const [showTotemKiosk, setShowTotemKiosk] = useState(false);
+  const [showQrScanner, setShowQrScanner] = useState(false);
   const { isAuthenticated, isInitializing, user, logout } = useAuthStore();
   const [showExerciseLibrary, setShowExerciseLibrary] = useState(false);
 
@@ -750,6 +752,7 @@ const App: React.FC = () => {
               }}
               onGoHome={() => { setView('HOME'); setSelectedPatientId(null); }}
               onOpenLibrary={() => setShowExerciseLibrary(true)}
+              onOpenQrScanner={() => setShowQrScanner(true)}
               isOnline={isOnline}
           />
         )}
@@ -807,7 +810,9 @@ const App: React.FC = () => {
             (view === 'HOME' || !currentPatient) ? (
               <PatientList 
                   patients={patients} 
-                  onSelectPatient={handleSelectPatient} 
+                  onSelectPatient={handleSelectPatient}
+                  onOpenQrScanner={() => setShowQrScanner(true)}
+                  isClockedIn={!!staffTimeLogs.find(l => (l.staffId === user.id || l.staffName.includes(user.name || '')) && l.status === 'OPEN' && l.date === new Date().toISOString().split('T')[0])}
               />
             ) : (
               <PatientDetail 
@@ -817,6 +822,16 @@ const App: React.FC = () => {
                   onUpdatePatient={handleUpdatePatient}
               />
             )
+          )}
+
+          {showQrScanner && (
+            <StaffQrScannerModal
+              staff={staff}
+              timeLogs={staffTimeLogs}
+              onAddStaffTimeLog={handleAddStaffTimeLog}
+              onUpdateStaffTimeLog={handleUpdateStaffTimeLog}
+              onClose={() => setShowQrScanner(false)}
+            />
           )}
         </main>
 
@@ -839,6 +854,14 @@ const App: React.FC = () => {
                  </button>
                );
              })()}
+             <button 
+                onClick={() => setShowQrScanner(true)}
+                className="flex items-center gap-1.5 py-1.5 px-3 rounded-full text-indigo-600 bg-indigo-50 border border-indigo-200 active:scale-95 transition-all duration-300 font-black"
+                title="Fichar Ingreso o Salida con QR"
+              >
+                <QrCode size={16} className="transition-transform active:scale-90" />
+                <span className="text-[10px] uppercase tracking-wider leading-none">Fichar (QR)</span>
+              </button>
              <button 
                onClick={() => setShowExerciseLibrary(true)}
                className="flex items-center gap-1.5 py-1.5 px-3 rounded-full text-slate-400 hover:text-slate-600 active:scale-95 transition-all duration-300 font-bold"

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Patient, CheckInStatus } from '../types';
-import { X, Home, Wifi, WifiOff, Activity, Dumbbell, Users, Clock, Settings, LogOut, ChevronRight, Menu } from 'lucide-react';
+import { X, Home, Wifi, WifiOff, Activity, Dumbbell, Users, Clock, Settings, LogOut, ChevronRight, Menu, QrCode } from 'lucide-react';
 
 interface SidebarProps {
   activePatients: Patient[];
@@ -10,6 +10,7 @@ interface SidebarProps {
   onGoHome: () => void;
   onOpenLibrary?: () => void;
   onOpenSettings?: () => void;
+  onOpenQrScanner?: () => void;
   isOnline: boolean;
 }
 
@@ -21,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onGoHome,
   onOpenLibrary,
   onOpenSettings,
+  onOpenQrScanner,
   isOnline
 }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -63,6 +65,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Home size={20} className="group-hover/item:scale-110 transition-transform" />
                   <span className="text-sm font-black uppercase tracking-wide">Panel Central</span>
                 </button>
+
+                {onOpenQrScanner && (
+                  <button 
+                    onClick={() => { onOpenQrScanner(); setIsMenuOpen(false); }}
+                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all group/item border border-indigo-100"
+                  >
+                    <QrCode size={20} className="group-hover/item:scale-110 transition-transform" />
+                    <span className="text-sm font-black uppercase tracking-wide">Fichar Turno (QR)</span>
+                  </button>
+                )}
 
                 {onOpenLibrary && (
                   <button 

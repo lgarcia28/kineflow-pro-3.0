@@ -1,16 +1,20 @@
 
 import React, { useState } from 'react';
 import { Patient, Stage, CheckInStatus, PlanType } from '../types';
-import { Search, ChevronRight, UserPlus, X, Settings2, Users, Clock, CheckCircle2 } from 'lucide-react';
+import { Search, ChevronRight, UserPlus, X, Settings2, Users, Clock, CheckCircle2, QrCode } from 'lucide-react';
 
 interface PatientListProps {
   patients: Patient[];
   onSelectPatient: (patient: Patient) => void;
+  onOpenQrScanner?: () => void;
+  isClockedIn?: boolean;
 }
 
 export const PatientList: React.FC<PatientListProps> = ({
   patients,
-  onSelectPatient
+  onSelectPatient,
+  onOpenQrScanner,
+  isClockedIn
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAll, setShowAll] = useState(true); // Default: show all patients
@@ -40,7 +44,21 @@ export const PatientList: React.FC<PatientListProps> = ({
               {showAll ? 'Base de datos completa' : 'Pacientes en sala hoy'}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap items-center">
+            {onOpenQrScanner && (
+              <button
+                onClick={onOpenQrScanner}
+                className={`px-4 py-3 rounded-2xl font-black flex items-center justify-center gap-2 transition-all duration-300 text-xs uppercase tracking-wider shadow-sm active:scale-95 border ${
+                  isClockedIn
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400 shadow-emerald-500/20'
+                    : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-800 shadow-slate-900/10'
+                }`}
+                title="Escanear QR del Tótem para marcar Ingreso o Salida"
+              >
+                <QrCode size={18} />
+                <span>{isClockedIn ? 'Fichar Salida' : 'Fichar Ingreso (QR)'}</span>
+              </button>
+            )}
             <button 
               onClick={() => setShowAll(!showAll)}
               className={`px-5 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all duration-300 text-sm shadow-sm active:scale-95 ${
