@@ -23,6 +23,8 @@ import {
   Moon,
   Trash2,
   CalendarDays,
+  Tv,
+  Check,
   CreditCard,
   X,
   FileSpreadsheet,
@@ -531,6 +533,13 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.open('/totem', '_blank')}
+            className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-600/20 active:scale-95 transition-all flex items-center gap-1.5 border border-primary-500"
+            title="Abrir pantalla del Tótem de Auto-Atención (/totem)"
+          >
+            <Tv size={14} /> Modo Tótem
+          </button>
           <button 
             onClick={() => {
               const inRoomPatients = patients.filter(p => p.checkInStatus === CheckInStatus.IN_ROOM);

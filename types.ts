@@ -17,6 +17,22 @@ export interface TenantSettings {
   priceSingleSession: number;
   pricePack10: number;
   priceMonthly: number;
+  totemPin?: string; // PIN para la activación del Tótem de la clínica (default '1234')
+  totemVideoUrl?: string; // URL del video publicitario de fondo del Tótem
+  payrollType?: 'HOURLY' | 'SHIFT' | 'PER_PATIENT'; // Tipo de liquidación
+}
+
+export interface StaffTimeLog {
+  id: string;
+  tenantId?: string;
+  staffId: string;
+  staffName: string;
+  date: string; // "YYYY-MM-DD"
+  clockIn: string; // "HH:mm:ss"
+  clockOut?: string; // "HH:mm:ss"
+  totalHours?: number; // Horas trabajadas calculadas en el turno
+  status: 'OPEN' | 'CLOSED';
+  notes?: string;
 }
 
 export enum PlanType {
@@ -219,6 +235,9 @@ export interface StaffMember {
   role: UserRole;
   activities?: string[];
   themeColor?: string;
+  hourlyRate?: number; // Tarifa por hora para liquidación ($)
+  shiftRate?: number;  // Tarifa por turno para liquidación ($)
+  pinCode?: string;    // PIN de fichaje rápido en el Tótem
 }
 
 export interface Tenant {

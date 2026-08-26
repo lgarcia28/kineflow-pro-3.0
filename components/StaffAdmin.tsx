@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StaffMember, UserRole } from '../types';
+import { StaffMember, UserRole, StaffTimeLog, TenantSettings } from '../types';
 import { 
   Users, 
   UserPlus, 
@@ -10,22 +10,45 @@ import {
   User,
   Lock,
   Activity,
-  Palette
+  Palette,
+  Clock,
+  DollarSign
 } from 'lucide-react';
 import { secondaryAuth } from '../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { CLINICAL_ACTIVITIES, STAFF_COLORS } from '../types';
 import { useAuthStore } from '../store/authStore';
+import { StaffPayrollView } from './StaffPayrollView';
 
 interface StaffAdminProps {
   staff: StaffMember[];
+  timeLogs?: StaffTimeLog[];
+  tenantSettings?: TenantSettings;
   onAddStaff: (member: StaffMember) => void;
   onDeleteStaff: (id: string) => void;
+  onUpdateStaffMember?: (member: StaffMember) => void;
+  onAddStaffTimeLog?: (log: StaffTimeLog) => void;
+  onUpdateStaffTimeLog?: (log: StaffTimeLog) => void;
+  onDeleteStaffTimeLog?: (id: string) => void;
+  onUpdateTenantSettings?: (settings: Partial<TenantSettings>) => void;
   onClose: () => void;
 }
 
-export const StaffAdmin: React.FC<StaffAdminProps> = ({ staff, onAddStaff, onDeleteStaff, onClose }) => {
+export const StaffAdmin: React.FC<StaffAdminProps> = ({ 
+  staff, 
+  timeLogs = [], 
+  tenantSettings,
+  onAddStaff, 
+  onDeleteStaff,
+  onUpdateStaffMember,
+  onAddStaffTimeLog,
+  onUpdateStaffTimeLog,
+  onDeleteStaffTimeLog,
+  onUpdateTenantSettings,
+  onClose 
+}) => {
   const { user } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<'MEMBERS' | 'PAYROLL'>('MEMBERS');
   const [showAddModal, setShowAddModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,25 +103,52 @@ export const StaffAdmin: React.FC<StaffAdminProps> = ({ staff, onAddStaff, onDel
 
   return (
     <div className="fixed inset-0 z-[150] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden">
+      <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10 flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-lg shadow-slate-200">
               <Users className="text-white w-6 h-6" />
             </div>
             <div>
               <h2 className="text-xl font-black text-slate-900">Gestión de Profesionales</h2>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Administración de Accesos</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Administración y Liquidación</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+
+          {/* Navegación Tabs */}
+          <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
             <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-primary-100"
+              onClick={() => setActiveTab('MEMBERS')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                activeTab === 'MEMBERS'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
             >
-              <UserPlus size={16} /> Nuevo Usuario
+              <Users size={15} /> Equipo ({staff.length})
             </button>
+            <button
+              onClick={() => setActiveTab('PAYROLL')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                activeTab === 'PAYROLL'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Clock size={15} /> Asistencia y Liquidaciones
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {activeTab === 'MEMBERS' && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-primary-100"
+              >
+                <UserPlus size={16} /> Nuevo Usuario
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-2.5 hover:bg-slate-100 rounded-xl text-slate-400 transition-colors"
@@ -110,7 +160,20 @@ export const StaffAdmin: React.FC<StaffAdminProps> = ({ staff, onAddStaff, onDel
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {activeTab === 'PAYROLL' ? (
+            <StaffPayrollView
+              staff={staff}
+              timeLogs={timeLogs}
+              tenantSettings={tenantSettings}
+              onUpdateStaffMember={onUpdateStaffMember || (() => {})}
+              onAddStaffTimeLog={onAddStaffTimeLog || (() => {})}
+              onUpdateStaffTimeLog={onUpdateStaffTimeLog || (() => {})}
+              onDeleteStaffTimeLog={onDeleteStaffTimeLog || (() => {})}
+              onUpdateTenantSettings={onUpdateTenantSettings}
+            />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {staff.map((member) => (
               <div 
                 key={member.id}
@@ -152,6 +215,8 @@ export const StaffAdmin: React.FC<StaffAdminProps> = ({ staff, onAddStaff, onDel
               </div>
               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No hay profesionales registrados</p>
             </div>
+          )}
+          </>
           )}
         </div>
 

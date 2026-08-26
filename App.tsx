@@ -13,7 +13,7 @@ import {
   addDoc
 } from 'firebase/firestore';
 import { MOCK_PATIENTS, EXERCISES as INITIAL_EXERCISES, MOCK_PRODUCTS, MOCK_APPOINTMENTS } from './constants';
-import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage } from './types';
+import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage, StaffTimeLog, TenantSettings } from './types';
 import { useAuthStore } from './store/authStore';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
@@ -30,6 +30,7 @@ const StaffAdmin = lazy(() => import('./components/StaffAdmin').then(m => ({ def
 const AdminDashboardView = lazy(() => import('./components/AdminDashboardView').then(m => ({ default: m.AdminDashboardView })));
 const SuperAdminDashboardView = lazy(() => import('./components/SuperAdminDashboardView').then(m => ({ default: m.SuperAdminDashboardView })));
 const SoundSettings = lazy(() => import('./components/SoundSettings').then(m => ({ default: m.SoundSettings })));
+const TotemKioskView = lazy(() => import('./components/TotemKioskView').then(m => ({ default: m.TotemKioskView })));
 
 // Componente Loading reutilizable para Suspense
 const ViewLoader = () => (
@@ -46,6 +47,16 @@ const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [staffTimeLogs, setStaffTimeLogs] = useState<StaffTimeLog[]>([]);
+  const [tenantSettings, setTenantSettings] = useState<TenantSettings>({
+    priceSingleSession: 15000,
+    pricePack10: 120000,
+    priceMonthly: 80000,
+    totemPin: '1234',
+    totemVideoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-athlete-stretching-and-preparing-to-run-41315-large.mp4',
+    payrollType: 'HOURLY'
+  });
+  const [showTotemKiosk, setShowTotemKiosk] = useState(false);
   const { isAuthenticated, isInitializing, user, logout } = useAuthStore();
   const [showExerciseLibrary, setShowExerciseLibrary] = useState(false);
 
@@ -306,8 +317,26 @@ const App: React.FC = () => {
       if (!snapshot.empty) {
         setExercises(exercisesData);
       } else {
-        // Para catálogo maestros de ejercicios dejamos el Inicial si la colección está 100% vacía (semilla)
         setExercises(INITIAL_EXERCISES);
+      }
+    });
+
+    let timeLogsQ = query(collection(db, 'timeLogs'));
+    if (role !== UserRole.SUPER_ADMIN) {
+      timeLogsQ = query(collection(db, 'timeLogs'), where('tenantId', '==', tenantId || 'default_tenant'));
+    }
+    const unsubscribeTimeLogs = onSnapshot(timeLogsQ, (snapshot) => {
+      const logsData: StaffTimeLog[] = [];
+      snapshot.forEach((doc) => {
+        logsData.push({ id: doc.id, ...doc.data() } as StaffTimeLog);
+      });
+      setStaffTimeLogs(logsData);
+    });
+
+    const settingsDocRef = doc(db, 'tenantSettings', tenantId || 'default_tenant');
+    const unsubscribeSettings = onSnapshot(settingsDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setTenantSettings(docSnap.data() as TenantSettings);
       }
     });
 
@@ -317,8 +346,60 @@ const App: React.FC = () => {
       unsubscribeProducts();
       unsubscribeAppointments();
       unsubscribeExercises();
+      unsubscribeTimeLogs();
+      unsubscribeSettings();
     };
   }, [isAuthenticated, user]);
+
+  const handleAddStaffTimeLog = async (log: StaffTimeLog) => {
+    if (db) {
+      try {
+        await setDoc(doc(db, 'timeLogs', log.id), sanitizeForFirestore(log));
+      } catch (e) { console.error(e); }
+    } else {
+      setStaffTimeLogs(prev => [...prev, log]);
+    }
+  };
+
+  const handleUpdateStaffTimeLog = async (log: StaffTimeLog) => {
+    if (db) {
+      try {
+        await setDoc(doc(db, 'timeLogs', log.id), sanitizeForFirestore(log), { merge: true });
+      } catch (e) { console.error(e); }
+    } else {
+      setStaffTimeLogs(prev => prev.map(l => l.id === log.id ? log : l));
+    }
+  };
+
+  const handleDeleteStaffTimeLog = async (id: string) => {
+    if (db) {
+      try {
+        await deleteDoc(doc(db, 'timeLogs', id));
+      } catch (e) { console.error(e); }
+    } else {
+      setStaffTimeLogs(prev => prev.filter(l => l.id !== id));
+    }
+  };
+
+  const handleUpdateStaffMember = async (member: StaffMember) => {
+    if (db) {
+      try {
+        await setDoc(doc(db, 'staff', member.id), sanitizeForFirestore(member), { merge: true });
+      } catch (e) { console.error(e); }
+    } else {
+      setStaff(prev => prev.map(s => s.id === member.id ? member : s));
+    }
+  };
+
+  const handleUpdateTenantSettings = async (settings: Partial<TenantSettings>) => {
+    const updated = { ...tenantSettings, ...settings };
+    setTenantSettings(updated);
+    if (db && user?.tenantId) {
+      try {
+        await setDoc(doc(db, 'tenantSettings', user.tenantId), sanitizeForFirestore(updated), { merge: true });
+      } catch (e) { console.error(e); }
+    }
+  };
 
   const handleAddExercise = async (newEx: ExerciseDefinition) => {
     if (db) {
@@ -551,6 +632,31 @@ const App: React.FC = () => {
 
   const currentPatient = patients.find(p => p.id === selectedPatientId);
   const loggedPatient = patients.find(p => p.dni === user?.assignedDni);
+
+  const isTotemRoute = window.location.pathname === '/totem' || window.location.pathname === '/totem-kiosk' || window.location.pathname === '/recepcion-totem' || showTotemKiosk;
+
+  if (isTotemRoute) {
+    return (
+      <Suspense fallback={<ViewLoader />}>
+        <TotemKioskView
+          patients={patients}
+          staff={staff}
+          timeLogs={staffTimeLogs}
+          tenantSettings={tenantSettings}
+          onUpdatePatient={handleUpdatePatient}
+          onAddStaffTimeLog={handleAddStaffTimeLog}
+          onUpdateStaffTimeLog={handleUpdateStaffTimeLog}
+          onExitKiosk={() => {
+            setShowTotemKiosk(false);
+            if (window.location.pathname.includes('totem')) {
+              window.history.pushState({}, '', '/');
+              window.location.reload();
+            }
+          }}
+        />
+      </Suspense>
+    );
+  }
 
   if (loading) {
     return (
