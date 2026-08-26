@@ -812,7 +812,7 @@ const App: React.FC = () => {
                   patients={patients} 
                   onSelectPatient={handleSelectPatient}
                   onOpenQrScanner={() => setShowQrScanner(true)}
-                  isClockedIn={!!staffTimeLogs.find(l => (l.staffId === user.id || l.staffName.includes(user.name || '')) && l.status === 'OPEN' && l.date === new Date().toISOString().split('T')[0])}
+                  isClockedIn={!!staffTimeLogs.find(l => (l.staffId === user.uid || (user.displayName && l.staffName.includes(user.displayName))) && l.status === 'OPEN' && l.date === new Date().toISOString().split('T')[0])}
               />
             ) : (
               <PatientDetail 

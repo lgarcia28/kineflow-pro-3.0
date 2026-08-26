@@ -34,12 +34,14 @@ export const StaffQrScannerModal: React.FC<StaffQrScannerModalProps> = ({
   const todayStr = new Date().toISOString().split('T')[0];
 
   // Identificar qué miembro del staff es el usuario actual
-  const currentStaffMember = staff.find(s => s.id === user?.id || s.username === user?.username) || {
-    id: user?.id || `staff_${Date.now()}`,
+  const userPrefix = user?.email?.split('@')[0] || '';
+  const currentStaffMember = staff.find(s => s.uid === user?.uid || s.id === user?.uid || (userPrefix && s.username.toLowerCase() === userPrefix.toLowerCase())) || {
+    id: user?.uid || `staff_${Date.now()}`,
+    uid: user?.uid,
     tenantId: user?.tenantId || 'default_tenant',
-    firstName: user?.name || user?.username || 'Profesional',
+    firstName: user?.displayName || userPrefix || 'Profesional',
     lastName: '',
-    username: user?.username || 'kine',
+    username: userPrefix || 'kine',
     role: user?.role
   } as StaffMember;
 
