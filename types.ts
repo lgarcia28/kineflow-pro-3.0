@@ -17,6 +17,7 @@ export interface TenantSettings {
   priceSingleSession: number;
   pricePack10: number;
   priceMonthly: number;
+  defaultHourlyRate?: number; // Tarifa por hora base/general para todos los kinesiólogos ($)
   totemPin?: string; // PIN para la activación del Tótem de la clínica (default '1234')
   totemVideoUrl?: string; // URL del video publicitario de fondo del Tótem
   payrollType?: 'HOURLY' | 'SHIFT' | 'PER_PATIENT'; // Tipo de liquidación

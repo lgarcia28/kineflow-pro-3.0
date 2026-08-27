@@ -49,6 +49,7 @@ export const AdminDashboardView: React.FC = () => {
     priceSingleSession: 10000,
     pricePack10: 80000,
     priceMonthly: 50000,
+    defaultHourlyRate: 5000,
     totemPin: '1234',
     totemVideoUrl: '',
     payrollType: 'HOURLY'
@@ -63,7 +64,8 @@ export const AdminDashboardView: React.FC = () => {
     password: '',
     role: UserRole.KINE as UserRole,
     activities: [] as string[],
-    themeColor: 'blue'
+    themeColor: 'blue',
+    hourlyRate: 0
   });
 
   const handleAddCustomActivity = () => {
@@ -209,7 +211,8 @@ export const AdminDashboardView: React.FC = () => {
           lastName: newStaff.lastName,
           role: newStaff.role,
           activities: newStaff.role === UserRole.KINE ? newStaff.activities : [],
-          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : ""
+          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : "",
+          hourlyRate: newStaff.hourlyRate > 0 ? newStaff.hourlyRate : 0
         };
         await setDoc(userRef, updates, { merge: true });
       } else {
@@ -228,7 +231,8 @@ export const AdminDashboardView: React.FC = () => {
           role: newStaff.role,
           password: newStaff.password,
           activities: newStaff.role === UserRole.KINE ? newStaff.activities : [],
-          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : ""
+          themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : "",
+          hourlyRate: newStaff.hourlyRate > 0 ? newStaff.hourlyRate : 0
         };
 
         await setDoc(doc(db, 'staff', newUid), userDoc);
@@ -241,7 +245,8 @@ export const AdminDashboardView: React.FC = () => {
         password: '',
         role: UserRole.KINE,
         activities: [],
-        themeColor: 'blue'
+        themeColor: 'blue',
+        hourlyRate: 0
       });
       setIsCustomActivity(false);
       setCustomActivityName('');
@@ -269,7 +274,8 @@ export const AdminDashboardView: React.FC = () => {
       password: staff.password || '',
       role: staff.role as UserRole,
       activities: staff.activities || [],
-      themeColor: staff.themeColor || 'blue'
+      themeColor: staff.themeColor || 'blue',
+      hourlyRate: staff.hourlyRate || 0
     });
     setEditingStaffId(staff.id);
     setError('');
@@ -648,7 +654,7 @@ export const AdminDashboardView: React.FC = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="space-y-2">
               <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">1 Sesión Suelta</label>
               <div className="relative">
@@ -657,7 +663,7 @@ export const AdminDashboardView: React.FC = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Paquete de 10 Sesiones</label>
+              <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Paquete 10 Sesiones</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
                 <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.pricePack10} onChange={e => setTenantSettings({...tenantSettings, pricePack10: Number(e.target.value)})} />
@@ -668,6 +674,13 @@ export const AdminDashboardView: React.FC = () => {
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
                 <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.priceMonthly} onChange={e => setTenantSettings({...tenantSettings, priceMonthly: Number(e.target.value)})} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-black text-indigo-600 uppercase tracking-widest ml-1">Tarifa Base Kines ($/hr)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-indigo-400">$</span>
+                <input type="number" className="w-full bg-indigo-50/50 border border-indigo-200 rounded-2xl p-4 pl-8 font-black text-indigo-950 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" value={tenantSettings.defaultHourlyRate || 5000} onChange={e => setTenantSettings({...tenantSettings, defaultHourlyRate: Number(e.target.value)})} />
               </div>
             </div>
           </div>
@@ -684,9 +697,9 @@ export const AdminDashboardView: React.FC = () => {
           <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-black text-slate-900">Equipo de Trabajo</h2>
-              <p className="text-sm font-medium text-slate-500">Administra accesos y roles (Kinesiología/Recepción).</p>
+              <p className="text-sm font-medium text-slate-500">Administra accesos, roles y tarifas individuales de honorarios.</p>
             </div>
-            <button onClick={() => { setEditingStaffId(null); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue'}); setIsCustomActivity(false); setCustomActivityName(''); setError(''); setShowAddModal(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-md shadow-indigo-200">
+            <button onClick={() => { setEditingStaffId(null); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue', hourlyRate: 0}); setIsCustomActivity(false); setCustomActivityName(''); setError(''); setShowAddModal(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-md shadow-indigo-200">
               <UserPlus size={18} />
               <span className="hidden sm:inline">Nuevo Empleado</span>
             </button>
@@ -698,6 +711,7 @@ export const AdminDashboardView: React.FC = () => {
                 <tr>
                   <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Empleado</th>
                   <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Rol Sistema</th>
+                  <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Tarifa / Hora</th>
                   <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Usuario Login</th>
                   <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Acciones</th>
                 </tr>
@@ -724,6 +738,22 @@ export const AdminDashboardView: React.FC = () => {
                       }`}>
                         {staff.role}
                       </span>
+                    </td>
+                    <td className="px-8 py-5">
+                      {staff.role === UserRole.KINE ? (
+                        <div>
+                          <span className="font-black text-slate-900 text-sm">
+                            ${(staff.hourlyRate && staff.hourlyRate > 0 ? staff.hourlyRate : (tenantSettings.defaultHourlyRate || 5000)).toLocaleString('es-AR')}/hr
+                          </span>
+                          <span className={`block text-[10px] font-bold ${
+                            staff.hourlyRate && staff.hourlyRate > 0 ? 'text-purple-600' : 'text-emerald-600'
+                          }`}>
+                            {staff.hourlyRate && staff.hourlyRate > 0 ? 'Personalizada' : 'Base General'}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400 font-bold">-</span>
+                      )}
                     </td>
                     <td className="px-8 py-5 text-sm font-bold text-slate-500">
                       {staff.username}
@@ -865,6 +895,29 @@ export const AdminDashboardView: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {newStaff.role === UserRole.KINE && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 ml-1">
+                    Tarifa por Hora Individual ($)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                    <input 
+                      type="number" 
+                      min="0" 
+                      step="100" 
+                      value={newStaff.hourlyRate || ''} 
+                      onChange={e => setNewStaff({...newStaff, hourlyRate: parseFloat(e.target.value) || 0})} 
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 font-bold px-5 pl-8 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" 
+                      placeholder={`Opcional (Defecto: $${(tenantSettings.defaultHourlyRate || 5000).toLocaleString('es-AR')}/hr)`}
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium mt-1 ml-1">
+                    Si se deja vacío o en 0, se aplicará automáticamente la <strong>Tarifa Base General (${(tenantSettings.defaultHourlyRate || 5000).toLocaleString('es-AR')}/hr)</strong>.
+                  </p>
                 </div>
               )}
 

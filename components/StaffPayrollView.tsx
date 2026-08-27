@@ -51,9 +51,19 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
   const [manualClockOut, setManualClockOut] = useState('12:00');
   const [manualStaffId, setManualStaffId] = useState('');
 
+  // Formulario Configuración de Tarifa Base General de la Clínica
+  const [baseHourlyRate, setBaseHourlyRate] = useState<number>(tenantSettings?.defaultHourlyRate || 5000);
+  const [isSavingBaseRate, setIsSavingBaseRate] = useState(false);
+
   // Formulario Configuración de Clínica / Tótem
   const [totemPin, setTotemPin] = useState(tenantSettings?.totemPin || '1234');
   const [totemVideoUrl, setTotemVideoUrl] = useState(tenantSettings?.totemVideoUrl || '');
+
+  React.useEffect(() => {
+    if (tenantSettings?.defaultHourlyRate !== undefined) {
+      setBaseHourlyRate(tenantSettings.defaultHourlyRate);
+    }
+  }, [tenantSettings?.defaultHourlyRate]);
 
   const monthsList = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -70,21 +80,60 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
   // Totales generales
   const totalHoursMonth = filteredLogs.reduce((acc, curr) => acc + (curr.totalHours || 0), 0);
 
+  // Obtener tarifa efectiva (individual personalizada o base general)
+  const getEffectiveRate = (member: StaffMember) => {
+    const hasCustom = member.hourlyRate !== undefined && member.hourlyRate !== null && member.hourlyRate > 0;
+    const rate = hasCustom ? member.hourlyRate! : (tenantSettings?.defaultHourlyRate || baseHourlyRate || 0);
+    return { rate, isCustom: hasCustom };
+  };
+
   const calculateStaffTotalPay = (member: StaffMember) => {
     const memberLogs = filteredLogs.filter(l => l.staffId === member.id);
     const memberHours = memberLogs.reduce((acc, curr) => acc + (curr.totalHours || 0), 0);
-    const rate = member.hourlyRate || 0;
+    const { rate } = getEffectiveRate(member);
     return memberHours * rate;
   };
 
   const totalPayrollMonth = staff.reduce((acc, curr) => acc + calculateStaffTotalPay(curr), 0);
 
-  // Guardar Tarifa por Hora de Staff
+  // Guardar Tarifa por Hora de Staff Individual
   const handleHourlyRateChange = (member: StaffMember, rate: number) => {
     onUpdateStaffMember({
       ...member,
       hourlyRate: rate
     });
+  };
+
+  // Restablecer a tarifa general
+  const handleResetToGeneralRate = (member: StaffMember) => {
+    onUpdateStaffMember({
+      ...member,
+      hourlyRate: 0
+    });
+  };
+
+  // Guardar Tarifa Base General en Firestore
+  const handleSaveBaseRate = () => {
+    if (onUpdateTenantSettings) {
+      setIsSavingBaseRate(true);
+      onUpdateTenantSettings({ defaultHourlyRate: baseHourlyRate });
+      setTimeout(() => setIsSavingBaseRate(false), 600);
+    }
+  };
+
+  // Aplicar Tarifa Base General a Todos
+  const handleApplyBaseRateToAll = () => {
+    if (confirm(`¿Deseas aplicar la tarifa de $${baseHourlyRate.toLocaleString('es-AR')}/hr a TODOS los kinesiólogos? (Sobreescribirá las tarifas personalizadas)`)) {
+      staff.forEach(member => {
+        onUpdateStaffMember({
+          ...member,
+          hourlyRate: baseHourlyRate
+        });
+      });
+      if (onUpdateTenantSettings) {
+        onUpdateTenantSettings({ defaultHourlyRate: baseHourlyRate });
+      }
+    }
   };
 
   // Guardar Configuración de Tótem
@@ -93,7 +142,8 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
     if (onUpdateTenantSettings) {
       onUpdateTenantSettings({
         totemPin,
-        totemVideoUrl
+        totemVideoUrl,
+        defaultHourlyRate: baseHourlyRate
       });
     }
     setShowConfigModal(false);
@@ -134,18 +184,19 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
 
   // Exportar reporte a CSV
   const handleExportCSV = () => {
-    const headers = ['Kinesiologo', 'Dias Trabajados', 'Horas Totales', 'Tarifa Hora ($)', 'Total a Pagar ($)'];
+    const headers = ['Kinesiologo', 'Dias Trabajados', 'Horas Totales', 'Tarifa Hora ($)', 'Tipo Tarifa', 'Total a Pagar ($)'];
     const rows = staff.map(s => {
       const sLogs = filteredLogs.filter(l => l.staffId === s.id);
       const uniqueDays = new Set(sLogs.map(l => l.date)).size;
       const sHours = sLogs.reduce((acc, curr) => acc + (curr.totalHours || 0), 0);
-      const rate = s.hourlyRate || 0;
+      const { rate, isCustom } = getEffectiveRate(s);
       const totalPay = sHours * rate;
       return [
         `"${s.firstName} ${s.lastName}"`,
         uniqueDays,
         sHours.toFixed(2),
         rate,
+        isCustom ? '"Personalizada"' : '"Base General"',
         totalPay.toFixed(2)
       ];
     });
@@ -224,6 +275,52 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
         </div>
       </div>
 
+      {/* Configuración de Tarifa Base General y Personalizada */}
+      <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-6 rounded-3xl border border-indigo-900/50 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/20 rounded-full border border-indigo-400/30 text-[10px] font-black uppercase tracking-wider text-indigo-300">
+            <DollarSign size={12} /> Configuración de Honorarios
+          </div>
+          <h3 className="text-lg font-black text-white">Tarifa General por Hora de la Clínica</h3>
+          <p className="text-xs text-slate-300 font-medium">
+            Se aplica automáticamente a todos los kinesiólogos. Puedes personalizar la tarifa de cualquiera de ellos por separado abajo.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center bg-slate-950/80 border border-white/20 rounded-2xl px-4 py-2.5 shadow-inner">
+            <span className="text-slate-400 font-black text-sm mr-1.5">$</span>
+            <input
+              type="number"
+              min="0"
+              step="500"
+              value={baseHourlyRate}
+              onChange={(e) => setBaseHourlyRate(parseFloat(e.target.value) || 0)}
+              className="w-24 bg-transparent text-white font-black text-base outline-none"
+              placeholder="5000"
+            />
+            <span className="text-xs text-slate-400 font-bold ml-1">/ hora</span>
+          </div>
+
+          <button
+            onClick={handleSaveBaseRate}
+            disabled={isSavingBaseRate}
+            className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-primary-600/30 active:scale-95 flex items-center gap-1.5"
+          >
+            <CheckCircle size={15} />
+            {isSavingBaseRate ? 'Guardando...' : 'Guardar Tarifa General'}
+          </button>
+
+          <button
+            onClick={handleApplyBaseRateToAll}
+            className="bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border border-white/20 active:scale-95"
+            title="Aplica este valor a todos los kinesiólogos del listado"
+          >
+            Aplicar a Todos
+          </button>
+        </div>
+      </div>
+
       {/* Tarjetas de Métricas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-gradient-to-br from-primary-600 to-primary-800 text-white p-5 rounded-3xl shadow-lg shadow-primary-600/20 space-y-1">
@@ -289,7 +386,7 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
                   const memberLogs = filteredLogs.filter(l => l.staffId === member.id);
                   const uniqueDays = new Set(memberLogs.map(l => l.date)).size;
                   const memberHours = memberLogs.reduce((acc, curr) => acc + (curr.totalHours || 0), 0);
-                  const rate = member.hourlyRate || 0;
+                  const { rate, isCustom } = getEffectiveRate(member);
                   const totalPay = memberHours * rate;
 
                   return (
@@ -312,17 +409,47 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
                       </td>
 
                       <td className="py-3.5 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <span className="text-slate-400 font-bold">$</span>
-                          <input
-                            type="number"
-                            min="0"
-                            step="100"
-                            value={member.hourlyRate || ''}
-                            onChange={(e) => handleHourlyRateChange(member, parseFloat(e.target.value) || 0)}
-                            placeholder="0"
-                            className="w-24 text-center font-black text-xs bg-slate-50 border border-slate-200 rounded-lg p-1 focus:bg-white focus:border-primary-500 outline-none"
-                          />
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="text-slate-400 font-bold">$</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="100"
+                              value={isCustom ? member.hourlyRate : ''}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                handleHourlyRateChange(member, isNaN(val) ? 0 : val);
+                              }}
+                              placeholder={baseHourlyRate ? `${baseHourlyRate}` : '0'}
+                              className={`w-28 text-center font-black text-xs rounded-xl p-1.5 outline-none transition-all ${
+                                isCustom
+                                  ? 'bg-purple-50 text-purple-950 border-2 border-purple-300 focus:bg-white focus:border-purple-500 shadow-sm'
+                                  : 'bg-slate-50 text-slate-700 border border-slate-200 focus:bg-white focus:border-primary-500'
+                              }`}
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            {isCustom ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 border border-purple-200">
+                                  Personalizada
+                                </span>
+                                <button
+                                  onClick={() => handleResetToGeneralRate(member)}
+                                  title="Usar tarifa base general de la clínica"
+                                  className="text-[9px] font-bold text-slate-400 hover:text-slate-700 underline"
+                                >
+                                  Usar Base
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                Base General (${baseHourlyRate}/hr)
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
 
