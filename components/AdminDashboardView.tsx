@@ -789,7 +789,7 @@ export const AdminDashboardView: React.FC = () => {
                  <h3 className="text-2xl font-black text-slate-900 mb-1">{editingStaffId ? 'Editar Empleado' : 'Nuevo Empleado'}</h3>
                  <p className="text-sm font-medium text-slate-500">{editingStaffId ? 'Actualiza los datos del perfil.' : 'El empleado heredará tu ID de forma segura.'}</p>
                </div>
-               <button onClick={() => { setShowAddModal(false); setError(''); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue'}); setIsCustomActivity(false); setCustomActivityName(''); }} className="text-slate-400 hover:text-slate-600 bg-slate-100 p-2.5 rounded-full transition-colors shrink-0 ml-4">
+               <button onClick={() => { setShowAddModal(false); setError(''); setNewStaff({firstName:'', lastName:'', username:'', password:'', role:UserRole.KINE, activities:[], themeColor:'blue', hourlyRate: 0}); setIsCustomActivity(false); setCustomActivityName(''); }} className="text-slate-400 hover:text-slate-600 bg-slate-100 p-2.5 rounded-full transition-colors shrink-0 ml-4">
                  <X size={20} />
                </button>
             </div>
