@@ -388,7 +388,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                 <th className="py-4 px-5">Insumo / Producto</th>
                 <th className="py-4 px-4">Presentación / Detalle</th>
                 <th className="py-4 px-4 text-center">Stock Actual</th>
-                <th className="py-4 px-4 text-center">Mínimo</th>
+                <th className="py-4 px-4 text-center">Stock Seguridad (Punto Pedido)</th>
                 <th className="py-4 px-4">Última Compra</th>
                 <th className="py-4 px-5 text-right">Acciones de Stock</th>
               </tr>
@@ -403,16 +403,22 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                 </tr>
               ) : (
                 filteredItems.map(item => {
-                  const isLow = (item.minStock !== undefined && item.currentStock <= item.minStock) || item.currentStock <= 0;
+                  const safetyThreshold = item.minStock !== undefined ? item.minStock : 1;
+                  const isLow = item.currentStock <= safetyThreshold;
                   const isZero = item.currentStock <= 0;
 
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                    <tr key={item.id} className={`transition-colors ${isLow ? 'bg-red-50/40 hover:bg-red-50/70' : 'hover:bg-slate-50/80'}`}>
                       
                       {/* Nombre y Categoría */}
                       <td className="py-4 px-5">
                         <div>
-                          <p className="font-black text-slate-900 text-sm">{item.name}</p>
+                          <p className="font-black text-slate-900 text-sm flex items-center gap-1.5">
+                            {item.name}
+                            {isLow && (
+                              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping inline-block" title="Alerta de Punto de Pedido alcanzado"></span>
+                            )}
+                          </p>
                           <span className="inline-block px-2 py-0.5 mt-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/60">
                             {item.category || 'General'}
                           </span>
@@ -429,24 +435,46 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                         </div>
                       </td>
 
-                      {/* Stock Actual */}
+                      {/* Stock Actual - En ROJO cuando llega al stock de seguridad o menos */}
                       <td className="py-4 px-4 text-center">
-                        <div className="inline-flex items-center gap-1.5">
-                          <span className={`px-3 py-1.5 rounded-xl font-black text-xs border ${
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`px-3 py-1.5 rounded-xl font-black text-xs border transition-all ${
                             isZero
-                              ? 'bg-red-50 text-red-700 border-red-200 animate-pulse'
+                              ? 'bg-red-600 text-white border-red-700 shadow-md shadow-red-600/30 animate-pulse'
                               : isLow
-                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              ? 'bg-red-500 text-white border-red-600 shadow-md shadow-red-500/20'
                               : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                           }`}>
                             {item.currentStock} {item.unit}
                           </span>
+                          {isLow && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-red-700 bg-red-100 px-2 py-0.5 rounded-md border border-red-200">
+                              <AlertTriangle size={10} /> {isZero ? 'Agotado' : '¡Punto Pedido!'}
+                            </span>
+                          )}
                         </div>
                       </td>
 
-                      {/* Stock Mínimo */}
-                      <td className="py-4 px-4 text-center font-bold text-slate-400">
-                        {item.minStock || 1}
+                      {/* Stock de Seguridad / Punto de Reorden (Editable directamente en la fila) */}
+                      <td className="py-4 px-4 text-center">
+                        <div className="flex flex-col items-center gap-0.5">
+                          <div className="flex items-center justify-center gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.5"
+                              value={item.minStock ?? 1}
+                              onChange={(e) => {
+                                const val = Math.max(0, parseFloat(e.target.value) || 0);
+                                onUpdateItem({ ...item, minStock: val, updatedAt: new Date().toISOString() });
+                              }}
+                              className="w-16 text-center font-black text-xs bg-slate-50 border border-slate-200 rounded-xl py-1.5 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all shadow-inner"
+                              title="Haz clic para editar el Stock de Seguridad / Punto de Pedido"
+                            />
+                            <span className="text-[10px] text-slate-400 font-bold">{item.unit}</span>
+                          </div>
+                          <span className="text-[9px] text-slate-400 font-medium">Click para editar</span>
+                        </div>
                       </td>
 
                       {/* Última Compra */}
@@ -587,7 +615,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1.5 ml-1">
-                    Stock Actual
+                    Stock Actual Disponible *
                   </label>
                   <input
                     type="number"
@@ -598,21 +626,25 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                     onChange={(e) => setItemStock(parseFloat(e.target.value) || 0)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
                   />
+                  <p className="text-[10px] text-slate-400 font-medium mt-1 ml-1">Cantidad física existente</p>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1.5 ml-1">
-                    Stock Mínimo (Alerta)
+                  <label className="block text-[10px] font-black uppercase text-indigo-600 tracking-wider mb-1.5 ml-1 flex items-center gap-1">
+                    <AlertTriangle size={12} className="text-amber-500" /> Stock Seguridad (Punto Pedido) *
                   </label>
                   <input
                     type="number"
                     min="0"
-                    step="1"
+                    step="0.5"
                     required
                     value={itemMinStock}
-                    onChange={(e) => setItemMinStock(parseFloat(e.target.value) || 1)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                    onChange={(e) => setItemMinStock(parseFloat(e.target.value) || 0)}
+                    className="w-full bg-indigo-50/50 border-2 border-indigo-200 rounded-2xl px-4 py-3 text-xs font-black text-indigo-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
+                  <p className="text-[10px] text-red-600 font-bold mt-1 ml-1">
+                    Al llegar a este número se pondrá en <strong>ROJO</strong>.
+                  </p>
                 </div>
               </div>
 
