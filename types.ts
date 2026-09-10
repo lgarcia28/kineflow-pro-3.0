@@ -609,6 +609,7 @@ export interface InventoryMovement {
   previousStock: number;
   newStock: number;
   reason: string; // Motivo del movimiento
+  cost?: number; // Costo / Precio pagado en caso de ingreso ($)
   performedBy?: string; // Usuario responsable
   date: string; // YYYY-MM-DD
   createdAt: string; // ISO timestamp

@@ -682,16 +682,35 @@ const App: React.FC = () => {
     if (db) {
       try {
         await setDoc(doc(db, 'inventoryMovements', newMovementId), sanitizeForFirestore(newMovement));
-        await setDoc(doc(db, 'inventory', movementData.itemId), {
+        const itemUpdatePayload: any = {
           currentStock: movementData.newStock,
           updatedAt: new Date().toISOString()
-        }, { merge: true });
+        };
+        if (movementData.type === 'IN' && movementData.cost !== undefined && movementData.cost > 0) {
+          itemUpdatePayload.lastPurchaseCost = movementData.cost;
+          itemUpdatePayload.lastPurchaseDate = movementData.date;
+          itemUpdatePayload.lastPurchaseQuantity = `${movementData.quantity}`;
+        }
+        await setDoc(doc(db, 'inventory', movementData.itemId), itemUpdatePayload, { merge: true });
       } catch (e) {
         console.error('Error registering inventory movement:', e);
       }
     } else {
       setInventoryMovements(prev => [...prev, newMovement]);
-      setInventory(prev => prev.map(i => i.id === movementData.itemId ? { ...i, currentStock: movementData.newStock, updatedAt: new Date().toISOString() } : i));
+      setInventory(prev => prev.map(i => {
+        if (i.id !== movementData.itemId) return i;
+        const updated: InventoryItem = {
+          ...i,
+          currentStock: movementData.newStock,
+          updatedAt: new Date().toISOString()
+        };
+        if (movementData.type === 'IN' && movementData.cost !== undefined && movementData.cost > 0) {
+          updated.lastPurchaseCost = movementData.cost;
+          updated.lastPurchaseDate = movementData.date;
+          updated.lastPurchaseQuantity = `${movementData.quantity} ${i.unit || ''}`.trim();
+        }
+        return updated;
+      }));
     }
   };
 

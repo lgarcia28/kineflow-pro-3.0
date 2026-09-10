@@ -74,6 +74,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
   const [movementQty, setMovementQty] = useState<number>(1);
   const [movementReason, setMovementReason] = useState('');
   const [movementDate, setMovementDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [movementCost, setMovementCost] = useState<number>(0);
 
   // Lista de categorías únicas encontradas en los ítems
   const defaultCategories = ['Limpieza', 'Descartables'];
@@ -181,6 +182,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
     setSelectedItemForMovement(item);
     setShowMovementModal(type);
     setMovementQty(1);
+    setMovementCost(item.lastPurchaseCost || 0);
     setMovementDate(new Date().toISOString().split('T')[0]);
     setMovementReason(type === 'IN' ? 'Compra / Reposición de stock' : 'Consumo / Uso en clínica');
   };
@@ -193,6 +195,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
     const qty = Number(movementQty);
     const prevStock = selectedItemForMovement.currentStock;
     const newStock = showMovementModal === 'IN' ? prevStock + qty : Math.max(0, prevStock - qty);
+    const enteredCost = showMovementModal === 'IN' && movementCost > 0 ? Number(movementCost) : undefined;
 
     onRegisterMovement({
       itemId: selectedItemForMovement.id,
@@ -201,10 +204,22 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
       quantity: qty,
       previousStock: prevStock,
       newStock: newStock,
+      cost: enteredCost,
       reason: movementReason.trim() || (showMovementModal === 'IN' ? 'Ingreso de stock' : 'Baja de stock'),
       performedBy: currentUserName,
       date: movementDate
     });
+
+    if (showMovementModal === 'IN' && enteredCost !== undefined) {
+      onUpdateItem({
+        ...selectedItemForMovement,
+        currentStock: newStock,
+        lastPurchaseCost: enteredCost,
+        lastPurchaseDate: movementDate,
+        lastPurchaseQuantity: `${qty} ${selectedItemForMovement.unit || ''}`.trim(),
+        updatedAt: new Date().toISOString()
+      });
+    }
 
     setShowMovementModal(null);
     setSelectedItemForMovement(null);
@@ -856,6 +871,30 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                 />
               </div>
 
+              {showMovementModal === 'IN' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1.5 ml-1 flex items-center justify-between">
+                    <span>Precio / Costo Total de Compra ($)</span>
+                    <span className="text-slate-400 font-normal lowercase">(opcional)</span>
+                  </label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Ej: 21696"
+                      value={movementCost || ''}
+                      onChange={(e) => setMovementCost(parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium mt-1 ml-1">
+                    Actualiza automáticamente el registro de costo de última compra del producto.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1.5 ml-1">
                   Fecha del Movimiento
@@ -936,6 +975,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                           <p className="text-xs font-black text-slate-900">{mov.itemName}</p>
                           <p className="text-[11px] text-slate-500 font-medium">
                             {mov.reason} {mov.performedBy ? `• Por ${mov.performedBy}` : ''}
+                            {mov.cost ? ` • Costo: $${mov.cost.toLocaleString('es-AR')}` : ''}
                           </p>
                         </div>
                       </div>
