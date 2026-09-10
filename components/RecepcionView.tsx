@@ -838,7 +838,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               onUpdateItem={onUpdateInventoryItem}
               onDeleteItem={onDeleteInventoryItem}
               onRegisterMovement={onRegisterInventoryMovement}
-              currentUserName={user?.username || 'Recepción'}
+              currentUserName={user?.displayName || user?.email || 'Recepción'}
             />
           </div>
         ) : (

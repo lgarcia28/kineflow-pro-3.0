@@ -362,6 +362,7 @@ const App: React.FC = () => {
 
       // Si la colección está vacía para esta clínica, sembrar los 17 insumos iniciales del Excel
       if (snapshot.empty && activeTenantId && db) {
+        const firestore = db;
         const seeded: InventoryItem[] = INITIAL_CLEANING_INVENTORY.map(item => ({
           ...item,
           tenantId: activeTenantId
@@ -370,7 +371,9 @@ const App: React.FC = () => {
         // Guardar en Firestore
         seeded.forEach(async (it) => {
           try {
-            await setDoc(doc(db, 'inventory', it.id), it);
+            if (firestore) {
+              await setDoc(doc(firestore, 'inventory', it.id), it);
+            }
           } catch (e) {
             console.error('Error seeding inventory item:', e);
           }
