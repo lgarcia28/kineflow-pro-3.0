@@ -518,28 +518,59 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
       <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-primary-100 rounded-full mix-blend-multiply filter blur-[80px] opacity-60 z-0 pointer-events-none"></div>
 
       {/* Header */}
-      <header className="glass-panel z-20 px-6 py-2.5 flex flex-wrap items-center justify-between gap-x-8 gap-y-3 sticky top-0 border-b border-slate-200/40">
-        <div className="flex items-center gap-6">
+      <header className="glass-panel z-20 px-4 md:px-6 py-2.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 sticky top-0 border-b border-slate-200/40">
+        <div className="flex items-center justify-between gap-4 w-full md:w-auto">
           <div className="shrink-0">
             <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">Recepción <span className="text-primary-500">•</span></h1>
           </div>
-          
-          <div className="flex bg-slate-100/60 backdrop-blur-md p-0.5 rounded-xl shadow-inner border border-slate-200/40">
+
+          {/* Action buttons on mobile */}
+          <div className="flex md:hidden items-center gap-1.5">
+            <button
+              onClick={() => window.open('/totem', '_blank')}
+              className="px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-primary-600 hover:bg-primary-700 text-white shadow-sm flex items-center gap-1 border border-primary-500"
+              title="Abrir pantalla del Tótem de Auto-Atención (/totem)"
+            >
+              <Tv size={13} /> Tótem
+            </button>
+            <button 
+              onClick={() => {
+                const inRoomPatients = patients.filter(p => p.checkInStatus === CheckInStatus.IN_ROOM);
+                let msg = '¿Desea finalizar la jornada? Se vaciará la sala de espera y se resetearán los estados de todos los pacientes.';
+                if (inRoomPatients.length > 0) {
+                  const names = inRoomPatients.map(p => `${p.firstName} ${p.lastName}`).join(', ');
+                  msg = `Hay pacientes que no se les finalizó el día:\n\n${names}\n\nSe finalizarán automáticamente. ¿Desea continuar?`;
+                }
+                if (window.confirm(msg)) {
+                  onClearWaitingRoom();
+                }
+              }}
+              className="px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-900 text-white hover:bg-slate-800 shadow-sm flex items-center gap-1 border border-slate-700"
+              title="Finalizar Jornada"
+            >
+              <Moon size={13} /> Fin
+            </button>
+          </div>
+        </div>
+
+        {/* Navigation Tabs (Desplazable horizontalmente en móviles sin recortar texto) */}
+        <div className="w-full md:w-auto overflow-x-auto scrollbar-none pb-0.5 -mx-1 px-1">
+          <div className="flex items-center bg-slate-100/80 backdrop-blur-md p-1 rounded-xl shadow-inner border border-slate-200/50 w-max md:w-auto gap-1">
             <button 
               onClick={() => setActiveTab('PATIENTS')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 ${activeTab === 'PATIENTS' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'PATIENTS' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <User size={14} /> Pacientes
             </button>
             <button 
               onClick={() => setActiveTab('CALENDAR')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 ${activeTab === 'CALENDAR' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'CALENDAR' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <CalendarDays size={14} /> Turnos
             </button>
             <button 
               onClick={() => setActiveTab('INVENTORY')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 ${activeTab === 'INVENTORY' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'INVENTORY' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <Boxes size={14} /> Insumos / Stock
               {inventory.filter(i => (i.minStock !== undefined && i.currentStock <= i.minStock) || i.currentStock <= 0).length > 0 && (
@@ -550,14 +581,15 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
             </button>
             <button 
               onClick={() => setActiveTab('SHOP')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 ${activeTab === 'SHOP' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'SHOP' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <ShoppingBag size={14} /> Tienda
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Action buttons on desktop */}
+        <div className="hidden md:flex items-center gap-2">
           <button
             onClick={() => window.open('/totem', '_blank')}
             className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-600/20 active:scale-95 transition-all flex items-center gap-1.5 border border-primary-500"
