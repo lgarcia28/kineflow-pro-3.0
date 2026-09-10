@@ -360,15 +360,22 @@ const App: React.FC = () => {
         inventoryData.push(docSnap.data() as InventoryItem);
       });
 
-      // Si la colección está vacía para esta clínica, sembrar los 17 insumos iniciales del Excel
-      if (snapshot.empty && activeTenantId && db) {
+      const isRtpUser = Boolean(
+        (user?.email && (user.email.toLowerCase().includes('recepcionrtp') || user.email.toLowerCase().includes('rtp'))) ||
+        (user?.displayName && user.displayName.toLowerCase().includes('rtp')) ||
+        (activeTenantId && activeTenantId.toLowerCase().includes('rtp'))
+      );
+
+      // Solo sembrar los 17 insumos del Excel si el usuario corresponde a recepcionrtp
+      if (snapshot.empty && activeTenantId && db && isRtpUser) {
         const firestore = db;
         const seeded: InventoryItem[] = INITIAL_CLEANING_INVENTORY.map(item => ({
           ...item,
+          id: `${item.id}_${activeTenantId}`,
           tenantId: activeTenantId
         }));
         setInventory(seeded);
-        // Guardar en Firestore
+        // Guardar en Firestore para recepcionrtp
         seeded.forEach(async (it) => {
           try {
             if (firestore) {
