@@ -4,7 +4,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_papel_higienico',
     name: 'Papel Higiénico',
-    category: 'Limpieza y Baño',
+    category: 'Limpieza',
     unit: 'Rollos',
     currentStock: 11,
     minStock: 4,
@@ -17,7 +17,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_toallas_intercaladas',
     name: 'Toallas Intercaladas Beige',
-    category: 'Limpieza y Baño',
+    category: 'Descartables',
     unit: 'Cajas',
     currentStock: 2,
     minStock: 1,
@@ -56,7 +56,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_bolsas_residuos',
     name: 'Bolsas residuos',
-    category: 'Limpieza General',
+    category: 'Limpieza',
     unit: 'Paquetes',
     currentStock: 4,
     minStock: 2,
@@ -69,7 +69,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_bicarbonato',
     name: 'Bicarbonato de Sodio',
-    category: 'Limpieza General',
+    category: 'Limpieza',
     unit: 'Bolsas',
     currentStock: 1,
     minStock: 1,
@@ -82,7 +82,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_jabon_liquido',
     name: 'Jabón Líquido para Manos',
-    category: 'Higiene Personal',
+    category: 'Limpieza',
     unit: 'Bidones',
     currentStock: 2,
     minStock: 1,
@@ -95,7 +95,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_aromatizante',
     name: 'Aromatizante de Ambiente',
-    category: 'Limpieza y Baño',
+    category: 'Limpieza',
     unit: 'Aerosoles',
     currentStock: 2,
     minStock: 1,
@@ -108,7 +108,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_detergente',
     name: 'Detergente Vajilla',
-    category: 'Limpieza y Cocina',
+    category: 'Limpieza',
     unit: 'Botellas',
     currentStock: 1,
     minStock: 1,
@@ -121,7 +121,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_alcohol_70_30',
     name: 'Alcohol 70/30 Sanitizante',
-    category: 'Desinfección y Kinesiología',
+    category: 'Limpieza',
     unit: 'Bidones',
     currentStock: 1.5,
     minStock: 1,
@@ -134,7 +134,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_cloro',
     name: 'Cloro Concentrado',
-    category: 'Limpieza y Desinfección',
+    category: 'Limpieza',
     unit: 'Bidones',
     currentStock: 1,
     minStock: 1,
@@ -147,7 +147,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_lavandina_gel',
     name: 'Lavandina en Gel',
-    category: 'Limpieza y Baño',
+    category: 'Limpieza',
     unit: 'Botellas',
     currentStock: 2,
     minStock: 1,
@@ -160,7 +160,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_perfumina_pisos',
     name: 'Perfumina para Pisos',
-    category: 'Limpieza General',
+    category: 'Limpieza',
     unit: 'Bidones',
     currentStock: 2.5,
     minStock: 1,
@@ -173,7 +173,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_vinagre_alcohol',
     name: 'Vinagre de Alcohol',
-    category: 'Limpieza General',
+    category: 'Limpieza',
     unit: 'Botellas',
     currentStock: 1,
     minStock: 1,
@@ -186,7 +186,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_trapo_microfibra',
     name: 'Trapo de Cocina / Microfibra',
-    category: 'Limpieza y Cocina',
+    category: 'Limpieza',
     unit: 'Unidades',
     currentStock: 3,
     minStock: 1,
@@ -199,7 +199,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_escobilla_bano',
     name: 'Escobilla de Baño',
-    category: 'Limpieza y Baño',
+    category: 'Limpieza',
     unit: 'Unidades',
     currentStock: 2,
     minStock: 1,
@@ -212,7 +212,7 @@ export const INITIAL_CLEANING_INVENTORY: Omit<InventoryItem, 'tenantId'>[] = [
   {
     id: 'insumo_quita_sarro',
     name: 'Quita Sarro',
-    category: 'Limpieza y Baño',
+    category: 'Limpieza',
     unit: 'Botellas',
     currentStock: 1,
     minStock: 1,

@@ -58,7 +58,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
 
   // Formulario de Insumo (Crear / Editar)
   const [itemName, setItemName] = useState('');
-  const [itemCategory, setItemCategory] = useState('Limpieza y Baño');
+  const [itemCategory, setItemCategory] = useState('Limpieza');
   const [itemUnit, setItemUnit] = useState('Unidades');
   const [itemStock, setItemStock] = useState<number>(1);
   const [itemMinStock, setItemMinStock] = useState<number>(1);
@@ -66,13 +66,18 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
   const [itemLastCost, setItemLastCost] = useState<number>(0);
   const [itemLastQuantity, setItemLastQuantity] = useState('');
 
+  // Creación dinámica de categoría en el modal
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
   // Formulario de Movimiento (Ingreso / Baja)
   const [movementQty, setMovementQty] = useState<number>(1);
   const [movementReason, setMovementReason] = useState('');
   const [movementDate, setMovementDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   // Lista de categorías únicas encontradas en los ítems
-  const categories = Array.from(new Set(['Limpieza y Baño', 'Limpieza General', 'Descartables', 'Higiene Personal', 'Desinfección y Kinesiología', 'Oficina', ...items.map(i => i.category).filter(Boolean)]));
+  const defaultCategories = ['Limpieza', 'Descartables'];
+  const categories = Array.from(new Set([...defaultCategories, ...items.map(i => i.category).filter(Boolean)]));
 
   // Filtrar ítems
   const filteredItems = items.filter(item => {
@@ -105,13 +110,15 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
   const handleOpenEdit = (item: InventoryItem) => {
     setEditingItem(item);
     setItemName(item.name);
-    setItemCategory(item.category || 'Limpieza y Baño');
+    setItemCategory(item.category || 'Limpieza');
     setItemUnit(item.unit || 'Unidades');
     setItemStock(item.currentStock);
     setItemMinStock(item.minStock || 1);
     setItemDetails(item.details || '');
     setItemLastCost(item.lastPurchaseCost || 0);
     setItemLastQuantity(item.lastPurchaseQuantity || '');
+    setIsCreatingCategory(false);
+    setNewCategoryName('');
     setShowItemModal(true);
   };
 
@@ -119,13 +126,15 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
   const handleOpenCreate = () => {
     setEditingItem(null);
     setItemName('');
-    setItemCategory('Limpieza y Baño');
+    setItemCategory('Limpieza');
     setItemUnit('Unidades');
     setItemStock(1);
     setItemMinStock(1);
     setItemDetails('');
     setItemLastCost(0);
     setItemLastQuantity('');
+    setIsCreatingCategory(false);
+    setNewCategoryName('');
     setShowItemModal(true);
   };
 
@@ -580,21 +589,80 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1.5 ml-1">
-                    Categoría
-                  </label>
-                  <select
-                    value={itemCategory}
-                    onChange={(e) => setItemCategory(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-                  >
-                    {categories.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                    <option value="General">General</option>
-                  </select>
+                  <div className="flex items-center justify-between mb-1.5 ml-1">
+                    <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                      Categoría *
+                    </label>
+                    {!isCreatingCategory && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCreatingCategory(true);
+                          setNewCategoryName('');
+                        }}
+                        className="text-[10px] font-bold text-primary-600 hover:text-primary-700 hover:underline flex items-center gap-1"
+                      >
+                        <Plus size={11} /> Nueva
+                      </button>
+                    )}
+                  </div>
+
+                  {isCreatingCategory ? (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="Ej: Insumos Médicos..."
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        className="flex-1 bg-white border-2 border-primary-500 rounded-2xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newCategoryName.trim()) {
+                            setItemCategory(newCategoryName.trim());
+                            setIsCreatingCategory(false);
+                            setNewCategoryName('');
+                          }
+                        }}
+                        className="px-3 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
+                      >
+                        Usar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCreatingCategory(false);
+                          setNewCategoryName('');
+                        }}
+                        className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors"
+                        title="Cancelar"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      value={itemCategory}
+                      onChange={(e) => {
+                        if (e.target.value === '__NEW__') {
+                          setIsCreatingCategory(true);
+                          setNewCategoryName('');
+                        } else {
+                          setItemCategory(e.target.value);
+                        }
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                    >
+                      {categories.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                      <option value="__NEW__">+ Crear Nueva Categoría...</option>
+                    </select>
+                  )}
                 </div>
 
                 <div>
