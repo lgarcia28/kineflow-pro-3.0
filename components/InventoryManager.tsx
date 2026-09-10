@@ -36,6 +36,23 @@ interface InventoryManagerProps {
   currentUserName?: string;
 }
 
+const normalizeItemCategory = (category: string, name?: string): string => {
+  const cat = (category || '').trim();
+  const lower = cat.toLowerCase();
+  if (lower === 'descartables' || lower === 'descartable') return 'Descartables';
+  if (lower === 'limpieza') return 'Limpieza';
+  if (name) {
+    const nameLower = name.toLowerCase();
+    if (nameLower.includes('toalla') || nameLower.includes('bobina') || nameLower.includes('arranque')) {
+      return 'Descartables';
+    }
+  }
+  if (lower.includes('limpieza') || lower.includes('baño') || lower.includes('higiene') || lower.includes('desinfección') || lower.includes('desinfeccion') || lower.includes('general')) {
+    return 'Limpieza';
+  }
+  return cat || 'Limpieza';
+};
+
 export const InventoryManager: React.FC<InventoryManagerProps> = ({
   items,
   movements,
@@ -48,6 +65,12 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [onlyLowStock, setOnlyLowStock] = useState(false);
+
+  // Normalizar ítems en memoria
+  const normalizedItems = items.map(item => ({
+    ...item,
+    category: normalizeItemCategory(item.category, item.name)
+  }));
 
   // Modales
   const [showItemModal, setShowItemModal] = useState(false);
@@ -78,10 +101,10 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
 
   // Lista de categorías únicas encontradas en los ítems
   const defaultCategories = ['Limpieza', 'Descartables'];
-  const categories = Array.from(new Set([...defaultCategories, ...items.map(i => i.category).filter(Boolean)]));
+  const categories = Array.from(new Set([...defaultCategories, ...normalizedItems.map(i => i.category).filter(Boolean)]));
 
   // Filtrar ítems
-  const filteredItems = items.filter(item => {
+  const filteredItems = normalizedItems.filter(item => {
     const matchesSearch = 
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.details && item.details.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -95,8 +118,8 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
   });
 
   // Métricas
-  const totalItemsCount = items.length;
-  const lowStockItems = items.filter(i => (i.minStock !== undefined && i.currentStock <= i.minStock) || i.currentStock <= 0);
+  const totalItemsCount = normalizedItems.length;
+  const lowStockItems = normalizedItems.filter(i => (i.minStock !== undefined && i.currentStock <= i.minStock) || i.currentStock <= 0);
   const lowStockCount = lowStockItems.length;
 
   const currentMonth = new Date().getMonth();
@@ -109,9 +132,10 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
 
   // Abrir Modal de Edición
   const handleOpenEdit = (item: InventoryItem) => {
+    const normalizedCat = normalizeItemCategory(item.category, item.name);
     setEditingItem(item);
     setItemName(item.name);
-    setItemCategory(item.category || 'Limpieza');
+    setItemCategory(normalizedCat);
     setItemUnit(item.unit || 'Unidades');
     setItemStock(item.currentStock);
     setItemMinStock(item.minStock || 1);
@@ -382,10 +406,10 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
             }`}
           >
-            Todas ({items.length})
+            Todas ({normalizedItems.length})
           </button>
           {categories.map(cat => {
-            const count = items.filter(i => i.category === cat).length;
+            const count = normalizedItems.filter(i => i.category === cat).length;
             return (
               <button
                 key={cat}

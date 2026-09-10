@@ -360,6 +360,34 @@ const App: React.FC = () => {
         inventoryData.push(docSnap.data() as InventoryItem);
       });
 
+      const firestore = db;
+      const normalizedList = inventoryData.map(item => {
+        const matchedInitial = INITIAL_CLEANING_INVENTORY.find(
+          init => init.name.toLowerCase().trim() === item.name.toLowerCase().trim() ||
+                  item.id.toLowerCase().includes(init.id.toLowerCase())
+        );
+        let targetCategory = item.category || 'Limpieza';
+        if (matchedInitial) {
+          targetCategory = matchedInitial.category;
+        } else {
+          const lower = targetCategory.toLowerCase().trim();
+          if (lower.includes('limpieza') || lower.includes('baño') || lower.includes('higiene') || lower.includes('desinfección') || lower.includes('desinfeccion') || lower.includes('general')) {
+            targetCategory = 'Limpieza';
+          } else if (lower.includes('descartable')) {
+            targetCategory = 'Descartables';
+          }
+        }
+
+        // Si la categoría en la base de datos era de las viejas, actualizarla en Firestore
+        if (firestore && item.category !== targetCategory) {
+          try {
+            updateDoc(doc(firestore, 'inventory', item.id), { category: targetCategory }).catch(() => {});
+          } catch (e) {}
+        }
+
+        return { ...item, category: targetCategory };
+      });
+
       const isRtpUser = Boolean(
         (user?.email && (user.email.toLowerCase().includes('recepcionrtp') || user.email.toLowerCase().includes('rtp'))) ||
         (user?.displayName && user.displayName.toLowerCase().includes('rtp')) ||
@@ -368,7 +396,6 @@ const App: React.FC = () => {
 
       // Solo sembrar los 17 insumos del Excel si el usuario corresponde a recepcionrtp
       if (snapshot.empty && activeTenantId && db && isRtpUser) {
-        const firestore = db;
         const seeded: InventoryItem[] = INITIAL_CLEANING_INVENTORY.map(item => ({
           ...item,
           id: `${item.id}_${activeTenantId}`,
@@ -386,7 +413,7 @@ const App: React.FC = () => {
           }
         });
       } else {
-        setInventory(inventoryData);
+        setInventory(normalizedList);
       }
     });
 
