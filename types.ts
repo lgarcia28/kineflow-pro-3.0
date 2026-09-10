@@ -582,3 +582,35 @@ export interface ClinicalEvaluation {
     weight?: number;
   };
 }
+
+// --- Control de Inventario e Insumos ---
+export interface InventoryItem {
+  id: string;
+  tenantId?: string;
+  name: string; // Nombre del insumo
+  category: string; // Ej: 'Limpieza', 'Descartables', 'Kinesiología', 'Oficina', 'General'
+  unit: string; // Ej: 'Rollos', 'Bidones 5L', 'Cajas', 'Botellas', 'Paquetes', 'Unidades'
+  currentStock: number; // Stock actual
+  minStock?: number; // Stock mínimo de alerta
+  details?: string; // Especificaciones (medidas, presentación)
+  lastPurchaseDate?: string; // YYYY-MM-DD
+  lastPurchaseCost?: number; // Costo última compra
+  lastPurchaseQuantity?: string; // Cantidad comprada
+  updatedAt?: string;
+}
+
+export interface InventoryMovement {
+  id: string;
+  tenantId?: string;
+  itemId: string;
+  itemName: string;
+  type: 'IN' | 'OUT' | 'ADJUSTMENT'; // 'IN' = Ingreso (+), 'OUT' = Baja (-), 'ADJUSTMENT' = Ajuste directo
+  quantity: number;
+  previousStock: number;
+  newStock: number;
+  reason: string; // Motivo del movimiento
+  performedBy?: string; // Usuario responsable
+  date: string; // YYYY-MM-DD
+  createdAt: string; // ISO timestamp
+}
+

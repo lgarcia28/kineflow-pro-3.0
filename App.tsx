@@ -13,7 +13,8 @@ import {
   addDoc
 } from 'firebase/firestore';
 import { MOCK_PATIENTS, EXERCISES as INITIAL_EXERCISES, MOCK_PRODUCTS, MOCK_APPOINTMENTS } from './constants';
-import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage, StaffTimeLog, TenantSettings } from './types';
+import { INITIAL_CLEANING_INVENTORY } from './constants/initialInventory';
+import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage, StaffTimeLog, TenantSettings, InventoryItem, InventoryMovement } from './types';
 import { useAuthStore } from './store/authStore';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
@@ -38,7 +39,7 @@ const ViewLoader = () => (
   <div className="flex-1 flex items-center justify-center bg-slate-50">
     <div className="flex flex-col items-center gap-4">
       <div className="w-12 h-12 border-[3px] border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-      <p className="text-[10px] font-black text-primary-600 uppercase tracking-widest">Cargando Vista...</p>
+      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cargando...</p>
     </div>
   </div>
 );
@@ -46,6 +47,8 @@ const App: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [exercises, setExercises] = useState<ExerciseDefinition[]>(INITIAL_EXERCISES);
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [staffTimeLogs, setStaffTimeLogs] = useState<StaffTimeLog[]>([]);
@@ -347,6 +350,48 @@ const App: React.FC = () => {
       }
     });
 
+    let inventoryQ = query(collection(db, 'inventory'));
+    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      inventoryQ = query(collection(db, 'inventory'), where('tenantId', '==', activeTenantId));
+    }
+    const unsubscribeInventory = onSnapshot(inventoryQ, async (snapshot) => {
+      const inventoryData: InventoryItem[] = [];
+      snapshot.forEach((docSnap) => {
+        inventoryData.push(docSnap.data() as InventoryItem);
+      });
+
+      // Si la colección está vacía para esta clínica, sembrar los 17 insumos iniciales del Excel
+      if (snapshot.empty && activeTenantId && db) {
+        const seeded: InventoryItem[] = INITIAL_CLEANING_INVENTORY.map(item => ({
+          ...item,
+          tenantId: activeTenantId
+        }));
+        setInventory(seeded);
+        // Guardar en Firestore
+        seeded.forEach(async (it) => {
+          try {
+            await setDoc(doc(db, 'inventory', it.id), it);
+          } catch (e) {
+            console.error('Error seeding inventory item:', e);
+          }
+        });
+      } else {
+        setInventory(inventoryData);
+      }
+    });
+
+    let movementsQ = query(collection(db, 'inventoryMovements'));
+    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      movementsQ = query(collection(db, 'inventoryMovements'), where('tenantId', '==', activeTenantId));
+    }
+    const unsubscribeMovements = onSnapshot(movementsQ, (snapshot) => {
+      const movementsData: InventoryMovement[] = [];
+      snapshot.forEach((docSnap) => {
+        movementsData.push({ id: docSnap.id, ...docSnap.data() } as InventoryMovement);
+      });
+      setInventoryMovements(movementsData);
+    });
+
     return () => {
       unsubscribe();
       unsubscribeStaff();
@@ -355,6 +400,8 @@ const App: React.FC = () => {
       unsubscribeExercises();
       unsubscribeTimeLogs();
       unsubscribeSettings();
+      unsubscribeInventory();
+      unsubscribeMovements();
     };
   }, [isAuthenticated, user]);
 
@@ -579,6 +626,65 @@ const App: React.FC = () => {
     }
   };
 
+  const handleAddInventoryItem = async (item: InventoryItem) => {
+    const safeData: InventoryItem = {
+      ...item,
+      tenantId: user?.tenantId || 'default_tenant'
+    };
+    if (db) {
+      try {
+        await setDoc(doc(db, 'inventory', safeData.id), sanitizeForFirestore(safeData));
+      } catch (e) { console.error('Error adding inventory item:', e); }
+    } else {
+      setInventory(prev => [...prev, safeData]);
+    }
+  };
+
+  const handleUpdateInventoryItem = async (updatedItem: InventoryItem) => {
+    if (db) {
+      try {
+        await setDoc(doc(db, 'inventory', updatedItem.id), sanitizeForFirestore(updatedItem), { merge: true });
+      } catch (e) { console.error('Error updating inventory item:', e); }
+    } else {
+      setInventory(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i));
+    }
+  };
+
+  const handleDeleteInventoryItem = async (id: string) => {
+    if (db) {
+      try {
+        await deleteDoc(doc(db, 'inventory', id));
+      } catch (e) { console.error('Error deleting inventory item:', e); }
+    } else {
+      setInventory(prev => prev.filter(i => i.id !== id));
+    }
+  };
+
+  const handleRegisterInventoryMovement = async (movementData: Omit<InventoryMovement, 'id' | 'createdAt'>) => {
+    const newMovementId = `mov_${Date.now()}`;
+    const newMovement: InventoryMovement = {
+      ...movementData,
+      id: newMovementId,
+      tenantId: user?.tenantId || 'default_tenant',
+      createdAt: new Date().toISOString()
+    };
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'inventoryMovements', newMovementId), sanitizeForFirestore(newMovement));
+        await setDoc(doc(db, 'inventory', movementData.itemId), {
+          currentStock: movementData.newStock,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (e) {
+        console.error('Error registering inventory movement:', e);
+      }
+    } else {
+      setInventoryMovements(prev => [...prev, newMovement]);
+      setInventory(prev => prev.map(i => i.id === movementData.itemId ? { ...i, currentStock: movementData.newStock, updatedAt: new Date().toISOString() } : i));
+    }
+  };
+
   const handleAddAppointment = async (app: Appointment) => {
     const safeData = { ...app, tenantId: user?.tenantId || 'default_tenant' };
     if (db) {
@@ -789,6 +895,12 @@ const App: React.FC = () => {
               onAddAppointment={handleAddAppointment}
               onUpdateAppointment={handleUpdateAppointment}
               onDeleteAppointment={handleDeleteAppointment}
+              inventory={inventory}
+              inventoryMovements={inventoryMovements}
+              onAddInventoryItem={handleAddInventoryItem}
+              onUpdateInventoryItem={handleUpdateInventoryItem}
+              onDeleteInventoryItem={handleDeleteInventoryItem}
+              onRegisterInventoryMovement={handleRegisterInventoryMovement}
             />
           ) : user.role === UserRole.TENANT_ADMIN ? (
             <AdminDashboardView />

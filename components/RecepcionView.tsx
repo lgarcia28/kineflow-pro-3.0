@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember, Stage, TenantSettings } from '../types';
+import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember, Stage, TenantSettings, InventoryItem, InventoryMovement } from '../types';
 import { secondaryAuth, auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
@@ -30,11 +30,13 @@ import {
   FileSpreadsheet,
   Download,
   ChevronDown,
-  FileText
+  FileText,
+  Boxes
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TurnoCalendar } from './TurnoCalendar';
 import { ImportPatientsModal } from './ImportPatientsModal';
+import { InventoryManager } from './InventoryManager';
 
 interface RecepcionViewProps {
   patients: Patient[];
@@ -52,6 +54,12 @@ interface RecepcionViewProps {
   onAddAppointment: (app: Appointment) => void;
   onUpdateAppointment: (app: Appointment) => void;
   onDeleteAppointment: (id: string) => void;
+  inventory?: InventoryItem[];
+  inventoryMovements?: InventoryMovement[];
+  onAddInventoryItem?: (item: InventoryItem) => void;
+  onUpdateInventoryItem?: (item: InventoryItem) => void;
+  onDeleteInventoryItem?: (id: string) => void;
+  onRegisterInventoryMovement?: (movement: Omit<InventoryMovement, 'id' | 'createdAt'>) => void;
 }
 
 export const RecepcionView: React.FC<RecepcionViewProps> = ({ 
@@ -69,10 +77,16 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   staff,
   onAddAppointment,
   onUpdateAppointment,
-  onDeleteAppointment
+  onDeleteAppointment,
+  inventory = [],
+  inventoryMovements = [],
+  onAddInventoryItem = () => {},
+  onUpdateInventoryItem = () => {},
+  onDeleteInventoryItem = () => {},
+  onRegisterInventoryMovement = () => {}
 }) => {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR'>('PATIENTS');
+  const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR' | 'INVENTORY'>('PATIENTS');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -524,6 +538,17 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               <CalendarDays size={14} /> Turnos
             </button>
             <button 
+              onClick={() => setActiveTab('INVENTORY')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 ${activeTab === 'INVENTORY' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <Boxes size={14} /> Insumos / Stock
+              {inventory.filter(i => (i.minStock !== undefined && i.currentStock <= i.minStock) || i.currentStock <= 0).length > 0 && (
+                <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-black ml-0.5 animate-pulse">
+                  {inventory.filter(i => (i.minStock !== undefined && i.currentStock <= i.minStock) || i.currentStock <= 0).length}
+                </span>
+              )}
+            </button>
+            <button 
               onClick={() => setActiveTab('SHOP')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 ${activeTab === 'SHOP' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
             >
@@ -802,6 +827,18 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               onUpdatePatient={onUpdatePatient}
               autoSchedulePatientId={autoSchedulePatientId}
               onClearAutoSchedule={() => setAutoSchedulePatientId(null)}
+            />
+          </div>
+        ) : activeTab === 'INVENTORY' ? (
+          <div className="max-w-6xl mx-auto animate-slide-up">
+            <InventoryManager
+              items={inventory}
+              movements={inventoryMovements}
+              onAddItem={onAddInventoryItem}
+              onUpdateItem={onUpdateInventoryItem}
+              onDeleteItem={onDeleteInventoryItem}
+              onRegisterMovement={onRegisterInventoryMovement}
+              currentUserName={user?.username || 'Recepción'}
             />
           </div>
         ) : (
