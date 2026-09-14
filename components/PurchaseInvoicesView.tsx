@@ -72,6 +72,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
 
   // Referencias para auto-focus y control de teclado
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const costInputRef = useRef<HTMLInputElement>(null);
   const quantityInputRef = useRef<HTMLInputElement>(null);
 
   // Estados para el selector/buscador de productos
@@ -87,7 +88,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
   
   // Inputs de cantidad y precio para el ítem a agregar
   const [inputQuantity, setInputQuantity] = useState<string>('');
-  const [inputUnitCost, setInputUnitCost] = useState<number>(0);
+  const [inputUnitCost, setInputUnitCost] = useState<string>('');
 
   // Lista de proveedores sugeridos previos
   const previousSuppliers = Array.from(new Set(invoices.map(i => i.supplier).filter(Boolean)));
@@ -112,7 +113,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     setNewProductCategory('Limpieza');
     setNewProductUnit('Unidades');
     setInputQuantity('');
-    setInputUnitCost(0);
+    setInputUnitCost('');
 
     setShowCreateModal(true);
     setTimeout(() => {
@@ -133,10 +134,11 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     setProductSearch(item.name);
     setIsDropdownOpen(false);
     setInputQuantity('');
-    setInputUnitCost(item.lastPurchaseCost || 0);
-    // Autofocus directo al campo de cantidad para abrir teclado numérico
+    setInputUnitCost(item.lastPurchaseCost ? String(item.lastPurchaseCost) : '');
+    // Lleva directo al costo, selecciona el valor y permite corregir o dar Enter/Tab para ir a cantidad
     setTimeout(() => {
-      quantityInputRef.current?.focus();
+      costInputRef.current?.focus();
+      costInputRef.current?.select();
     }, 80);
   };
 
@@ -149,9 +151,9 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     setNewProductUnit('Unidades');
     setIsDropdownOpen(false);
     setInputQuantity('');
-    setInputUnitCost(0);
+    setInputUnitCost('');
     setTimeout(() => {
-      quantityInputRef.current?.focus();
+      costInputRef.current?.focus();
     }, 80);
   };
 
@@ -164,13 +166,15 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
       return;
     }
 
+    const unitCost = parseFloat(inputUnitCost) || 0;
+
     if (isNewProductMode) {
       if (!newProductName.trim()) {
         alert('Por favor escribe el nombre del nuevo producto.');
         return;
       }
       const newItemId = `insumo_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-      const totalCost = qty * (Number(inputUnitCost) || 0);
+      const totalCost = qty * unitCost;
 
       const newItem: PurchaseInvoiceItem = {
         itemId: newItemId,
@@ -178,7 +182,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
         category: newProductCategory.trim() || 'Limpieza',
         unit: newProductUnit.trim() || 'Unidades',
         quantity: qty,
-        unitCost: Number(inputUnitCost) || 0,
+        unitCost: unitCost,
         totalCost: totalCost
       };
 
@@ -190,7 +194,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
         return;
       }
 
-      const totalCost = qty * (Number(inputUnitCost) || 0);
+      const totalCost = qty * unitCost;
 
       // Si ya está en la lista, sumamos la cantidad y actualizamos precio
       const existingIndex = addedItems.findIndex(it => it.itemId === selectedInventoryItem.id);
@@ -200,8 +204,8 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
         updated[existingIndex] = {
           ...updated[existingIndex],
           quantity: newQty,
-          unitCost: Number(inputUnitCost) || updated[existingIndex].unitCost,
-          totalCost: newQty * (Number(inputUnitCost) || updated[existingIndex].unitCost)
+          unitCost: unitCost || updated[existingIndex].unitCost,
+          totalCost: newQty * (unitCost || updated[existingIndex].unitCost)
         };
         setAddedItems(updated);
       } else {
@@ -211,7 +215,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
           category: selectedInventoryItem.category || 'Limpieza',
           unit: selectedInventoryItem.unit || 'Unidades',
           quantity: qty,
-          unitCost: Number(inputUnitCost) || 0,
+          unitCost: unitCost,
           totalCost: totalCost
         };
         setAddedItems(prev => [...prev, newItem]);
@@ -224,7 +228,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     setIsNewProductMode(false);
     setNewProductName('');
     setInputQuantity('');
-    setInputUnitCost(0);
+    setInputUnitCost('');
     setTimeout(() => {
       searchInputRef.current?.focus();
     }, 80);
@@ -1050,28 +1054,30 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                       {/* Controles de Entrada a la Derecha */}
                       <div className="flex items-end gap-2.5 flex-wrap sm:flex-nowrap">
                         
-                        {/* Precio Unitario */}
-                        <div className="w-28 sm:w-28 space-y-1">
+                        {/* Precio / Costo Unitario */}
+                        <div className="w-28 sm:w-32 space-y-1">
                           <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                            Precio Unit ($)
+                            Costo Unit ($)
                           </label>
                           <div className="relative">
                             <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
                             <input
+                              ref={costInputRef}
                               type="number"
                               inputMode="decimal"
                               min="0"
                               step="any"
-                              value={inputUnitCost || ''}
-                              onChange={(e) => setInputUnitCost(parseFloat(e.target.value) || 0)}
+                              value={inputUnitCost}
+                              onChange={(e) => setInputUnitCost(e.target.value)}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault();
                                   quantityInputRef.current?.focus();
+                                  quantityInputRef.current?.select();
                                 }
                               }}
                               placeholder="0"
-                              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-7 pr-2.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                              className="w-full bg-slate-50 border-2 border-slate-200 focus:border-primary-500 rounded-xl pl-7 pr-2.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                             />
                           </div>
                         </div>
@@ -1126,7 +1132,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                     {inputQuantity && (
                       <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 pt-1 border-t border-slate-100">
                         <span>
-                          Subtotal: <strong className="text-slate-900 font-bold">${((parseFloat(inputQuantity) || 0) * (Number(inputUnitCost) || 0)).toLocaleString('es-AR')}</strong>
+                          Subtotal: <strong className="text-slate-900 font-bold">${((parseFloat(inputQuantity) || 0) * (parseFloat(inputUnitCost) || 0)).toLocaleString('es-AR')}</strong>
                         </span>
                         {!isNewProductMode && selectedInventoryItem && (
                           <span className="text-teal-700 font-bold">
