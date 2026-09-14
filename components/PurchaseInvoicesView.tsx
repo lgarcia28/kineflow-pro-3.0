@@ -74,10 +74,12 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const costInputRef = useRef<HTMLInputElement>(null);
   const quantityInputRef = useRef<HTMLInputElement>(null);
+  const dropdownListRef = useRef<HTMLDivElement>(null);
 
   // Estados para el selector/buscador de productos
   const [productSearch, setProductSearch] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
   
   // Si está creando un producto nuevo que no existe en stock
@@ -107,6 +109,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     // Reset buscador
     setProductSearch('');
     setIsDropdownOpen(false);
+    setHighlightedIndex(0);
     setSelectedInventoryItem(null);
     setIsNewProductMode(false);
     setNewProductName('');
@@ -127,12 +130,23 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     (item.category && item.category.toLowerCase().includes(productSearch.toLowerCase()))
   );
 
+  // Auto-scroll del dropdown al navegar con flechitas
+  useEffect(() => {
+    if (isDropdownOpen && dropdownListRef.current) {
+      const activeEl = dropdownListRef.current.querySelector(`[data-dropdown-index="${highlightedIndex}"]`);
+      if (activeEl) {
+        (activeEl as HTMLElement).scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [highlightedIndex, isDropdownOpen]);
+
   // Seleccionar producto del buscador
   const handleSelectProduct = (item: InventoryItem) => {
     setSelectedInventoryItem(item);
     setIsNewProductMode(false);
     setProductSearch(item.name);
     setIsDropdownOpen(false);
+    setHighlightedIndex(0);
     setInputQuantity('');
     setInputUnitCost(item.lastPurchaseCost ? String(item.lastPurchaseCost) : '');
     // Lleva directo al costo, selecciona el valor y permite corregir o dar Enter/Tab para ir a cantidad
@@ -890,19 +904,51 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                       type="text"
                       placeholder="Escribe el nombre del producto o insumo (ej: Alcohol, Guantes, Toallas...)"
                       value={productSearch}
-                      onFocus={() => setIsDropdownOpen(true)}
+                      onFocus={() => {
+                        setIsDropdownOpen(true);
+                        setHighlightedIndex(0);
+                      }}
                       onChange={(e) => {
                         setProductSearch(e.target.value);
                         setIsDropdownOpen(true);
+                        setHighlightedIndex(0);
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
+                        const totalOptions = matchingProducts.length + 1; // incluye botón de crear nuevo
+
+                        if (e.key === 'ArrowDown') {
                           e.preventDefault();
-                          if (matchingProducts.length > 0 && !selectedInventoryItem) {
-                            handleSelectProduct(matchingProducts[0]);
-                          } else if (productSearch.trim() && !selectedInventoryItem) {
-                            handleStartNewProduct();
+                          if (!isDropdownOpen) {
+                            setIsDropdownOpen(true);
+                            setHighlightedIndex(0);
+                          } else {
+                            setHighlightedIndex(prev => (prev < totalOptions - 1 ? prev + 1 : 0));
                           }
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          if (!isDropdownOpen) {
+                            setIsDropdownOpen(true);
+                            setHighlightedIndex(totalOptions - 1);
+                          } else {
+                            setHighlightedIndex(prev => (prev > 0 ? prev - 1 : totalOptions - 1));
+                          }
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (isDropdownOpen) {
+                            if (highlightedIndex >= 0 && highlightedIndex < matchingProducts.length) {
+                              handleSelectProduct(matchingProducts[highlightedIndex]);
+                            } else if (highlightedIndex === matchingProducts.length) {
+                              handleStartNewProduct();
+                            }
+                          } else {
+                            if (matchingProducts.length > 0 && !selectedInventoryItem) {
+                              handleSelectProduct(matchingProducts[0]);
+                            } else if (productSearch.trim() && !selectedInventoryItem) {
+                              handleStartNewProduct();
+                            }
+                          }
+                        } else if (e.key === 'Escape') {
+                          setIsDropdownOpen(false);
                         }
                       }}
                       className="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-10 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 placeholder:text-slate-400 placeholder:font-normal"
@@ -915,6 +961,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                           setSelectedInventoryItem(null);
                           setIsNewProductMode(false);
                           setIsDropdownOpen(false);
+                          setHighlightedIndex(0);
                         }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
                       >
@@ -923,35 +970,51 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                     )}
                   </div>
 
-                  {/* Dropdown flotante de sugerencias */}
+                  {/* Dropdown flotante de sugerencias con soporte para teclado */}
                   {isDropdownOpen && (
-                    <div className="absolute z-50 left-0 right-0 mt-1.5 max-h-60 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-y-auto divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150">
+                    <div 
+                      ref={dropdownListRef}
+                      className="absolute z-50 left-0 right-0 mt-1.5 max-h-60 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-y-auto divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150"
+                    >
                       {matchingProducts.length > 0 ? (
-                        matchingProducts.map(item => (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => handleSelectProduct(item)}
-                            className="w-full text-left px-4 py-3 hover:bg-primary-50/60 flex items-center justify-between gap-2 transition-colors"
-                          >
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-slate-900 truncate">{item.name}</p>
-                              <span className="inline-block text-[10px] font-medium text-slate-400 mt-0.5">
-                                Categoría: {item.category || 'General'}
-                              </span>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold">
-                                Stock actual: {item.currentStock} {item.unit || 'unid'}
-                              </span>
-                              {item.lastPurchaseCost ? (
-                                <p className="text-[10px] text-emerald-600 font-bold mt-0.5">
-                                  Último: ${item.lastPurchaseCost.toLocaleString('es-AR')}
+                        matchingProducts.map((item, idx) => {
+                          const isHighlighted = highlightedIndex === idx;
+                          return (
+                            <button
+                              key={item.id}
+                              data-dropdown-index={idx}
+                              type="button"
+                              onMouseEnter={() => setHighlightedIndex(idx)}
+                              onClick={() => handleSelectProduct(item)}
+                              className={`w-full text-left px-4 py-3 flex items-center justify-between gap-2 transition-colors ${
+                                isHighlighted
+                                  ? 'bg-primary-50 text-slate-900 border-l-4 border-primary-600 pl-3'
+                                  : 'hover:bg-slate-50 text-slate-900'
+                              }`}
+                            >
+                              <div className="min-w-0">
+                                <p className={`text-xs font-black truncate ${isHighlighted ? 'text-primary-950' : 'text-slate-900'}`}>
+                                  {item.name}
                                 </p>
-                              ) : null}
-                            </div>
-                          </button>
-                        ))
+                                <span className="inline-block text-[10px] font-medium text-slate-400 mt-0.5">
+                                  Categoría: {item.category || 'General'}
+                                </span>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold ${
+                                  isHighlighted ? 'bg-primary-100 text-primary-800' : 'bg-slate-100 text-slate-700'
+                                }`}>
+                                  Stock actual: {item.currentStock} {item.unit || 'unid'}
+                                </span>
+                                {item.lastPurchaseCost ? (
+                                  <p className="text-[10px] text-emerald-600 font-bold mt-0.5">
+                                    Último: ${item.lastPurchaseCost.toLocaleString('es-AR')}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </button>
+                          );
+                        })
                       ) : (
                         <div className="p-3.5 text-center text-xs text-slate-500">
                           No se encontró ningún producto con ese nombre.
@@ -960,9 +1023,15 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
 
                       {/* Opción para crear nuevo producto */}
                       <button
+                        data-dropdown-index={matchingProducts.length}
                         type="button"
+                        onMouseEnter={() => setHighlightedIndex(matchingProducts.length)}
                         onClick={handleStartNewProduct}
-                        className="w-full text-left px-4 py-3 bg-primary-50/80 hover:bg-primary-100 text-primary-700 flex items-center gap-2 transition-colors font-bold text-xs"
+                        className={`w-full text-left px-4 py-3 flex items-center gap-2 transition-colors font-bold text-xs ${
+                          highlightedIndex === matchingProducts.length
+                            ? 'bg-primary-100 text-primary-950 border-l-4 border-primary-600 pl-3'
+                            : 'bg-primary-50/80 hover:bg-primary-100 text-primary-700'
+                        }`}
                       >
                         <PackagePlus size={16} />
                         <span>
