@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PurchaseInvoice, PurchaseInvoiceItem, InventoryItem } from '../types';
 import { 
   FileText, 
   Plus, 
-  Minus,
   Search, 
   Calendar, 
   DollarSign, 
@@ -25,7 +24,8 @@ import {
   Receipt,
   ExternalLink,
   PackagePlus,
-  ArrowRight
+  ArrowRight,
+  CornerDownLeft
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -39,7 +39,6 @@ interface PurchaseInvoicesViewProps {
   onDeleteInvoice?: (invoiceId: string, revertStock: boolean) => void;
   currentUserName?: string;
 }
-
 
 export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
   invoices = [],
@@ -71,6 +70,10 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
   // Lista de ítems cargados en la factura actual
   const [addedItems, setAddedItems] = useState<PurchaseInvoiceItem[]>([]);
 
+  // Referencias para auto-focus y control de teclado
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const quantityInputRef = useRef<HTMLInputElement>(null);
+
   // Estados para el selector/buscador de productos
   const [productSearch, setProductSearch] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -83,7 +86,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
   const [newProductUnit, setNewProductUnit] = useState('Unidades');
   
   // Inputs de cantidad y precio para el ítem a agregar
-  const [inputQuantity, setInputQuantity] = useState<number>(1);
+  const [inputQuantity, setInputQuantity] = useState<string>('');
   const [inputUnitCost, setInputUnitCost] = useState<number>(0);
 
   // Lista de proveedores sugeridos previos
@@ -108,10 +111,13 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     setNewProductName('');
     setNewProductCategory('Limpieza');
     setNewProductUnit('Unidades');
-    setInputQuantity(1);
+    setInputQuantity('');
     setInputUnitCost(0);
 
     setShowCreateModal(true);
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 150);
   };
 
   // Filtrar productos disponibles por búsqueda
@@ -126,8 +132,12 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     setIsNewProductMode(false);
     setProductSearch(item.name);
     setIsDropdownOpen(false);
-    setInputQuantity(1);
+    setInputQuantity('');
     setInputUnitCost(item.lastPurchaseCost || 0);
+    // Autofocus directo al campo de cantidad para abrir teclado numérico
+    setTimeout(() => {
+      quantityInputRef.current?.focus();
+    }, 80);
   };
 
   // Seleccionar modo crear nuevo producto
@@ -138,14 +148,19 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     setNewProductCategory('Limpieza');
     setNewProductUnit('Unidades');
     setIsDropdownOpen(false);
-    setInputQuantity(1);
+    setInputQuantity('');
     setInputUnitCost(0);
+    setTimeout(() => {
+      quantityInputRef.current?.focus();
+    }, 80);
   };
 
   // Agregar ítem a la lista de la factura
   const handleAddItemToInvoice = () => {
-    if (inputQuantity <= 0) {
-      alert('La cantidad a ingresar debe ser mayor a 0.');
+    const qty = parseFloat(inputQuantity);
+    if (isNaN(qty) || qty <= 0) {
+      alert('Por favor escribe la cantidad que ingresa (debe ser mayor a 0).');
+      quantityInputRef.current?.focus();
       return;
     }
 
@@ -155,14 +170,14 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
         return;
       }
       const newItemId = `insumo_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-      const totalCost = (Number(inputQuantity) || 1) * (Number(inputUnitCost) || 0);
+      const totalCost = qty * (Number(inputUnitCost) || 0);
 
       const newItem: PurchaseInvoiceItem = {
         itemId: newItemId,
         itemName: newProductName.trim(),
         category: newProductCategory.trim() || 'Limpieza',
         unit: newProductUnit.trim() || 'Unidades',
-        quantity: Number(inputQuantity),
+        quantity: qty,
         unitCost: Number(inputUnitCost) || 0,
         totalCost: totalCost
       };
@@ -171,16 +186,17 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     } else {
       if (!selectedInventoryItem) {
         alert('Por favor busca y selecciona un producto del stock o crea uno nuevo.');
+        searchInputRef.current?.focus();
         return;
       }
 
-      const totalCost = (Number(inputQuantity) || 1) * (Number(inputUnitCost) || 0);
+      const totalCost = qty * (Number(inputUnitCost) || 0);
 
       // Si ya está en la lista, sumamos la cantidad y actualizamos precio
       const existingIndex = addedItems.findIndex(it => it.itemId === selectedInventoryItem.id);
       if (existingIndex >= 0) {
         const updated = [...addedItems];
-        const newQty = updated[existingIndex].quantity + Number(inputQuantity);
+        const newQty = updated[existingIndex].quantity + qty;
         updated[existingIndex] = {
           ...updated[existingIndex],
           quantity: newQty,
@@ -194,7 +210,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
           itemName: selectedInventoryItem.name,
           category: selectedInventoryItem.category || 'Limpieza',
           unit: selectedInventoryItem.unit || 'Unidades',
-          quantity: Number(inputQuantity),
+          quantity: qty,
           unitCost: Number(inputUnitCost) || 0,
           totalCost: totalCost
         };
@@ -202,33 +218,21 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
       }
     }
 
-    // Resetear buscador para el siguiente producto
+    // Resetear buscador para el siguiente producto y hacer foco en el buscador
     setProductSearch('');
     setSelectedInventoryItem(null);
     setIsNewProductMode(false);
     setNewProductName('');
-    setInputQuantity(1);
+    setInputQuantity('');
     setInputUnitCost(0);
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 80);
   };
 
   // Quitar ítem de la lista
   const handleRemoveAddedItem = (index: number) => {
     setAddedItems(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // Modificar cantidad directamente en la lista
-  const handleUpdateItemQuantity = (index: number, newQty: number) => {
-    if (newQty <= 0) return;
-    setAddedItems(prev => {
-      const updated = [...prev];
-      const it = updated[index];
-      updated[index] = {
-        ...it,
-        quantity: newQty,
-        totalCost: newQty * it.unitCost
-      };
-      return updated;
-    });
   };
 
   // Cargar imagen de comprobante (Base64)
@@ -878,6 +882,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                   <div className="relative">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input
+                      ref={searchInputRef}
                       type="text"
                       placeholder="Escribe el nombre del producto o insumo (ej: Alcohol, Guantes, Toallas...)"
                       value={productSearch}
@@ -885,6 +890,16 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                       onChange={(e) => {
                         setProductSearch(e.target.value);
                         setIsDropdownOpen(true);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (matchingProducts.length > 0 && !selectedInventoryItem) {
+                            handleSelectProduct(matchingProducts[0]);
+                          } else if (productSearch.trim() && !selectedInventoryItem) {
+                            handleStartNewProduct();
+                          }
+                        }
                       }}
                       className="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-10 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 placeholder:text-slate-400 placeholder:font-normal"
                     />
@@ -956,47 +971,15 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                   )}
                 </div>
 
-                {/* 2.2 Panel de Selección Activa y Cantidad a Ingresar */}
+                {/* 2.2 Panel de Producto Seleccionado con Campo Cantidad a la derecha y tecla Enter */}
                 {(selectedInventoryItem || isNewProductMode) && (
-                  <div className="p-4 bg-white border-2 border-primary-200 rounded-2xl space-y-3 animate-in fade-in duration-200 shadow-sm">
+                  <div className="p-4 bg-white border-2 border-primary-300 rounded-2xl space-y-3 animate-in fade-in duration-200 shadow-sm">
                     
-                    {/* Header del producto seleccionado o en creación */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] font-black uppercase text-primary-600 tracking-wider">
-                          {isNewProductMode ? '★ Nuevo Producto a Registrar' : '✓ Producto Seleccionado del Stock'}
-                        </span>
-                        {!isNewProductMode && selectedInventoryItem && (
-                          <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                            <h5 className="text-sm font-black text-slate-900">{selectedInventoryItem.name}</h5>
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
-                              {selectedInventoryItem.category || 'Limpieza'}
-                            </span>
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-teal-50 text-teal-700 rounded-md">
-                              Stock actual: {selectedInventoryItem.currentStock} {selectedInventoryItem.unit}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedInventoryItem(null);
-                          setIsNewProductMode(false);
-                          setProductSearch('');
-                        }}
-                        className="text-slate-400 hover:text-slate-600 text-xs font-bold px-2 py-1 hover:bg-slate-100 rounded-lg transition-colors"
-                      >
-                        Cambiar
-                      </button>
-                    </div>
-
                     {/* Si es nuevo producto: campos de nombre, categoría y unidad */}
                     {isNewProductMode && (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2 border-b border-slate-100">
                         <div>
-                          <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Nombre</label>
+                          <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Nombre del nuevo producto *</label>
                           <input
                             type="text"
                             required
@@ -1023,7 +1006,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                           <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Unidad de Medida</label>
                           <input
                             type="text"
-                            placeholder="Unidades, Cajas, Litros, Rollos..."
+                            placeholder="Unidades, Cajas, Rollos..."
                             value={newProductUnit}
                             onChange={(e) => setNewProductUnit(e.target.value)}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none"
@@ -1032,85 +1015,126 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                       </div>
                     )}
 
-                    {/* Inputs de Cantidad que ingresa y Precio Unitario */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 items-end">
+                    {/* Fila Principal: Producto a la izquierda | Precio | Cantidad (con foco y Enter) | Botón */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       
-                      {/* Cantidad que ingresa */}
-                      <div>
-                        <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1">
-                          ¿Cuántos ingresan? ({isNewProductMode ? newProductUnit || 'Unid' : selectedInventoryItem?.unit || 'Unid'}) *
-                        </label>
-                        <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden p-1">
-                          <button
-                            type="button"
-                            onClick={() => setInputQuantity(Math.max(1, inputQuantity - 1))}
-                            className="w-8 h-8 rounded-lg bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shadow-xs transition-colors shrink-0"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <input
-                            type="number"
-                            min="0.5"
-                            step="0.5"
-                            required
-                            value={inputQuantity}
-                            onChange={(e) => setInputQuantity(parseFloat(e.target.value) || 0)}
-                            className="w-full bg-transparent text-center font-black text-sm text-slate-900 focus:outline-none px-1"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setInputQuantity(inputQuantity + 1)}
-                            className="w-8 h-8 rounded-lg bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shadow-xs transition-colors shrink-0"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Precio Unitario */}
-                      <div>
-                        <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1">
-                          Precio Unitario ($)
-                        </label>
-                        <div className="relative">
-                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={inputUnitCost || ''}
-                            onChange={(e) => setInputUnitCost(parseFloat(e.target.value) || 0)}
-                            placeholder="0"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Botón Agregar a la Factura */}
-                      <div>
-                        <button
-                          type="button"
-                          onClick={handleAddItemToInvoice}
-                          className="w-full py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-primary-600/25 transition-all active:scale-95"
-                        >
-                          <Plus size={15} />
-                          <span>Agregar a la Factura</span>
-                        </button>
-                      </div>
-
-                    </div>
-
-                    {/* Previsualización del cálculo de la línea */}
-                    <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 pt-1 border-t border-slate-100">
-                      <span>
-                        Subtotal para este ítem: <strong className="text-slate-900 font-bold">${((Number(inputQuantity) || 0) * (Number(inputUnitCost) || 0)).toLocaleString('es-AR')}</strong>
-                      </span>
-                      {!isNewProductMode && selectedInventoryItem && (
-                        <span className="text-teal-700 font-bold">
-                          Nuevo stock estimado: {(selectedInventoryItem.currentStock || 0) + (Number(inputQuantity) || 0)} {selectedInventoryItem.unit}
+                      {/* Producto Seleccionado */}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] font-black uppercase text-primary-600 tracking-wider block">
+                          {isNewProductMode ? '★ Nuevo Producto' : '✓ Producto Seleccionado'}
                         </span>
-                      )}
+                        <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                          <h5 className="text-sm font-black text-slate-900 truncate">
+                            {isNewProductMode ? (newProductName || 'Nuevo Producto') : selectedInventoryItem?.name}
+                          </h5>
+                          {!isNewProductMode && selectedInventoryItem && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 bg-teal-50 text-teal-700 rounded-md">
+                              Stock actual: {selectedInventoryItem.currentStock} {selectedInventoryItem.unit}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedInventoryItem(null);
+                              setIsNewProductMode(false);
+                              setProductSearch('');
+                              setTimeout(() => searchInputRef.current?.focus(), 50);
+                            }}
+                            className="text-slate-400 hover:text-slate-600 text-[11px] font-bold underline ml-1 transition-colors"
+                          >
+                            Cambiar
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Controles de Entrada a la Derecha */}
+                      <div className="flex items-end gap-2.5 flex-wrap sm:flex-nowrap">
+                        
+                        {/* Precio Unitario */}
+                        <div className="w-28 sm:w-28 space-y-1">
+                          <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                            Precio Unit ($)
+                          </label>
+                          <div className="relative">
+                            <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              min="0"
+                              step="any"
+                              value={inputUnitCost || ''}
+                              onChange={(e) => setInputUnitCost(parseFloat(e.target.value) || 0)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  quantityInputRef.current?.focus();
+                                }
+                              }}
+                              placeholder="0"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-7 pr-2.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Campo Cantidad (Abre teclado numérico en móvil y agrega al presionar Enter) */}
+                        <div className="w-32 sm:w-32 space-y-1">
+                          <label className="block text-[10px] font-black uppercase text-primary-700 tracking-wider">
+                            Cantidad *
+                          </label>
+                          <input
+                            ref={quantityInputRef}
+                            type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            step="any"
+                            required
+                            placeholder="Ej: 5"
+                            value={inputQuantity}
+                            onChange={(e) => setInputQuantity(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddItemToInvoice();
+                              }
+                            }}
+                            className="w-full bg-primary-50/40 border-2 border-primary-500 rounded-xl px-3 py-2.5 text-sm font-black text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-primary-500/30 placeholder:text-slate-400"
+                          />
+                        </div>
+
+                        {/* Botón Agregar a la Factura (o Enter) */}
+                        <div className="space-y-1">
+                          <label className="block text-[10px] font-black uppercase text-transparent tracking-wider">
+                            Acción
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleAddItemToInvoice}
+                            className="h-[42px] px-4 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-primary-600/25 transition-all active:scale-95 whitespace-nowrap"
+                            title="Presiona Enter o haz clic para agregar"
+                          >
+                            <Plus size={15} />
+                            <span>Agregar</span>
+                            <CornerDownLeft size={13} className="opacity-80 hidden sm:inline" />
+                          </button>
+                        </div>
+
+                      </div>
+
                     </div>
+
+                    {/* Previsualización del cálculo */}
+                    {inputQuantity && (
+                      <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 pt-1 border-t border-slate-100">
+                        <span>
+                          Subtotal: <strong className="text-slate-900 font-bold">${((parseFloat(inputQuantity) || 0) * (Number(inputUnitCost) || 0)).toLocaleString('es-AR')}</strong>
+                        </span>
+                        {!isNewProductMode && selectedInventoryItem && (
+                          <span className="text-teal-700 font-bold">
+                            Nuevo stock: {(selectedInventoryItem.currentStock || 0) + (parseFloat(inputQuantity) || 0)} {selectedInventoryItem.unit}
+                          </span>
+                        )}
+                      </div>
+                    )}
 
                   </div>
                 )}
@@ -1133,7 +1157,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                       <Boxes size={28} className="mx-auto text-slate-300" />
                       <p className="text-xs font-bold text-slate-700">La lista de la factura está vacía</p>
                       <p className="text-[11px] text-slate-400 font-medium">
-                        Usa el buscador de arriba para seleccionar o crear productos, indica cuántos ingresan y agrégalos a la lista.
+                        Selecciona un producto arriba, escribe la cantidad y presiona Enter para sumarlo a la lista.
                       </p>
                     </div>
                   ) : (
@@ -1144,7 +1168,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                         const newStock = currentStock + item.quantity;
 
                         return (
-                          <div key={idx} className="p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors">
+                          <div key={idx} className="p-3 sm:p-3.5 flex items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors">
                             
                             {/* Información del Producto */}
                             <div className="space-y-0.5 flex-1 min-w-0">
@@ -1158,7 +1182,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                                 </span>
                               </div>
                               <div className="flex items-center gap-2 text-[10px] text-slate-500 font-medium pl-7">
-                                <span>Precio Unitario: ${item.unitCost.toLocaleString('es-AR')}</span>
+                                <span>Precio: ${item.unitCost.toLocaleString('es-AR')} c/u</span>
                                 <span>•</span>
                                 <span className="text-teal-700 font-bold">
                                   Stock: {currentStock} → {newStock} {item.unit}
@@ -1166,32 +1190,18 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                               </div>
                             </div>
 
-                            {/* Controles de Cantidad y Subtotal */}
-                            <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pl-7 sm:pl-0">
+                            {/* Cantidad, Subtotal y Eliminar */}
+                            <div className="flex items-center gap-4 shrink-0">
                               
-                              {/* Ajuste Rápido de Cantidad */}
-                              <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
-                                <button
-                                  type="button"
-                                  onClick={() => handleUpdateItemQuantity(idx, Math.max(1, item.quantity - 1))}
-                                  className="w-6 h-6 rounded-lg bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shadow-xs"
-                                >
-                                  <Minus size={12} />
-                                </button>
-                                <span className="text-xs font-black text-slate-900 px-2 min-w-[2.5rem] text-center">
+                              {/* Cantidad cargada */}
+                              <div className="text-right">
+                                <span className="text-xs font-black text-slate-900 bg-slate-100 px-2.5 py-1 rounded-xl">
                                   {item.quantity} {item.unit || 'unid'}
                                 </span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleUpdateItemQuantity(idx, item.quantity + 1)}
-                                  className="w-6 h-6 rounded-lg bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shadow-xs"
-                                >
-                                  <Plus size={12} />
-                                </button>
                               </div>
 
                               {/* Subtotal */}
-                              <div className="text-right min-w-[5rem]">
+                              <div className="text-right min-w-[4.5rem]">
                                 <span className="text-xs font-black text-slate-900">
                                   ${item.totalCost.toLocaleString('es-AR')}
                                 </span>
