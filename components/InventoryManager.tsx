@@ -22,7 +22,8 @@ import {
   Boxes,
   ArrowDownLeft,
   ArrowUpRight,
-  ClipboardList
+  ClipboardList,
+  Receipt
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -33,6 +34,7 @@ interface InventoryManagerProps {
   onUpdateItem: (item: InventoryItem) => void;
   onDeleteItem: (id: string) => void;
   onRegisterMovement: (movement: Omit<InventoryMovement, 'id' | 'createdAt'>) => void;
+  onOpenInvoices?: () => void;
   currentUserName?: string;
 }
 
@@ -60,6 +62,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
   onUpdateItem,
   onDeleteItem,
   onRegisterMovement,
+  onOpenInvoices,
   currentUserName = 'Recepción'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -385,6 +388,17 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({
               <FileSpreadsheet size={15} />
               <span className="hidden sm:inline">Excel</span>
             </button>
+
+            {onOpenInvoices && (
+              <button
+                onClick={onOpenInvoices}
+                className="px-3.5 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all shadow-sm active:scale-95"
+                title="Cargar y consultar Facturas de Compra"
+              >
+                <Receipt size={15} />
+                <span className="hidden sm:inline">Facturas de Compra</span>
+              </button>
+            )}
 
             <button
               onClick={handleOpenCreate}

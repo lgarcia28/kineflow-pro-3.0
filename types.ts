@@ -615,3 +615,31 @@ export interface InventoryMovement {
   createdAt: string; // ISO timestamp
 }
 
+// --- Facturas de Compra de Insumos y Productos ---
+export interface PurchaseInvoiceItem {
+  itemId?: string; // ID del insumo existente o generado
+  itemName: string;
+  category?: string;
+  unit?: string;
+  quantity: number;
+  unitCost: number;
+  totalCost: number;
+}
+
+export interface PurchaseInvoice {
+  id: string;
+  tenantId?: string;
+  invoiceNumber: string; // Ej: 'A-0001-00004521'
+  supplier: string; // Proveedor / Razón Social
+  date: string; // YYYY-MM-DD
+  paymentMethod?: 'Efectivo' | 'Transferencia' | 'Tarjeta de Débito' | 'Tarjeta de Crédito' | 'Cuenta Corriente' | 'Otro';
+  paymentStatus?: 'PAID' | 'PENDING';
+  items: PurchaseInvoiceItem[];
+  totalAmount: number;
+  receiptUrl?: string; // Imagen en base64 o URL
+  notes?: string;
+  registeredBy?: string;
+  createdAt: string;
+}
+
+

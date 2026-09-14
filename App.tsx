@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { MOCK_PATIENTS, EXERCISES as INITIAL_EXERCISES, MOCK_PRODUCTS, MOCK_APPOINTMENTS } from './constants';
 import { INITIAL_CLEANING_INVENTORY } from './constants/initialInventory';
-import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage, StaffTimeLog, TenantSettings, InventoryItem, InventoryMovement } from './types';
+import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage, StaffTimeLog, TenantSettings, InventoryItem, InventoryMovement, PurchaseInvoice } from './types';
 import { useAuthStore } from './store/authStore';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
@@ -43,12 +43,13 @@ const ViewLoader = () => (
     </div>
   </div>
 );
-const App: React.FC = () => {
+export function App() {
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [exercises, setExercises] = useState<ExerciseDefinition[]>(INITIAL_EXERCISES);
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>([]);
+  const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [staffTimeLogs, setStaffTimeLogs] = useState<StaffTimeLog[]>([]);
@@ -429,6 +430,18 @@ const App: React.FC = () => {
       setInventoryMovements(movementsData);
     });
 
+    let invoicesQ = query(collection(db, 'purchaseInvoices'));
+    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      invoicesQ = query(collection(db, 'purchaseInvoices'), where('tenantId', '==', activeTenantId));
+    }
+    const unsubscribeInvoices = onSnapshot(invoicesQ, (snapshot) => {
+      const invoicesData: PurchaseInvoice[] = [];
+      snapshot.forEach((docSnap) => {
+        invoicesData.push({ id: docSnap.id, ...docSnap.data() } as PurchaseInvoice);
+      });
+      setPurchaseInvoices(invoicesData);
+    });
+
     return () => {
       unsubscribe();
       unsubscribeStaff();
@@ -439,6 +452,7 @@ const App: React.FC = () => {
       unsubscribeSettings();
       unsubscribeInventory();
       unsubscribeMovements();
+      unsubscribeInvoices();
     };
   }, [isAuthenticated, user]);
 
@@ -741,6 +755,146 @@ const App: React.FC = () => {
     }
   };
 
+  const handleAddPurchaseInvoice = async (
+    invoiceData: Omit<PurchaseInvoice, 'id' | 'createdAt'>,
+    itemsToUpdate: { item: InventoryItem; isNew: boolean; qtyAdded: number; unitCost: number }[]
+  ) => {
+    const invoiceId = `fac_${Date.now()}`;
+    const newInvoice: PurchaseInvoice = {
+      ...invoiceData,
+      id: invoiceId,
+      tenantId: user?.tenantId || 'default_tenant',
+      createdAt: new Date().toISOString()
+    };
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'purchaseInvoices', invoiceId), sanitizeForFirestore(newInvoice));
+
+        for (const { item, isNew, qtyAdded, unitCost } of itemsToUpdate) {
+          const safeItem: InventoryItem = {
+            ...item,
+            tenantId: user?.tenantId || 'default_tenant',
+            currentStock: isNew ? qtyAdded : (item.currentStock + qtyAdded),
+            lastPurchaseCost: unitCost,
+            lastPurchaseDate: invoiceData.date,
+            lastPurchaseQuantity: `${qtyAdded} ${item.unit || 'Unidades'}`.trim(),
+            updatedAt: new Date().toISOString()
+          };
+
+          await setDoc(doc(db, 'inventory', safeItem.id), sanitizeForFirestore(safeItem), { merge: true });
+
+          const movId = `mov_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+          const movement: InventoryMovement = {
+            id: movId,
+            tenantId: user?.tenantId || 'default_tenant',
+            itemId: safeItem.id,
+            itemName: safeItem.name,
+            type: 'IN',
+            quantity: qtyAdded,
+            previousStock: isNew ? 0 : item.currentStock,
+            newStock: safeItem.currentStock,
+            reason: `Factura ${invoiceData.invoiceNumber || 'S/N'} - ${invoiceData.supplier}`,
+            cost: unitCost * qtyAdded,
+            performedBy: user?.displayName || user?.email || 'Recepción',
+            date: invoiceData.date,
+            createdAt: new Date().toISOString()
+          };
+          await setDoc(doc(db, 'inventoryMovements', movId), sanitizeForFirestore(movement));
+        }
+      } catch (e) {
+        console.error('Error adding purchase invoice:', e);
+      }
+    } else {
+      setPurchaseInvoices(prev => [newInvoice, ...prev]);
+      setInventory(prev => {
+        let updated = [...prev];
+        itemsToUpdate.forEach(({ item, isNew, qtyAdded, unitCost }) => {
+          if (isNew) {
+            updated.push({
+              ...item,
+              currentStock: qtyAdded,
+              lastPurchaseCost: unitCost,
+              lastPurchaseDate: invoiceData.date,
+              lastPurchaseQuantity: `${qtyAdded} ${item.unit || 'Unidades'}`.trim(),
+              updatedAt: new Date().toISOString()
+            });
+          } else {
+            updated = updated.map(it => it.id === item.id ? {
+              ...it,
+              currentStock: it.currentStock + qtyAdded,
+              lastPurchaseCost: unitCost,
+              lastPurchaseDate: invoiceData.date,
+              lastPurchaseQuantity: `${qtyAdded} ${it.unit || 'Unidades'}`.trim(),
+              updatedAt: new Date().toISOString()
+            } : it);
+          }
+        });
+        return updated;
+      });
+    }
+  };
+
+  const handleDeletePurchaseInvoice = async (invoiceId: string, revertStock: boolean) => {
+    const invoiceToDelete = purchaseInvoices.find(inv => inv.id === invoiceId);
+    if (!invoiceToDelete) return;
+
+    if (db) {
+      try {
+        await deleteDoc(doc(db, 'purchaseInvoices', invoiceId));
+
+        if (revertStock) {
+          for (const it of invoiceToDelete.items) {
+            if (it.itemId) {
+              const currentItem = inventory.find(inv => inv.id === it.itemId);
+              if (currentItem) {
+                const newStock = Math.max(0, currentItem.currentStock - it.quantity);
+                await setDoc(doc(db, 'inventory', currentItem.id), {
+                  currentStock: newStock,
+                  updatedAt: new Date().toISOString()
+                }, { merge: true });
+
+                const movId = `mov_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                const movement: InventoryMovement = {
+                  id: movId,
+                  tenantId: user?.tenantId || 'default_tenant',
+                  itemId: currentItem.id,
+                  itemName: currentItem.name,
+                  type: 'OUT',
+                  quantity: it.quantity,
+                  previousStock: currentItem.currentStock,
+                  newStock: newStock,
+                  reason: `Anulación Factura ${invoiceToDelete.invoiceNumber} - ${invoiceToDelete.supplier}`,
+                  performedBy: user?.displayName || user?.email || 'Recepción',
+                  date: new Date().toISOString().split('T')[0],
+                  createdAt: new Date().toISOString()
+                };
+                await setDoc(doc(db, 'inventoryMovements', movId), sanitizeForFirestore(movement));
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error deleting purchase invoice:', e);
+      }
+    } else {
+      setPurchaseInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+      if (revertStock) {
+        setInventory(prev => prev.map(inv => {
+          const matched = invoiceToDelete.items.find(it => it.itemId === inv.id);
+          if (matched) {
+            return {
+              ...inv,
+              currentStock: Math.max(0, inv.currentStock - matched.quantity),
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return inv;
+        }));
+      }
+    }
+  };
+
   const handleAddAppointment = async (app: Appointment) => {
     const safeData = { ...app, tenantId: user?.tenantId || 'default_tenant' };
     if (db) {
@@ -957,6 +1111,9 @@ const App: React.FC = () => {
               onUpdateInventoryItem={handleUpdateInventoryItem}
               onDeleteInventoryItem={handleDeleteInventoryItem}
               onRegisterInventoryMovement={handleRegisterInventoryMovement}
+              purchaseInvoices={purchaseInvoices}
+              onAddPurchaseInvoice={handleAddPurchaseInvoice}
+              onDeletePurchaseInvoice={handleDeletePurchaseInvoice}
             />
           ) : user.role === UserRole.TENANT_ADMIN ? (
             <AdminDashboardView />

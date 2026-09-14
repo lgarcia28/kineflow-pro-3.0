@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember, Stage, TenantSettings, InventoryItem, InventoryMovement } from '../types';
+import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember, Stage, TenantSettings, InventoryItem, InventoryMovement, PurchaseInvoice } from '../types';
 import { secondaryAuth, auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
@@ -31,12 +31,14 @@ import {
   Download,
   ChevronDown,
   FileText,
-  Boxes
+  Boxes,
+  Receipt
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TurnoCalendar } from './TurnoCalendar';
 import { ImportPatientsModal } from './ImportPatientsModal';
 import { InventoryManager } from './InventoryManager';
+import { PurchaseInvoicesView } from './PurchaseInvoicesView';
 
 interface RecepcionViewProps {
   patients: Patient[];
@@ -60,6 +62,12 @@ interface RecepcionViewProps {
   onUpdateInventoryItem?: (item: InventoryItem) => void;
   onDeleteInventoryItem?: (id: string) => void;
   onRegisterInventoryMovement?: (movement: Omit<InventoryMovement, 'id' | 'createdAt'>) => void;
+  purchaseInvoices?: PurchaseInvoice[];
+  onAddPurchaseInvoice?: (
+    invoice: Omit<PurchaseInvoice, 'id' | 'createdAt'>,
+    itemsToUpdate: { item: InventoryItem; isNew: boolean; qtyAdded: number; unitCost: number }[]
+  ) => void;
+  onDeletePurchaseInvoice?: (invoiceId: string, revertStock: boolean) => void;
 }
 
 export const RecepcionView: React.FC<RecepcionViewProps> = ({ 
@@ -83,10 +91,13 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   onAddInventoryItem = () => {},
   onUpdateInventoryItem = () => {},
   onDeleteInventoryItem = () => {},
-  onRegisterInventoryMovement = () => {}
+  onRegisterInventoryMovement = () => {},
+  purchaseInvoices = [],
+  onAddPurchaseInvoice = () => {},
+  onDeletePurchaseInvoice = () => {}
 }) => {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR' | 'INVENTORY'>('PATIENTS');
+  const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR' | 'INVENTORY' | 'PURCHASES'>('PATIENTS');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -580,6 +591,17 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               )}
             </button>
             <button 
+              onClick={() => setActiveTab('PURCHASES')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'PURCHASES' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <Receipt size={14} /> Facturas de Compra
+              {purchaseInvoices.filter(i => i.paymentStatus === 'PENDING').length > 0 && (
+                <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-black ml-0.5">
+                  {purchaseInvoices.filter(i => i.paymentStatus === 'PENDING').length}
+                </span>
+              )}
+            </button>
+            <button 
               onClick={() => setActiveTab('SHOP')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'SHOP' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
             >
@@ -870,6 +892,17 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               onUpdateItem={onUpdateInventoryItem}
               onDeleteItem={onDeleteInventoryItem}
               onRegisterMovement={onRegisterInventoryMovement}
+              onOpenInvoices={() => setActiveTab('PURCHASES')}
+              currentUserName={user?.displayName || user?.email || 'Recepción'}
+            />
+          </div>
+        ) : activeTab === 'PURCHASES' ? (
+          <div className="max-w-6xl mx-auto animate-slide-up">
+            <PurchaseInvoicesView
+              invoices={purchaseInvoices}
+              inventory={inventory}
+              onAddInvoice={onAddPurchaseInvoice}
+              onDeleteInvoice={onDeletePurchaseInvoice}
               currentUserName={user?.displayName || user?.email || 'Recepción'}
             />
           </div>
