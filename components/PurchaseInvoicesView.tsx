@@ -3,6 +3,7 @@ import { PurchaseInvoice, PurchaseInvoiceItem, InventoryItem } from '../types';
 import { 
   FileText, 
   Plus, 
+  Minus,
   Search, 
   Calendar, 
   DollarSign, 
@@ -22,7 +23,9 @@ import {
   ArrowDownLeft,
   Sparkles,
   Receipt,
-  ExternalLink
+  ExternalLink,
+  PackagePlus,
+  ArrowRight
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -37,14 +40,6 @@ interface PurchaseInvoicesViewProps {
   currentUserName?: string;
 }
 
-interface FormItemRow {
-  selectedItemId: string; // 'NEW' or item.id
-  name: string;
-  category: string;
-  unit: string;
-  quantity: number;
-  unitCost: number;
-}
 
 export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
   invoices = [],
@@ -73,10 +68,23 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
   const [formReceiptUrl, setFormReceiptUrl] = useState('');
   const [formNotes, setFormNotes] = useState('');
 
-  // Filas de ítems en el formulario
-  const [formItems, setFormItems] = useState<FormItemRow[]>([
-    { selectedItemId: '', name: '', category: 'Limpieza', unit: 'Unidades', quantity: 1, unitCost: 0 }
-  ]);
+  // Lista de ítems cargados en la factura actual
+  const [addedItems, setAddedItems] = useState<PurchaseInvoiceItem[]>([]);
+
+  // Estados para el selector/buscador de productos
+  const [productSearch, setProductSearch] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem | null>(null);
+  
+  // Si está creando un producto nuevo que no existe en stock
+  const [isNewProductMode, setIsNewProductMode] = useState(false);
+  const [newProductName, setNewProductName] = useState('');
+  const [newProductCategory, setNewProductCategory] = useState('Limpieza');
+  const [newProductUnit, setNewProductUnit] = useState('Unidades');
+  
+  // Inputs de cantidad y precio para el ítem a agregar
+  const [inputQuantity, setInputQuantity] = useState<number>(1);
+  const [inputUnitCost, setInputUnitCost] = useState<number>(0);
 
   // Lista de proveedores sugeridos previos
   const previousSuppliers = Array.from(new Set(invoices.map(i => i.supplier).filter(Boolean)));
@@ -90,58 +98,137 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     setFormPaymentStatus('PAID');
     setFormReceiptUrl('');
     setFormNotes('');
-    setFormItems([
-      { selectedItemId: '', name: '', category: 'Limpieza', unit: 'Unidades', quantity: 1, unitCost: 0 }
-    ]);
+    setAddedItems([]);
+    
+    // Reset buscador
+    setProductSearch('');
+    setIsDropdownOpen(false);
+    setSelectedInventoryItem(null);
+    setIsNewProductMode(false);
+    setNewProductName('');
+    setNewProductCategory('Limpieza');
+    setNewProductUnit('Unidades');
+    setInputQuantity(1);
+    setInputUnitCost(0);
+
     setShowCreateModal(true);
   };
 
-  // Manejo de cambio en selección de insumo en una fila
-  const handleItemSelectChange = (index: number, itemId: string) => {
-    const updated = [...formItems];
-    if (itemId === 'NEW') {
-      updated[index] = {
-        ...updated[index],
-        selectedItemId: 'NEW',
-        name: '',
-        category: 'Limpieza',
-        unit: 'Unidades'
+  // Filtrar productos disponibles por búsqueda
+  const matchingProducts = inventory.filter(item => 
+    item.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+    (item.category && item.category.toLowerCase().includes(productSearch.toLowerCase()))
+  );
+
+  // Seleccionar producto del buscador
+  const handleSelectProduct = (item: InventoryItem) => {
+    setSelectedInventoryItem(item);
+    setIsNewProductMode(false);
+    setProductSearch(item.name);
+    setIsDropdownOpen(false);
+    setInputQuantity(1);
+    setInputUnitCost(item.lastPurchaseCost || 0);
+  };
+
+  // Seleccionar modo crear nuevo producto
+  const handleStartNewProduct = () => {
+    setSelectedInventoryItem(null);
+    setIsNewProductMode(true);
+    setNewProductName(productSearch.trim());
+    setNewProductCategory('Limpieza');
+    setNewProductUnit('Unidades');
+    setIsDropdownOpen(false);
+    setInputQuantity(1);
+    setInputUnitCost(0);
+  };
+
+  // Agregar ítem a la lista de la factura
+  const handleAddItemToInvoice = () => {
+    if (inputQuantity <= 0) {
+      alert('La cantidad a ingresar debe ser mayor a 0.');
+      return;
+    }
+
+    if (isNewProductMode) {
+      if (!newProductName.trim()) {
+        alert('Por favor escribe el nombre del nuevo producto.');
+        return;
+      }
+      const newItemId = `insumo_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+      const totalCost = (Number(inputQuantity) || 1) * (Number(inputUnitCost) || 0);
+
+      const newItem: PurchaseInvoiceItem = {
+        itemId: newItemId,
+        itemName: newProductName.trim(),
+        category: newProductCategory.trim() || 'Limpieza',
+        unit: newProductUnit.trim() || 'Unidades',
+        quantity: Number(inputQuantity),
+        unitCost: Number(inputUnitCost) || 0,
+        totalCost: totalCost
       };
+
+      setAddedItems(prev => [...prev, newItem]);
     } else {
-      const found = inventory.find(i => i.id === itemId);
-      if (found) {
-        updated[index] = {
-          ...updated[index],
-          selectedItemId: found.id,
-          name: found.name,
-          category: found.category || 'Limpieza',
-          unit: found.unit || 'Unidades',
-          unitCost: found.lastPurchaseCost || 0
+      if (!selectedInventoryItem) {
+        alert('Por favor busca y selecciona un producto del stock o crea uno nuevo.');
+        return;
+      }
+
+      const totalCost = (Number(inputQuantity) || 1) * (Number(inputUnitCost) || 0);
+
+      // Si ya está en la lista, sumamos la cantidad y actualizamos precio
+      const existingIndex = addedItems.findIndex(it => it.itemId === selectedInventoryItem.id);
+      if (existingIndex >= 0) {
+        const updated = [...addedItems];
+        const newQty = updated[existingIndex].quantity + Number(inputQuantity);
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: newQty,
+          unitCost: Number(inputUnitCost) || updated[existingIndex].unitCost,
+          totalCost: newQty * (Number(inputUnitCost) || updated[existingIndex].unitCost)
         };
+        setAddedItems(updated);
+      } else {
+        const newItem: PurchaseInvoiceItem = {
+          itemId: selectedInventoryItem.id,
+          itemName: selectedInventoryItem.name,
+          category: selectedInventoryItem.category || 'Limpieza',
+          unit: selectedInventoryItem.unit || 'Unidades',
+          quantity: Number(inputQuantity),
+          unitCost: Number(inputUnitCost) || 0,
+          totalCost: totalCost
+        };
+        setAddedItems(prev => [...prev, newItem]);
       }
     }
-    setFormItems(updated);
+
+    // Resetear buscador para el siguiente producto
+    setProductSearch('');
+    setSelectedInventoryItem(null);
+    setIsNewProductMode(false);
+    setNewProductName('');
+    setInputQuantity(1);
+    setInputUnitCost(0);
   };
 
-  // Actualizar campo de fila de ítem
-  const handleItemRowChange = (index: number, field: keyof FormItemRow, value: any) => {
-    const updated = [...formItems];
-    updated[index] = { ...updated[index], [field]: value };
-    setFormItems(updated);
+  // Quitar ítem de la lista
+  const handleRemoveAddedItem = (index: number) => {
+    setAddedItems(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Agregar fila de ítem
-  const handleAddRow = () => {
-    setFormItems([
-      ...formItems,
-      { selectedItemId: '', name: '', category: 'Limpieza', unit: 'Unidades', quantity: 1, unitCost: 0 }
-    ]);
-  };
-
-  // Eliminar fila de ítem
-  const handleRemoveRow = (index: number) => {
-    if (formItems.length === 1) return;
-    setFormItems(formItems.filter((_, i) => i !== index));
+  // Modificar cantidad directamente en la lista
+  const handleUpdateItemQuantity = (index: number, newQty: number) => {
+    if (newQty <= 0) return;
+    setAddedItems(prev => {
+      const updated = [...prev];
+      const it = updated[index];
+      updated[index] = {
+        ...it,
+        quantity: newQty,
+        totalCost: newQty * it.unitCost
+      };
+      return updated;
+    });
   };
 
   // Cargar imagen de comprobante (Base64)
@@ -160,9 +247,9 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
     }
   };
 
-  // Calcular total de la factura
-  const calculatedTotal = formItems.reduce((acc, row) => {
-    return acc + (Number(row.quantity) || 0) * (Number(row.unitCost) || 0);
+  // Calcular total de la factura a partir de los ítems agregados a la lista
+  const calculatedTotal = addedItems.reduce((acc, it) => {
+    return acc + (Number(it.quantity) || 0) * (Number(it.unitCost) || 0);
   }, 0);
 
   // Guardar Factura y Actualizar Stock
@@ -174,74 +261,44 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
       return;
     }
 
-    const validRows = formItems.filter(r => r.name.trim() && r.quantity > 0);
-    if (validRows.length === 0) {
-      alert('Por favor agrega al menos un producto o insumo válido con cantidad mayor a 0.');
+    if (addedItems.length === 0) {
+      alert('Por favor agrega al menos un producto o insumo a la lista de la factura.');
       return;
     }
 
-    const invoiceItems: PurchaseInvoiceItem[] = [];
     const itemsToUpdate: { item: InventoryItem; isNew: boolean; qtyAdded: number; unitCost: number }[] = [];
 
-    validRows.forEach(row => {
-      const qty = Number(row.quantity) || 1;
-      const unitCost = Number(row.unitCost) || 0;
-      const totalCost = qty * unitCost;
-
-      if (row.selectedItemId && row.selectedItemId !== 'NEW') {
-        const existingItem = inventory.find(i => i.id === row.selectedItemId);
-        if (existingItem) {
-          invoiceItems.push({
-            itemId: existingItem.id,
-            itemName: existingItem.name,
-            category: existingItem.category,
-            unit: existingItem.unit,
-            quantity: qty,
-            unitCost: unitCost,
-            totalCost: totalCost
-          });
-          itemsToUpdate.push({
-            item: existingItem,
-            isNew: false,
-            qtyAdded: qty,
-            unitCost: unitCost
-          });
-          return;
-        }
+    addedItems.forEach(it => {
+      const existingItem = inventory.find(i => i.id === it.itemId);
+      if (existingItem) {
+        itemsToUpdate.push({
+          item: existingItem,
+          isNew: false,
+          qtyAdded: it.quantity,
+          unitCost: it.unitCost
+        });
+      } else {
+        // Insumo nuevo creado al cargar la factura
+        const newItem: InventoryItem = {
+          id: it.itemId,
+          name: it.itemName,
+          category: it.category || 'Limpieza',
+          unit: it.unit || 'Unidades',
+          currentStock: 0,
+          minStock: 1,
+          details: 'Cargado vía Factura de Compra',
+          lastPurchaseCost: it.unitCost,
+          lastPurchaseDate: formDate,
+          lastPurchaseQuantity: `${it.quantity} ${it.unit || 'Unidades'}`.trim(),
+          updatedAt: new Date().toISOString()
+        };
+        itemsToUpdate.push({
+          item: newItem,
+          isNew: true,
+          qtyAdded: it.quantity,
+          unitCost: it.unitCost
+        });
       }
-
-      // Si es un ítem nuevo
-      const newItemId = `insumo_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-      const newItem: InventoryItem = {
-        id: newItemId,
-        name: row.name.trim(),
-        category: row.category.trim() || 'Limpieza',
-        unit: row.unit.trim() || 'Unidades',
-        currentStock: 0,
-        minStock: 1,
-        details: 'Cargado vía Factura de Compra',
-        lastPurchaseCost: unitCost,
-        lastPurchaseDate: formDate,
-        lastPurchaseQuantity: `${qty} ${row.unit || 'Unidades'}`.trim(),
-        updatedAt: new Date().toISOString()
-      };
-
-      invoiceItems.push({
-        itemId: newItemId,
-        itemName: newItem.name,
-        category: newItem.category,
-        unit: newItem.unit,
-        quantity: qty,
-        unitCost: unitCost,
-        totalCost: totalCost
-      });
-
-      itemsToUpdate.push({
-        item: newItem,
-        isNew: true,
-        qtyAdded: qty,
-        unitCost: unitCost
-      });
     });
 
     const newInvoiceData: Omit<PurchaseInvoice, 'id' | 'createdAt'> = {
@@ -250,7 +307,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
       date: formDate,
       paymentMethod: formPaymentMethod,
       paymentStatus: formPaymentStatus,
-      items: invoiceItems,
+      items: addedItems,
       totalAmount: calculatedTotal,
       receiptUrl: formReceiptUrl || undefined,
       notes: formNotes.trim() || undefined,
@@ -802,144 +859,363 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
                 </div>
               </div>
 
-              {/* Sección 2: Detalle de Insumos y Precios */}
-              <div className="space-y-3">
+              {/* Sección 2: Buscador e Ingreso de Productos a la Factura */}
+              <div className="bg-slate-50 p-4 sm:p-5 rounded-3xl border border-slate-200/80 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                    <Boxes size={14} className="text-primary-600" /> 2. Insumos y Productos Comprados
+                    <Boxes size={14} className="text-primary-600" /> 2. Buscar y Agregar Insumos
                   </h4>
-                  <button
-                    type="button"
-                    onClick={handleAddRow}
-                    className="px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors"
-                  >
-                    <Plus size={13} /> Agregar Producto
-                  </button>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {addedItems.length} {addedItems.length === 1 ? 'ítem en lista' : 'ítems en lista'}
+                  </span>
                 </div>
 
-                <div className="space-y-2.5">
-                  {formItems.map((row, idx) => {
-                    const rowSubtotal = (Number(row.quantity) || 0) * (Number(row.unitCost) || 0);
-                    return (
-                      <div 
-                        key={idx} 
-                        className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3 transition-all"
+                {/* 2.1 Buscador Autocomplete y Selector */}
+                <div className="relative">
+                  <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1 ml-1">
+                    Buscar Producto en Inventario por Nombre
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Escribe el nombre del producto o insumo (ej: Alcohol, Guantes, Toallas...)"
+                      value={productSearch}
+                      onFocus={() => setIsDropdownOpen(true)}
+                      onChange={(e) => {
+                        setProductSearch(e.target.value);
+                        setIsDropdownOpen(true);
+                      }}
+                      className="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-10 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 placeholder:text-slate-400 placeholder:font-normal"
+                    />
+                    {productSearch && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProductSearch('');
+                          setSelectedInventoryItem(null);
+                          setIsNewProductMode(false);
+                          setIsDropdownOpen(false);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
                       >
-                        {/* Selector de Insumo o Nuevo */}
-                        <div className="flex-1 space-y-1.5">
-                          <label className="block text-[9px] font-black uppercase text-slate-400 tracking-wider">
-                            Insumo #{idx + 1}
-                          </label>
-                          
-                          <select
-                            value={row.selectedItemId}
-                            onChange={(e) => handleItemSelectChange(idx, e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Dropdown flotante de sugerencias */}
+                  {isDropdownOpen && (
+                    <div className="absolute z-50 left-0 right-0 mt-1.5 max-h-60 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-y-auto divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150">
+                      {matchingProducts.length > 0 ? (
+                        matchingProducts.map(item => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => handleSelectProduct(item)}
+                            className="w-full text-left px-4 py-3 hover:bg-primary-50/60 flex items-center justify-between gap-2 transition-colors"
                           >
-                            <option value="">-- Seleccionar de la lista --</option>
-                            {inventory.map(inv => (
-                              <option key={inv.id} value={inv.id}>
-                                {inv.name} (Stock actual: {inv.currentStock} {inv.unit})
-                              </option>
-                            ))}
-                            <option value="NEW">+ Crear Insumo Nuevo...</option>
-                          </select>
-
-                          {/* Si eligió crear nuevo o tipeo libre */}
-                          {row.selectedItemId === 'NEW' && (
-                            <div className="grid grid-cols-3 gap-2 pt-1">
-                              <input
-                                type="text"
-                                required
-                                placeholder="Nombre del nuevo producto..."
-                                value={row.name}
-                                onChange={(e) => handleItemRowChange(idx, 'name', e.target.value)}
-                                className="col-span-1 bg-white border border-primary-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none"
-                              />
-                              <select
-                                value={row.category}
-                                onChange={(e) => handleItemRowChange(idx, 'category', e.target.value)}
-                                className="col-span-1 bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-bold text-slate-900"
-                              >
-                                <option value="Limpieza">Limpieza</option>
-                                <option value="Descartables">Descartables</option>
-                                <option value="Kinesiología">Kinesiología</option>
-                                <option value="General">General</option>
-                              </select>
-                              <input
-                                type="text"
-                                placeholder="Unidad (Rollos, Cajas, etc.)"
-                                value={row.unit}
-                                onChange={(e) => handleItemRowChange(idx, 'unit', e.target.value)}
-                                className="col-span-1 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none"
-                              />
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-slate-900 truncate">{item.name}</p>
+                              <span className="inline-block text-[10px] font-medium text-slate-400 mt-0.5">
+                                Categoría: {item.category || 'General'}
+                              </span>
                             </div>
-                          )}
+                            <div className="text-right shrink-0">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold">
+                                Stock actual: {item.currentStock} {item.unit || 'unid'}
+                              </span>
+                              {item.lastPurchaseCost ? (
+                                <p className="text-[10px] text-emerald-600 font-bold mt-0.5">
+                                  Último: ${item.lastPurchaseCost.toLocaleString('es-AR')}
+                                </p>
+                              ) : null}
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-3.5 text-center text-xs text-slate-500">
+                          No se encontró ningún producto con ese nombre.
                         </div>
+                      )}
 
-                        {/* Cantidad */}
-                        <div className="w-full sm:w-28 space-y-1">
-                          <label className="block text-[9px] font-black uppercase text-slate-400 tracking-wider">
-                            Cantidad ({row.unit || 'Unid'})
-                          </label>
+                      {/* Opción para crear nuevo producto */}
+                      <button
+                        type="button"
+                        onClick={handleStartNewProduct}
+                        className="w-full text-left px-4 py-3 bg-primary-50/80 hover:bg-primary-100 text-primary-700 flex items-center gap-2 transition-colors font-bold text-xs"
+                      >
+                        <PackagePlus size={16} />
+                        <span>
+                          {productSearch.trim() 
+                            ? `+ Crear nuevo producto: "${productSearch.trim()}"`
+                            : '+ Crear producto nuevo que no está en la lista...'}
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2.2 Panel de Selección Activa y Cantidad a Ingresar */}
+                {(selectedInventoryItem || isNewProductMode) && (
+                  <div className="p-4 bg-white border-2 border-primary-200 rounded-2xl space-y-3 animate-in fade-in duration-200 shadow-sm">
+                    
+                    {/* Header del producto seleccionado o en creación */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-primary-600 tracking-wider">
+                          {isNewProductMode ? '★ Nuevo Producto a Registrar' : '✓ Producto Seleccionado del Stock'}
+                        </span>
+                        {!isNewProductMode && selectedInventoryItem && (
+                          <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                            <h5 className="text-sm font-black text-slate-900">{selectedInventoryItem.name}</h5>
+                            <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
+                              {selectedInventoryItem.category || 'Limpieza'}
+                            </span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 bg-teal-50 text-teal-700 rounded-md">
+                              Stock actual: {selectedInventoryItem.currentStock} {selectedInventoryItem.unit}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedInventoryItem(null);
+                          setIsNewProductMode(false);
+                          setProductSearch('');
+                        }}
+                        className="text-slate-400 hover:text-slate-600 text-xs font-bold px-2 py-1 hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        Cambiar
+                      </button>
+                    </div>
+
+                    {/* Si es nuevo producto: campos de nombre, categoría y unidad */}
+                    {isNewProductMode && (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                        <div>
+                          <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Nombre</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Ej: Guantes de Látex M"
+                            value={newProductName}
+                            onChange={(e) => setNewProductName(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Categoría</label>
+                          <select
+                            value={newProductCategory}
+                            onChange={(e) => setNewProductCategory(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none"
+                          >
+                            <option value="Limpieza">Limpieza</option>
+                            <option value="Descartables">Descartables</option>
+                            <option value="Kinesiología">Kinesiología</option>
+                            <option value="General">General</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Unidad de Medida</label>
+                          <input
+                            type="text"
+                            placeholder="Unidades, Cajas, Litros, Rollos..."
+                            value={newProductUnit}
+                            onChange={(e) => setNewProductUnit(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Inputs de Cantidad que ingresa y Precio Unitario */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 items-end">
+                      
+                      {/* Cantidad que ingresa */}
+                      <div>
+                        <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1">
+                          ¿Cuántos ingresan? ({isNewProductMode ? newProductUnit || 'Unid' : selectedInventoryItem?.unit || 'Unid'}) *
+                        </label>
+                        <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden p-1">
+                          <button
+                            type="button"
+                            onClick={() => setInputQuantity(Math.max(1, inputQuantity - 1))}
+                            className="w-8 h-8 rounded-lg bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shadow-xs transition-colors shrink-0"
+                          >
+                            <Minus size={14} />
+                          </button>
                           <input
                             type="number"
                             min="0.5"
                             step="0.5"
                             required
-                            value={row.quantity}
-                            onChange={(e) => handleItemRowChange(idx, 'quantity', parseFloat(e.target.value) || 0)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                            value={inputQuantity}
+                            onChange={(e) => setInputQuantity(parseFloat(e.target.value) || 0)}
+                            className="w-full bg-transparent text-center font-black text-sm text-slate-900 focus:outline-none px-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setInputQuantity(inputQuantity + 1)}
+                            className="w-8 h-8 rounded-lg bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shadow-xs transition-colors shrink-0"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Precio Unitario */}
+                      <div>
+                        <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1">
+                          Precio Unitario ($)
+                        </label>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={inputUnitCost || ''}
+                            onChange={(e) => setInputUnitCost(parseFloat(e.target.value) || 0)}
+                            placeholder="0"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                           />
                         </div>
-
-                        {/* Costo Unitario ($) */}
-                        <div className="w-full sm:w-32 space-y-1">
-                          <label className="block text-[9px] font-black uppercase text-slate-400 tracking-wider">
-                            Precio Unitario ($)
-                          </label>
-                          <div className="relative">
-                            <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
-                            <input
-                              type="number"
-                              min="0"
-                              step="1"
-                              required
-                              value={row.unitCost || ''}
-                              onChange={(e) => handleItemRowChange(idx, 'unitCost', parseFloat(e.target.value) || 0)}
-                              className="w-full bg-white border border-slate-200 rounded-xl pl-7 pr-2.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                              placeholder="0"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Subtotal ($) */}
-                        <div className="w-full sm:w-28 text-right space-y-1">
-                          <label className="block text-[9px] font-black uppercase text-slate-400 tracking-wider">
-                            Subtotal
-                          </label>
-                          <p className="text-xs font-black text-slate-900 py-2">
-                            ${rowSubtotal.toLocaleString('es-AR')}
-                          </p>
-                        </div>
-
-                        {/* Botón Eliminar fila */}
-                        {formItems.length > 1 && (
-                          <div className="pt-4 sm:pt-4">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveRow(idx)}
-                              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                              title="Eliminar fila"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
-                        )}
                       </div>
-                    );
-                  })}
+
+                      {/* Botón Agregar a la Factura */}
+                      <div>
+                        <button
+                          type="button"
+                          onClick={handleAddItemToInvoice}
+                          className="w-full py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-primary-600/25 transition-all active:scale-95"
+                        >
+                          <Plus size={15} />
+                          <span>Agregar a la Factura</span>
+                        </button>
+                      </div>
+
+                    </div>
+
+                    {/* Previsualización del cálculo de la línea */}
+                    <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 pt-1 border-t border-slate-100">
+                      <span>
+                        Subtotal para este ítem: <strong className="text-slate-900 font-bold">${((Number(inputQuantity) || 0) * (Number(inputUnitCost) || 0)).toLocaleString('es-AR')}</strong>
+                      </span>
+                      {!isNewProductMode && selectedInventoryItem && (
+                        <span className="text-teal-700 font-bold">
+                          Nuevo stock estimado: {(selectedInventoryItem.currentStock || 0) + (Number(inputQuantity) || 0)} {selectedInventoryItem.unit}
+                        </span>
+                      )}
+                    </div>
+
+                  </div>
+                )}
+
+                {/* 2.3 Lista Dinámica de Productos Cargados en la Factura */}
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      Productos cargados en esta factura ({addedItems.length})
+                    </span>
+                    {addedItems.length > 0 && (
+                      <span className="text-[11px] font-black text-primary-700">
+                        Total acumulado: ${calculatedTotal.toLocaleString('es-AR')}
+                      </span>
+                    )}
+                  </div>
+
+                  {addedItems.length === 0 ? (
+                    <div className="p-6 bg-white border border-dashed border-slate-200 rounded-2xl text-center space-y-1.5">
+                      <Boxes size={28} className="mx-auto text-slate-300" />
+                      <p className="text-xs font-bold text-slate-700">La lista de la factura está vacía</p>
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        Usa el buscador de arriba para seleccionar o crear productos, indica cuántos ingresan y agrégalos a la lista.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-100">
+                      {addedItems.map((item, idx) => {
+                        const invItem = inventory.find(i => i.id === item.itemId);
+                        const currentStock = invItem ? invItem.currentStock : 0;
+                        const newStock = currentStock + item.quantity;
+
+                        return (
+                          <div key={idx} className="p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors">
+                            
+                            {/* Información del Producto */}
+                            <div className="space-y-0.5 flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black flex items-center justify-center shrink-0">
+                                  {idx + 1}
+                                </span>
+                                <h6 className="text-xs font-black text-slate-900 truncate">{item.itemName}</h6>
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded">
+                                  {item.category}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-[10px] text-slate-500 font-medium pl-7">
+                                <span>Precio Unitario: ${item.unitCost.toLocaleString('es-AR')}</span>
+                                <span>•</span>
+                                <span className="text-teal-700 font-bold">
+                                  Stock: {currentStock} → {newStock} {item.unit}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Controles de Cantidad y Subtotal */}
+                            <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pl-7 sm:pl-0">
+                              
+                              {/* Ajuste Rápido de Cantidad */}
+                              <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateItemQuantity(idx, Math.max(1, item.quantity - 1))}
+                                  className="w-6 h-6 rounded-lg bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shadow-xs"
+                                >
+                                  <Minus size={12} />
+                                </button>
+                                <span className="text-xs font-black text-slate-900 px-2 min-w-[2.5rem] text-center">
+                                  {item.quantity} {item.unit || 'unid'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateItemQuantity(idx, item.quantity + 1)}
+                                  className="w-6 h-6 rounded-lg bg-white hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shadow-xs"
+                                >
+                                  <Plus size={12} />
+                                </button>
+                              </div>
+
+                              {/* Subtotal */}
+                              <div className="text-right min-w-[5rem]">
+                                <span className="text-xs font-black text-slate-900">
+                                  ${item.totalCost.toLocaleString('es-AR')}
+                                </span>
+                              </div>
+
+                              {/* Botón Eliminar de la Lista */}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveAddedItem(idx)}
+                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                                title="Quitar de la lista"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+
+                            </div>
+
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
+
               </div>
 
               {/* Observaciones Opcionales */}
