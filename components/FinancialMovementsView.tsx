@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   DollarSign,
   TrendingUp,
@@ -64,14 +64,42 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
   onBulkAddMovements,
   onOpenReports
 }) => {
-  // Period filter
-  const currentDate = new Date();
-  // By default, if we have movements in August 2026, default to August 2026 or current month
-  const defaultYear = movements.some(m => m.date.startsWith('2026-08')) ? 2026 : currentDate.getFullYear();
-  const defaultMonth = movements.some(m => m.date.startsWith('2026-08')) ? 8 : currentDate.getMonth() + 1;
+  // Period filter: determina el mejor período inicial con registros
+  const defaultPeriod = useMemo(() => {
+    const currentDate = new Date();
+    const currYear = currentDate.getFullYear();
+    const currMonth = currentDate.getMonth() + 1;
+    const currPrefix = `${currYear}-${currMonth < 10 ? `0${currMonth}` : currMonth}`;
 
-  const [selectedYear, setSelectedYear] = useState<number>(defaultYear);
-  const [selectedMonth, setSelectedMonth] = useState<number>(defaultMonth);
+    // 1. Si el mes actual del sistema tiene movimientos registrados, usar el mes actual
+    if (movements.some(m => m.date.startsWith(currPrefix))) {
+      return { year: currYear, month: currMonth };
+    }
+
+    // 2. Si no, buscar el mes más reciente que sí contenga movimientos registrados
+    const monthsWithData = Array.from(new Set(movements.map(m => m.date.slice(0, 7)))).sort();
+    if (monthsWithData.length > 0) {
+      const latest = monthsWithData[monthsWithData.length - 1]; // e.g. "2026-08"
+      const [y, m] = latest.split('-').map(Number);
+      return { year: y, month: m };
+    }
+
+    // 3. Fallback a Agosto 2026
+    return { year: 2026, month: 8 };
+  }, [movements]);
+
+  const [selectedYear, setSelectedYear] = useState<number>(defaultPeriod.year);
+  const [selectedMonth, setSelectedMonth] = useState<number>(defaultPeriod.month);
+
+  // Si los movimientos cambian y el período seleccionado actualmente no tiene registros mientras que otro sí, sincronizar
+  useEffect(() => {
+    const curPrefix = `${selectedYear}-${selectedMonth < 10 ? `0${selectedMonth}` : selectedMonth}`;
+    const hasMovementsInSelected = movements.some(m => m.date.startsWith(curPrefix));
+    if (!hasMovementsInSelected && movements.length > 0) {
+      setSelectedYear(defaultPeriod.year);
+      setSelectedMonth(defaultPeriod.month);
+    }
+  }, [movements, defaultPeriod]);
 
   // Tab & Filters
   const [activeTab, setActiveTab] = useState<'ALL' | 'TRANSFERENCIA' | 'EFECTIVO' | 'INCOME' | 'EXPENSE' | 'RESUMEN'>('ALL');

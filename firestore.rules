@@ -64,5 +64,11 @@ service cloud.firestore {
        allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || exists(/databases/$(database)/documents/staff/$(request.auth.uid)));
        allow write: if isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
     }
+
+    // MOVIMIENTOS FINANCIEROS (INGRESOS, EGRESOS, CIERRES DE CAJA):
+    match /financialMovements/{movId} {
+       // Solo el personal de staff autenticado puede leer y gestionar movimientos financieros
+       allow read, write: if isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+    }
   }
 }

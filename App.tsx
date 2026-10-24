@@ -52,7 +52,7 @@ export function App() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>([]);
   const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>([]);
-  const [financialMovements, setFinancialMovements] = useState<FinancialMovement[]>([]);
+  const [financialMovements, setFinancialMovements] = useState<FinancialMovement[]>(initialAugustMovements as FinancialMovement[]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [staffTimeLogs, setStaffTimeLogs] = useState<StaffTimeLog[]>([]);
@@ -455,8 +455,8 @@ export function App() {
         finData.push({ id: docSnap.id, ...docSnap.data() } as FinancialMovement);
       });
 
-      // Si la colección está vacía para el tenant RTP, auto-sembrar con los movimientos de Agosto 2026
-      if (finData.length === 0 && (activeTenantId === 'recepcionrtp' || activeTenantId === 'rtp') && db) {
+      // Si la colección está vacía en Firestore, auto-sembrar con los movimientos de Agosto 2026
+      if (finData.length === 0 && db) {
         const firestoreDb = db;
         try {
           const movementsToSeed = initialAugustMovements as any[];
@@ -469,10 +469,12 @@ export function App() {
             });
             await batch.commit();
           }
-          return;
         } catch (seedErr) {
           console.error('Error auto-seeding financial movements:', seedErr);
         }
+        // Respetar datos locales como fallback mientras se propaga la persistencia
+        setFinancialMovements(initialAugustMovements as FinancialMovement[]);
+        return;
       }
 
       // Reconciliación automática: si existen movimientos pre-sembrados del Cierre #59 con fecha 2026-09-01/02, actualizarlos a 2026-08-31
@@ -493,13 +495,15 @@ export function App() {
             });
             await batch.commit();
           }
-          return;
         } catch (fixErr) {
           console.error('Error reconciling seeded financial movements:', fixErr);
         }
       }
 
-      setFinancialMovements(finData);
+      setFinancialMovements(finData.length > 0 ? finData : (initialAugustMovements as FinancialMovement[]));
+    }, (error) => {
+      console.warn('Firestore financialMovements snapshot error (using local data fallback):', error);
+      setFinancialMovements(initialAugustMovements as FinancialMovement[]);
     });
 
     return () => {
