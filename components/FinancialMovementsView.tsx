@@ -41,7 +41,7 @@ import {
   MONTH_NAMES,
   getAutoClassification
 } from '../constants/financialCategories';
-import { exportCashFlowExcel } from '../utils/financialExcelExport';
+import { exportCashFlowExcel, exportEERRExcel } from '../utils/financialExcelExport';
 
 interface FinancialMovementsViewProps {
   movements: FinancialMovement[];
@@ -110,9 +110,8 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
   const allProfessionals = useMemo(() => {
     const set = new Set<string>(KNOWN_PROFESSIONALS);
     staff.forEach(s => {
-      if (s.name) {
-        // use first name or short name
-        const shortName = s.name.split(' ')[0];
+      if (s.firstName) {
+        const shortName = s.firstName.split(' ')[0];
         set.add(shortName);
       }
     });
@@ -274,7 +273,7 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
   const handleCategoryChange = (cat: string) => {
     setFormCategory(cat);
     if (cat !== 'OTRO') {
-      const auto = getAutoClassification(cat, formType === 'INCOME');
+      const auto = getAutoClassification(cat, formType === 'INCOME', formDescription, parseFloat(formAmount) || 0);
       setFormBusinessUnit(auto.businessUnit);
       setFormCostClassification(auto.costClassification);
     }
@@ -298,14 +297,16 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
       return;
     }
 
+    const auto = getAutoClassification(finalCategory, formType === 'INCOME', formDescription.trim(), finalAmount);
+
     const movementData = {
       date: formDate,
       type: formType,
       paymentMethod: formMethod,
       amount: finalAmount,
       category: finalCategory,
-      businessUnit: formBusinessUnit,
-      costClassification: formCostClassification,
+      businessUnit: auto.businessUnit,
+      costClassification: auto.costClassification,
       patientName: formPatientName.trim() || undefined,
       cuit: formCuit.trim() || undefined,
       professional: formProfessional.trim() || undefined,
@@ -326,10 +327,15 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
     setEditingMovement(null);
   };
 
-  // Download Excel
-  const handleExportExcel = () => {
+  // Download Cash Flow Excel (Archivo 1: [Mes]_[Año]_Ingresos_y_Gastos.xlsx)
+  const handleExportExcel = async () => {
     const monthName = MONTH_NAMES[selectedMonth - 1] || 'Mes';
-    exportCashFlowExcel(monthMovements, monthName, selectedYear);
+    await exportCashFlowExcel(monthMovements, monthName, selectedYear);
+  };
+
+  // Download EERR Excel (Archivo 2: EERR_RTP_[Mes]_[Año].xlsx)
+  const handleExportEERR = async () => {
+    await exportEERRExcel(movements, selectedMonth, selectedYear);
   };
 
   // Parse Excel File for Import
@@ -390,7 +396,8 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
 
             if (entrada > 0) {
               const category = String(row['CONCEPTO INGRESO'] || row['Concepto'] || row['CATEGORIA'] || 'Particular').trim();
-              const auto = getAutoClassification(category, true);
+              const desc = row['DESCRIPCION'] || row['DETALLE'] || row['Detalle'] ? String(row['DESCRIPCION'] || row['DETALLE'] || row['Detalle']) : undefined;
+              const auto = getAutoClassification(category, true, desc, entrada);
               importedRows.push({
                 date: dateStr,
                 type: 'INCOME',
@@ -402,7 +409,7 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
                 patientName: row['PACIENTE'] || row['Paciente'] || undefined,
                 cuit: row['CUIT'] ? String(row['CUIT']) : undefined,
                 professional: row['KINE'] || row['Kine'] || row['Profesional'] || undefined,
-                description: row['DESCRIPCION'] || row['DETALLE'] || row['Detalle'] || undefined,
+                description: desc,
                 cierreNumber: row['N° CIERRE'] || row['Cierre'] ? parseInt(row['N° CIERRE'] || row['Cierre']) : undefined,
               });
               if (method === 'TRANSFERENCIA') transCount++;
@@ -412,7 +419,8 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
 
             if (salida > 0) {
               const category = String(row['CONCEPTO SALIDA'] || row['Concepto'] || row['CATEGORIA'] || 'Otros').trim();
-              const auto = getAutoClassification(category, false);
+              const desc = row['DESCRIPCION'] || row['DETALLE'] || row['Detalle'] ? String(row['DESCRIPCION'] || row['DETALLE'] || row['Detalle']) : undefined;
+              const auto = getAutoClassification(category, false, desc, salida);
               importedRows.push({
                 date: dateStr,
                 type: 'EXPENSE',
@@ -424,7 +432,7 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
                 patientName: row['PACIENTE'] || row['Paciente'] || undefined,
                 cuit: row['CUIT'] ? String(row['CUIT']) : undefined,
                 professional: row['KINE'] || row['Kine'] || row['Profesional'] || undefined,
-                description: row['DESCRIPCION'] || row['DETALLE'] || row['Detalle'] || undefined,
+                description: desc,
                 cierreNumber: row['N° CIERRE'] || row['Cierre'] ? parseInt(row['N° CIERRE'] || row['Cierre']) : undefined,
               });
               if (method === 'TRANSFERENCIA') transCount++;
@@ -530,24 +538,34 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
             <span>Importar</span>
           </button>
 
-          {/* Export Cash Flow Excel */}
+          {/* Botón A: Exportar Caja Diaria (Excel) -> [Mes]_[Año]_Ingresos_y_Gastos.xlsx */}
           <button
             onClick={handleExportExcel}
             className="px-3.5 py-2.5 rounded-2xl text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
-            title="Descargar las 3 hojas (Resumen, Transferencias, Efectivo) en formato exacto Excel"
+            title="Descargar archivo independiente 1: [Mes]_[Año]_Ingresos_y_Gastos.xlsx (Resumen, Transferencias y Efectivo)"
           >
             <Download size={14} />
-            <span>Descargar Excel</span>
+            <span>📥 Exportar Caja Diaria (Excel)</span>
+          </button>
+
+          {/* Botón B: Exportar Estado de Resultados (Excel) -> EERR_RTP_[Mes]_[Año].xlsx */}
+          <button
+            onClick={handleExportEERR}
+            className="px-3.5 py-2.5 rounded-2xl text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
+            title="Descargar archivo independiente 2: EERR_RTP_[Mes]_[Año].xlsx (Dashboard Gerencial y Económico)"
+          >
+            <FileSpreadsheet size={14} />
+            <span>📥 Exportar Estado de Resultados (Excel)</span>
           </button>
 
           {/* View P&L Reports */}
           {onOpenReports && (
             <button
               onClick={onOpenReports}
-              className="px-3.5 py-2.5 rounded-2xl text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
+              className="px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
             >
               <BarChart3 size={14} />
-              <span>Ver Estado de Resultados</span>
+              <span>Ver Panel EERR</span>
             </button>
           )}
 
@@ -864,10 +882,15 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
       ) : (
         /* TABLE VIEW FOR MOVEMENTS */
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto max-h-[640px] focus:outline-2 focus:outline-primary-500"
+            tabIndex={0}
+            role="region"
+            aria-label="Tabla de movimientos financieros"
+          >
             <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/75 border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-500">
+              <thead className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_theme(colors.slate.200)]">
+                <tr className="text-[11px] font-black uppercase tracking-wider text-slate-500">
                   <th className="py-3 px-4">Fecha</th>
                   <th className="py-3 px-4">Medio</th>
                   <th className="py-3 px-4">Concepto / Categoría</th>
@@ -1156,7 +1179,7 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
                       const val = e.target.value;
                       setFormPatientName(val);
                       // Auto-fill CUIT/DNI if matches a patient
-                      const found = patients.find(p => p.name.toLowerCase() === val.toLowerCase());
+                      const found = patients.find(p => `${p.firstName} ${p.lastName}`.trim().toLowerCase() === val.toLowerCase());
                       if (found && found.dni && !formCuit) {
                         setFormCuit(found.dni);
                       }
@@ -1165,7 +1188,7 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
                   />
                   <datalist id="patient-names-list">
                     {patients.map(p => (
-                      <option key={p.id} value={p.name}>{p.dni ? `DNI: ${p.dni}` : ''}</option>
+                      <option key={p.id} value={`${p.firstName} ${p.lastName}`.trim()}>{p.dni ? `DNI: ${p.dni}` : ''}</option>
                     ))}
                   </datalist>
                 </div>

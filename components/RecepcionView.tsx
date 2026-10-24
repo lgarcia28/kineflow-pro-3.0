@@ -519,15 +519,17 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     }
 
     if (onAddFinancialMovement && paymentAmount > 0) {
+      const lastApp = appointments.find(a => a.patientId === paymentPatient.id && a.kineId);
+      const assignedStaff = lastApp?.kineId ? staff.find(s => s.id === lastApp.kineId) : undefined;
       onAddFinancialMovement({
         date: today,
         type: 'INCOME',
         paymentMethod: paymentMethodState,
         amount: paymentAmount,
-        category: updatedPatient.treatmentPlan || 'Particular',
+        category: updatedPatient.healthInsurance ? 'Obra Social' : 'Particular',
         patientName: `${paymentPatient.firstName} ${paymentPatient.lastName}`.trim(),
         cuit: paymentPatient.dni,
-        professional: paymentPatient.assignedKineName ? paymentPatient.assignedKineName.split(' ')[0] : undefined,
+        professional: assignedStaff?.firstName ? assignedStaff.firstName.split(' ')[0] : undefined,
         description: `Pago recepción: ${paymentTypeState === 'SINGLE' ? '1 sesión' : paymentTypeState === 'PACK' ? `${paymentValue} sesiones` : `${paymentValue} mes(es)`}`,
         businessUnit: 'KINESIO',
         costClassification: 'NONE',

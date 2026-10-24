@@ -302,7 +302,7 @@ export const PurchaseInvoicesView: React.FC<PurchaseInvoicesViewProps> = ({
       } else {
         // Insumo nuevo creado al cargar la factura
         const newItem: InventoryItem = {
-          id: it.itemId,
+          id: it.itemId || `inv_${Date.now()}`,
           name: it.itemName,
           category: it.category || 'Limpieza',
           unit: it.unit || 'Unidades',

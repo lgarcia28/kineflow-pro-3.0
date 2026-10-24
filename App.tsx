@@ -456,14 +456,15 @@ export function App() {
       });
 
       // Si la colección está vacía para el tenant RTP, auto-sembrar con los movimientos de Agosto 2026
-      if (finData.length === 0 && (activeTenantId === 'recepcionrtp' || activeTenantId === 'rtp')) {
+      if (finData.length === 0 && (activeTenantId === 'recepcionrtp' || activeTenantId === 'rtp') && db) {
+        const firestoreDb = db;
         try {
           const movementsToSeed = initialAugustMovements as any[];
           for (let i = 0; i < movementsToSeed.length; i += 400) {
             const chunk = movementsToSeed.slice(i, i + 400);
-            const batch = writeBatch(db);
+            const batch = writeBatch(firestoreDb);
             chunk.forEach(mov => {
-              const docRef = doc(db, 'financialMovements', mov.id);
+              const docRef = doc(firestoreDb, 'financialMovements', mov.id);
               batch.set(docRef, sanitizeForFirestore({ ...mov, tenantId: activeTenantId }));
             });
             await batch.commit();
@@ -471,6 +472,30 @@ export function App() {
           return;
         } catch (seedErr) {
           console.error('Error auto-seeding financial movements:', seedErr);
+        }
+      }
+
+      // Reconciliación automática: si existen movimientos pre-sembrados del Cierre #59 con fecha 2026-09-01/02, actualizarlos a 2026-08-31
+      if (finData.some(m => (m.id.startsWith('mov_trans_') || m.id.startsWith('mov_efec_')) && m.date.startsWith('2026-09')) && db) {
+        const firestoreDb = db;
+        try {
+          const seedMap = new Map((initialAugustMovements as any[]).map(m => [m.id, m]));
+          const toFix = finData.filter(m => seedMap.has(m.id));
+          for (let i = 0; i < toFix.length; i += 400) {
+            const chunk = toFix.slice(i, i + 400);
+            const batch = writeBatch(firestoreDb);
+            chunk.forEach(mov => {
+              const canonical = seedMap.get(mov.id);
+              if (canonical) {
+                const docRef = doc(firestoreDb, 'financialMovements', mov.id);
+                batch.set(docRef, sanitizeForFirestore({ ...canonical, tenantId: activeTenantId }));
+              }
+            });
+            await batch.commit();
+          }
+          return;
+        } catch (fixErr) {
+          console.error('Error reconciling seeded financial movements:', fixErr);
         }
       }
 
@@ -982,14 +1007,15 @@ export function App() {
     const now = new Date().toISOString();
 
     if (db) {
+      const firestore = db;
       try {
         const chunkSize = 400;
         for (let i = 0; i < movementsToAdd.length; i += chunkSize) {
           const chunk = movementsToAdd.slice(i, i + chunkSize);
-          const batch = writeBatch(db);
+          const batch = writeBatch(firestore);
           chunk.forEach((mov, idx) => {
             const id = `fin_${Date.now()}_${i + idx}_${Math.random().toString(36).substr(2, 5)}`;
-            const docRef = doc(db, 'financialMovements', id);
+            const docRef = doc(firestore, 'financialMovements', id);
             batch.set(docRef, sanitizeForFirestore({
               ...mov,
               id,

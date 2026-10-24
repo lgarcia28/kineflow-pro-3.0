@@ -672,10 +672,19 @@ export interface HistoricalMonthEERR {
   monthNumber: number; // 1-12
   year: number;
   revenue: number;
+  kinesioRevenue?: number;
+  gymRevenue?: number;
+  turismoRevenue?: number;
+  alquileresRevenue?: number;
+  kinesioBreakdown?: Record<string, number>;
+  alquileresBreakdown?: Record<string, number>;
   variableCosts: number;
+  variableCostsBreakdown?: Record<string, number>;
   grossMargin: number;
   fixedCosts: number;
+  fixedCostsBreakdown?: Record<string, number>;
   ebitda: number;
+  investments?: number;
 }
 
 
