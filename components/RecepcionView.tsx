@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember, Stage, TenantSettings, InventoryItem, InventoryMovement, PurchaseInvoice } from '../types';
+import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember, Stage, TenantSettings, InventoryItem, InventoryMovement, PurchaseInvoice, FinancialMovement } from '../types';
 import { secondaryAuth, auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
@@ -26,6 +26,9 @@ import {
   Tv,
   Check,
   CreditCard,
+  Banknote,
+  DollarSign,
+  BarChart3,
   X,
   FileSpreadsheet,
   Download,
@@ -39,6 +42,8 @@ import { TurnoCalendar } from './TurnoCalendar';
 import { ImportPatientsModal } from './ImportPatientsModal';
 import { InventoryManager } from './InventoryManager';
 import { PurchaseInvoicesView } from './PurchaseInvoicesView';
+import { FinancialMovementsView } from './FinancialMovementsView';
+import { FinancialReportsView } from './FinancialReportsView';
 
 interface RecepcionViewProps {
   patients: Patient[];
@@ -68,6 +73,11 @@ interface RecepcionViewProps {
     itemsToUpdate: { item: InventoryItem; isNew: boolean; qtyAdded: number; unitCost: number }[]
   ) => void;
   onDeletePurchaseInvoice?: (invoiceId: string, revertStock: boolean) => void;
+  financialMovements?: FinancialMovement[];
+  onAddFinancialMovement?: (movement: Omit<FinancialMovement, 'id' | 'createdAt'>) => Promise<void> | void;
+  onUpdateFinancialMovement?: (movement: FinancialMovement) => Promise<void> | void;
+  onDeleteFinancialMovement?: (id: string) => Promise<void> | void;
+  onBulkAddFinancialMovements?: (movements: Omit<FinancialMovement, 'id' | 'createdAt'>[]) => Promise<void> | void;
 }
 
 export const RecepcionView: React.FC<RecepcionViewProps> = ({ 
@@ -94,10 +104,15 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   onRegisterInventoryMovement = () => {},
   purchaseInvoices = [],
   onAddPurchaseInvoice = () => {},
-  onDeletePurchaseInvoice = () => {}
+  onDeletePurchaseInvoice = () => {},
+  financialMovements = [],
+  onAddFinancialMovement = () => {},
+  onUpdateFinancialMovement = () => {},
+  onDeleteFinancialMovement = () => {},
+  onBulkAddFinancialMovements = () => {}
 }) => {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR' | 'INVENTORY' | 'PURCHASES'>('PATIENTS');
+  const [activeTab, setActiveTab] = useState<'PATIENTS' | 'SHOP' | 'CALENDAR' | 'INVENTORY' | 'PURCHASES' | 'FINANCES' | 'EERR'>('PATIENTS');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -183,6 +198,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   };
   const [paymentPatient, setPaymentPatient] = useState<Patient | null>(null);
   const [paymentTypeState, setPaymentTypeState] = useState<'SINGLE' | 'PACK' | 'MONTH'>('MONTH');
+  const [paymentMethodState, setPaymentMethodState] = useState<'EFECTIVO' | 'TRANSFERENCIA'>('TRANSFERENCIA');
   const [paymentValue, setPaymentValue] = useState<number>(1);
   const [tenantSettings, setTenantSettings] = useState<TenantSettings>({
     priceSingleSession: 10000,
@@ -492,6 +508,32 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
 
     updatedPatient.history = [historyMsg, ...(updatedPatient.history || [])];
 
+    // Registrar automáticamente en Caja y Finanzas
+    let paymentAmount = 0;
+    if (paymentTypeState === 'SINGLE') {
+      paymentAmount = tenantSettings.priceSingleSession || 10000;
+    } else if (paymentTypeState === 'PACK') {
+      paymentAmount = ((tenantSettings.pricePack10 || 80000) / 10) * paymentValue;
+    } else if (paymentTypeState === 'MONTH') {
+      paymentAmount = (tenantSettings.priceMonthly || 50000) * paymentValue;
+    }
+
+    if (onAddFinancialMovement && paymentAmount > 0) {
+      onAddFinancialMovement({
+        date: today,
+        type: 'INCOME',
+        paymentMethod: paymentMethodState,
+        amount: paymentAmount,
+        category: updatedPatient.treatmentPlan || 'Particular',
+        patientName: `${paymentPatient.firstName} ${paymentPatient.lastName}`.trim(),
+        cuit: paymentPatient.dni,
+        professional: paymentPatient.assignedKineName ? paymentPatient.assignedKineName.split(' ')[0] : undefined,
+        description: `Pago recepción: ${paymentTypeState === 'SINGLE' ? '1 sesión' : paymentTypeState === 'PACK' ? `${paymentValue} sesiones` : `${paymentValue} mes(es)`}`,
+        businessUnit: 'KINESIO',
+        costClassification: 'NONE',
+      });
+    }
+
     onUpdatePatient(updatedPatient);
     setPaymentPatient(null);
   };
@@ -606,6 +648,12 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'SHOP' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <ShoppingBag size={14} /> Tienda
+            </button>
+            <button 
+              onClick={() => setActiveTab('FINANCES')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === 'FINANCES' || activeTab === 'EERR' ? 'bg-white text-emerald-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <DollarSign size={14} /> Caja y Finanzas
             </button>
           </div>
         </div>
@@ -904,6 +952,26 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               onAddInvoice={onAddPurchaseInvoice}
               onDeleteInvoice={onDeletePurchaseInvoice}
               currentUserName={user?.displayName || user?.email || 'Recepción'}
+            />
+          </div>
+        ) : activeTab === 'FINANCES' ? (
+          <div className="max-w-6xl mx-auto animate-slide-up">
+            <FinancialMovementsView
+              movements={financialMovements}
+              patients={patients}
+              staff={staff}
+              onAddMovement={onAddFinancialMovement}
+              onUpdateMovement={onUpdateFinancialMovement}
+              onDeleteMovement={onDeleteFinancialMovement}
+              onBulkAddMovements={onBulkAddFinancialMovements}
+              onOpenReports={() => setActiveTab('EERR')}
+            />
+          </div>
+        ) : activeTab === 'EERR' ? (
+          <div className="max-w-6xl mx-auto animate-slide-up">
+            <FinancialReportsView
+              movements={financialMovements}
+              onBackToCashFlow={() => setActiveTab('FINANCES')}
             />
           </div>
         ) : (
@@ -1644,6 +1712,35 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                   <input type="number" min="1" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 text-lg" value={paymentValue} onChange={e => setPaymentValue(Number(e.target.value))} />
                 </div>
               )}
+
+              {/* Medio de Pago Selector */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Medio de Pago</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethodState('TRANSFERENCIA')}
+                    className={`py-2.5 rounded-xl font-bold text-xs transition-all border flex items-center justify-center gap-1.5 ${
+                      paymentMethodState === 'TRANSFERENCIA'
+                        ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
+                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    <CreditCard size={14} /> Transferencia
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethodState('EFECTIVO')}
+                    className={`py-2.5 rounded-xl font-bold text-xs transition-all border flex items-center justify-center gap-1.5 ${
+                      paymentMethodState === 'EFECTIVO'
+                        ? 'bg-amber-50 border-amber-200 text-amber-700 shadow-sm'
+                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Banknote size={14} /> Efectivo
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col gap-4">

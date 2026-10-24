@@ -3,7 +3,7 @@ import { collection, query, where, getDocs, doc, setDoc, deleteDoc, getDoc } fro
 import { db, secondaryAuth } from '../firebase';
 import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { useAuthStore } from '../store/authStore';
-import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS, TenantSettings, Appointment, StaffTimeLog } from '../types';
+import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS, TenantSettings, Appointment, StaffTimeLog, FinancialMovement } from '../types';
 import { 
   Users, 
   Activity, 
@@ -23,14 +23,32 @@ import {
   ExternalLink, 
   Check, 
   Play, 
-  Video 
+  Video,
+  BarChart3,
+  Wallet
 } from 'lucide-react';
 import { StaffPayrollView } from './StaffPayrollView';
+import { FinancialMovementsView } from './FinancialMovementsView';
+import { FinancialReportsView } from './FinancialReportsView';
 import { parseMediaUrl } from '../utils/mediaUrl';
 
-export const AdminDashboardView: React.FC = () => {
+interface AdminDashboardViewProps {
+  financialMovements?: FinancialMovement[];
+  onAddFinancialMovement?: (movement: Omit<FinancialMovement, 'id' | 'createdAt'>) => Promise<void> | void;
+  onUpdateFinancialMovement?: (movement: FinancialMovement) => Promise<void> | void;
+  onDeleteFinancialMovement?: (id: string) => Promise<void> | void;
+  onBulkAddFinancialMovements?: (movements: Omit<FinancialMovement, 'id' | 'createdAt'>[]) => Promise<void> | void;
+}
+
+export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
+  financialMovements = [],
+  onAddFinancialMovement = () => {},
+  onUpdateFinancialMovement = () => {},
+  onDeleteFinancialMovement = () => {},
+  onBulkAddFinancialMovements = () => {}
+}) => {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'GENERAL' | 'PAYROLL' | 'TOTEM'>('GENERAL');
+  const [activeTab, setActiveTab] = useState<'GENERAL' | 'PAYROLL' | 'FINANCES' | 'EERR' | 'TOTEM'>('GENERAL');
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [timeLogs, setTimeLogs] = useState<StaffTimeLog[]>([]);
   const [totalPatients, setTotalPatients] = useState(0);
@@ -355,6 +373,26 @@ export const AdminDashboardView: React.FC = () => {
               <Clock size={16} /> Asistencia y Sueldos
             </button>
             <button
+              onClick={() => setActiveTab('FINANCES')}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === 'FINANCES'
+                  ? 'bg-white text-indigo-950 shadow-md'
+                  : 'text-indigo-200 hover:text-white'
+              }`}
+            >
+              <DollarSign size={16} /> Caja Diaria
+            </button>
+            <button
+              onClick={() => setActiveTab('EERR')}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === 'EERR'
+                  ? 'bg-white text-indigo-950 shadow-md'
+                  : 'text-indigo-200 hover:text-white'
+              }`}
+            >
+              <BarChart3 size={16} /> Estado de Resultados
+            </button>
+            <button
               onClick={() => setActiveTab('TOTEM')}
               className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
                 activeTab === 'TOTEM'
@@ -381,6 +419,31 @@ export const AdminDashboardView: React.FC = () => {
               onUpdateStaffTimeLog={handleUpdateStaffTimeLog}
               onDeleteStaffTimeLog={handleDeleteStaffTimeLog}
               onUpdateTenantSettings={handleUpdateTenantSettings}
+            />
+          </div>
+        )}
+
+        {/* PESTAÑA 3: CAJA Y MOVIMIENTOS FINANCIEROS */}
+        {activeTab === 'FINANCES' && (
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <FinancialMovementsView
+              movements={financialMovements}
+              staff={staffList}
+              onAddMovement={onAddFinancialMovement}
+              onUpdateMovement={onUpdateFinancialMovement}
+              onDeleteMovement={onDeleteFinancialMovement}
+              onBulkAddMovements={onBulkAddFinancialMovements}
+              onOpenReports={() => setActiveTab('EERR')}
+            />
+          </div>
+        )}
+
+        {/* PESTAÑA 4: ESTADO DE RESULTADOS (EERR / EBITDA) */}
+        {activeTab === 'EERR' && (
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <FinancialReportsView
+              movements={financialMovements}
+              onBackToCashFlow={() => setActiveTab('FINANCES')}
             />
           </div>
         )}

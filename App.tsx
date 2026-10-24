@@ -10,11 +10,13 @@ import {
   deleteDoc,
   query,
   where,
-  addDoc
+  addDoc,
+  writeBatch
 } from 'firebase/firestore';
 import { MOCK_PATIENTS, EXERCISES as INITIAL_EXERCISES, MOCK_PRODUCTS, MOCK_APPOINTMENTS } from './constants';
 import { INITIAL_CLEANING_INVENTORY } from './constants/initialInventory';
-import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage, StaffTimeLog, TenantSettings, InventoryItem, InventoryMovement, PurchaseInvoice } from './types';
+import initialAugustMovements from './constants/initialFinancialMovements.json';
+import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage, StaffTimeLog, TenantSettings, InventoryItem, InventoryMovement, PurchaseInvoice, FinancialMovement } from './types';
 import { useAuthStore } from './store/authStore';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
@@ -50,6 +52,7 @@ export function App() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>([]);
   const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>([]);
+  const [financialMovements, setFinancialMovements] = useState<FinancialMovement[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [staffTimeLogs, setStaffTimeLogs] = useState<StaffTimeLog[]>([]);
@@ -442,6 +445,38 @@ export function App() {
       setPurchaseInvoices(invoicesData);
     });
 
+    let finMovementsQ = query(collection(db, 'financialMovements'));
+    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      finMovementsQ = query(collection(db, 'financialMovements'), where('tenantId', '==', activeTenantId));
+    }
+    const unsubscribeFinMovements = onSnapshot(finMovementsQ, async (snapshot) => {
+      const finData: FinancialMovement[] = [];
+      snapshot.forEach((docSnap) => {
+        finData.push({ id: docSnap.id, ...docSnap.data() } as FinancialMovement);
+      });
+
+      // Si la colección está vacía para el tenant RTP, auto-sembrar con los movimientos de Agosto 2026
+      if (finData.length === 0 && (activeTenantId === 'recepcionrtp' || activeTenantId === 'rtp')) {
+        try {
+          const movementsToSeed = initialAugustMovements as any[];
+          for (let i = 0; i < movementsToSeed.length; i += 400) {
+            const chunk = movementsToSeed.slice(i, i + 400);
+            const batch = writeBatch(db);
+            chunk.forEach(mov => {
+              const docRef = doc(db, 'financialMovements', mov.id);
+              batch.set(docRef, sanitizeForFirestore({ ...mov, tenantId: activeTenantId }));
+            });
+            await batch.commit();
+          }
+          return;
+        } catch (seedErr) {
+          console.error('Error auto-seeding financial movements:', seedErr);
+        }
+      }
+
+      setFinancialMovements(finData);
+    });
+
     return () => {
       unsubscribe();
       unsubscribeStaff();
@@ -453,6 +488,7 @@ export function App() {
       unsubscribeInventory();
       unsubscribeMovements();
       unsubscribeInvoices();
+      unsubscribeFinMovements();
     };
   }, [isAuthenticated, user]);
 
@@ -895,6 +931,88 @@ export function App() {
     }
   };
 
+  const handleAddFinancialMovement = async (movement: Omit<FinancialMovement, 'id' | 'createdAt'>) => {
+    const id = `fin_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    const createdAt = new Date().toISOString();
+    const activeTenantId = user?.tenantId || 'recepcionrtp';
+    const newMovement: FinancialMovement = {
+      ...movement,
+      id,
+      tenantId: activeTenantId,
+      createdAt,
+    };
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'financialMovements', id), sanitizeForFirestore(newMovement));
+      } catch (err) {
+        console.error('Error adding financial movement:', err);
+      }
+    } else {
+      setFinancialMovements(prev => [newMovement, ...prev]);
+    }
+  };
+
+  const handleUpdateFinancialMovement = async (movement: FinancialMovement) => {
+    if (db) {
+      try {
+        await setDoc(doc(db, 'financialMovements', movement.id), sanitizeForFirestore(movement));
+      } catch (err) {
+        console.error('Error updating financial movement:', err);
+      }
+    } else {
+      setFinancialMovements(prev => prev.map(m => m.id === movement.id ? movement : m));
+    }
+  };
+
+  const handleDeleteFinancialMovement = async (id: string) => {
+    if (db) {
+      try {
+        await deleteDoc(doc(db, 'financialMovements', id));
+      } catch (err) {
+        console.error('Error deleting financial movement:', err);
+      }
+    } else {
+      setFinancialMovements(prev => prev.filter(m => m.id !== id));
+    }
+  };
+
+  const handleBulkAddFinancialMovements = async (movementsToAdd: Omit<FinancialMovement, 'id' | 'createdAt'>[]) => {
+    const activeTenantId = user?.tenantId || 'recepcionrtp';
+    const now = new Date().toISOString();
+
+    if (db) {
+      try {
+        const chunkSize = 400;
+        for (let i = 0; i < movementsToAdd.length; i += chunkSize) {
+          const chunk = movementsToAdd.slice(i, i + chunkSize);
+          const batch = writeBatch(db);
+          chunk.forEach((mov, idx) => {
+            const id = `fin_${Date.now()}_${i + idx}_${Math.random().toString(36).substr(2, 5)}`;
+            const docRef = doc(db, 'financialMovements', id);
+            batch.set(docRef, sanitizeForFirestore({
+              ...mov,
+              id,
+              tenantId: activeTenantId,
+              createdAt: now,
+            }));
+          });
+          await batch.commit();
+        }
+      } catch (err) {
+        console.error('Error bulk adding financial movements:', err);
+      }
+    } else {
+      const created = movementsToAdd.map((m, idx) => ({
+        ...m,
+        id: `fin_${Date.now()}_${idx}`,
+        tenantId: activeTenantId,
+        createdAt: now,
+      }));
+      setFinancialMovements(prev => [...created, ...prev]);
+    }
+  };
+
   const handleAddAppointment = async (app: Appointment) => {
     const safeData = { ...app, tenantId: user?.tenantId || 'default_tenant' };
     if (db) {
@@ -1114,9 +1232,20 @@ export function App() {
               purchaseInvoices={purchaseInvoices}
               onAddPurchaseInvoice={handleAddPurchaseInvoice}
               onDeletePurchaseInvoice={handleDeletePurchaseInvoice}
+              financialMovements={financialMovements}
+              onAddFinancialMovement={handleAddFinancialMovement}
+              onUpdateFinancialMovement={handleUpdateFinancialMovement}
+              onDeleteFinancialMovement={handleDeleteFinancialMovement}
+              onBulkAddFinancialMovements={handleBulkAddFinancialMovements}
             />
           ) : user.role === UserRole.TENANT_ADMIN ? (
-            <AdminDashboardView />
+            <AdminDashboardView 
+              financialMovements={financialMovements}
+              onAddFinancialMovement={handleAddFinancialMovement}
+              onUpdateFinancialMovement={handleUpdateFinancialMovement}
+              onDeleteFinancialMovement={handleDeleteFinancialMovement}
+              onBulkAddFinancialMovements={handleBulkAddFinancialMovements}
+            />
           ) : user.role === UserRole.PATIENT ? (
             loggedPatient ? (
               <PatientView patient={loggedPatient} products={products} exercises={exercises} onUpdatePatient={handleUpdatePatient} />

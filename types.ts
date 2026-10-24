@@ -642,4 +642,40 @@ export interface PurchaseInvoice {
   createdAt: string;
 }
 
+// --- Módulo Financiero: Movimientos de Caja y Estado de Resultados (EERR) ---
+export type FinancialMovementType = 'INCOME' | 'EXPENSE';
+export type PaymentMethod = 'EFECTIVO' | 'TRANSFERENCIA';
+export type BusinessUnit = 'KINESIO' | 'GYM' | 'TURISMO' | 'ALQUILERES' | 'GENERAL';
+export type CostClassification = 'VARIABLE' | 'FIXED' | 'INVESTMENT' | 'NONE';
+
+export interface FinancialMovement {
+  id: string;
+  tenantId?: string;
+  date: string; // YYYY-MM-DD
+  type: FinancialMovementType;
+  paymentMethod: PaymentMethod;
+  amount: number;
+  category: string; // Ej: 'Particular', 'Obra Sociales', 'Unr', 'Iapos', 'Gimnasio 2 veces por semana', 'Alquiler Local', etc.
+  businessUnit?: BusinessUnit;
+  costClassification?: CostClassification;
+  patientName?: string;
+  cuit?: string;
+  professional?: string; // Ej: 'Angie', 'Lean', 'Colo'
+  description?: string; // Detalle adicional
+  cierreNumber?: number; // N° de cierre / día si aplica
+  registeredBy?: string;
+  createdAt: string;
+}
+
+export interface HistoricalMonthEERR {
+  month: string; // Enero, Febrero, Marzo...
+  monthNumber: number; // 1-12
+  year: number;
+  revenue: number;
+  variableCosts: number;
+  grossMargin: number;
+  fixedCosts: number;
+  ebitda: number;
+}
+
 
