@@ -8,9 +8,24 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Función auxiliar para verificar si el usuario es staff existente
+    function isStaff() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+    }
+
     // Función para obtener el documento del staff actual
     function getStaffData() {
       return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data;
+    }
+
+    // Función auxiliar para verificar si es Super Administrador
+    function isSuperAdmin() {
+      return isStaff() && getStaffData().role == 'SUPER_ADMIN';
+    }
+
+    // Función auxiliar para aislamiento multi-tenant
+    function isSameTenant(docTenantId) {
+      return isSuperAdmin() || (isStaff() && (getStaffData().tenantId == docTenantId || docTenantId == 'default_tenant'));
     }
 
     // Regla global segura por defecto: Cerrado
@@ -18,57 +33,101 @@ service cloud.firestore {
       allow read, write: if false; 
     }
 
+    // TENANTS (INSTITUCIONES):
+    match /tenants/{tenantId} {
+      // Lectura para usuarios autenticados, gestión exclusiva de SuperAdmin
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
+    // CONFIGURACIÓN DE TENANT:
+    match /tenantSettings/{tenantId} {
+      // Lectura para usuarios autenticados
+      allow read: if isAuthenticated();
+      // Escritura permitida para Administrador de Tenant, Recepción del mismo tenant o SuperAdmin
+      allow write: if isSameTenant(tenantId) && (getStaffData().role == 'TENANT_ADMIN' || getStaffData().role == 'RECEPCION' || isSuperAdmin());
+    }
+
+    // STAFF (EQUIPO / PROFESIONALES):
+    match /staff/{staffId} {
+      // Lectura para el propio usuario o staff del mismo tenant
+      allow read: if isAuthenticated() && (request.auth.uid == staffId || isSameTenant(resource.data.tenantId));
+      // Creación y actualización controlada: solo SuperAdmin o Kine/Admin del mismo tenant.
+      // Prohibido almacenar contraseñas en texto plano.
+      allow create, update: if (isSuperAdmin() || (isSameTenant(request.resource.data.tenantId) && (getStaffData().role == 'TENANT_ADMIN' || getStaffData().role == 'KINE')))
+        && (!('password' in request.resource.data) || request.resource.data.password == '');
+      // Eliminación solo por SuperAdmin o Tenant Admin del mismo tenant
+      allow delete: if isSuperAdmin() || (isSameTenant(resource.data.tenantId) && getStaffData().role == 'TENANT_ADMIN');
+    }
+
     // PACIENTES:
     match /patients/{patientId} {
-      // Un paciente puede leer su propio documento y actualizar sus rutinas (homeRoutine)
-      allow read, update: if isAuthenticated() && request.auth.uid == patientId;
-      
-      // El staff puede crear, leer, modificar perfiles de su tenantId
-      // Para este nivel de reglas sin custom claims, permitiremos que cualquier staff autenticado opre sobre la base (se filtran del lado del cliente)
-      allow read, write: if isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+      // El paciente puede leer y actualizar su propio perfil (rutinas, etc.)
+      allow read: if (isAuthenticated() && request.auth.uid == patientId) || isSameTenant(resource.data.tenantId);
+      allow create: if isSameTenant(request.resource.data.tenantId);
+      allow update: if (isAuthenticated() && request.auth.uid == patientId) || isSameTenant(request.resource.data.tenantId);
+      allow delete: if isSameTenant(resource.data.tenantId);
     }
 
-    // STAFF:
-    match /staff/{staffId} {
-      // Cualquier staff puede leer la colección del staff
-      allow read: if isAuthenticated();
-      // Solo un Dueño de Institución, Kine o superAdmin puede modificar, O el propio usuario puede AUTO-CREAR su cuenta en la inicialización si no existe.
-      allow write: if isAuthenticated() && (
-        (exists(/databases/$(database)/documents/staff/$(request.auth.uid)) && (getStaffData().role == 'KINE' || getStaffData().role == 'TENANT_ADMIN')) 
-        || 
-        (!exists(/databases/$(database)/documents/staff/$(request.auth.uid)) && request.auth.uid == staffId)
-      );
-    }
-
-    // CITAS, EVALUACIONES CLÍNICAS, EJERCICIOS Y PRODUCTOS
+    // CITAS / TURNOS:
     match /appointments/{appId} {
-       // El staff puede crear y ver citas, los pacientes pueden ver sus citas si `patientId` coincide.
-       allow read: if isAuthenticated() && (exists(/databases/$(database)/documents/staff/$(request.auth.uid)) || resource.data.patientId == request.auth.uid);
-       allow write: if isAuthenticated();
+      // El paciente puede ver sus citas; el staff ve las de su tenant
+      allow read: if isAuthenticated() && (resource.data.patientId == request.auth.uid || isSameTenant(resource.data.tenantId));
+      allow create, update: if isSameTenant(request.resource.data.tenantId);
+      allow delete: if isSameTenant(resource.data.tenantId);
     }
     
+    // CATÁLOGO DE EJERCICIOS:
     match /exercises/{exId} {
-       // Son catálogos globales o por tenant, dejamos lectura para todos los authed, escritura solo KINE
-       allow read: if isAuthenticated();
-       allow write: if isAuthenticated() && getStaffData().role == 'KINE';
+      // Catálogo consultable por todos los autenticados; edición solo Kinesiólogos, Tenant Admins o SuperAdmin
+      allow read: if isAuthenticated();
+      allow write: if isStaff() && (getStaffData().role == 'KINE' || getStaffData().role == 'TENANT_ADMIN' || isSuperAdmin());
     }
 
+    // PRODUCTOS / SERVICIOS:
     match /products/{prodId} {
-       // Catálogos globales por Recepción y Kinesiólogos
-       allow read: if isAuthenticated();
-       allow write: if isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+      // Catálogo visible a usuarios autenticados; gestión por staff del mismo tenant
+      allow read: if isAuthenticated();
+      allow create, update: if isSameTenant(request.resource.data.tenantId);
+      allow delete: if isSameTenant(resource.data.tenantId);
     }
     
+    // EVALUACIONES CLÍNICAS:
     match /clinical_evaluations/{evalId} {
-       // Los pacientes pueden leer su propio historial. El staff los escribe y lee de todos
-       allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || exists(/databases/$(database)/documents/staff/$(request.auth.uid)));
-       allow write: if isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+      // El paciente puede consultar su historial; staff del mismo tenant gestiona
+      allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isSameTenant(resource.data.tenantId));
+      allow create, update: if isSameTenant(request.resource.data.tenantId);
+      allow delete: if isSameTenant(resource.data.tenantId);
     }
 
     // MOVIMIENTOS FINANCIEROS (INGRESOS, EGRESOS, CIERRES DE CAJA):
     match /financialMovements/{movId} {
-       // Solo el personal de staff autenticado puede leer y gestionar movimientos financieros
-       allow read, write: if isAuthenticated() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+      allow read, delete: if isSameTenant(resource.data.tenantId);
+      allow create, update: if isSameTenant(request.resource.data.tenantId);
+    }
+
+    // CONTROL HORARIO (TIME LOGS / FICHAJES):
+    match /timeLogs/{logId} {
+      allow read, delete: if isSameTenant(resource.data.tenantId);
+      allow create, update: if isSameTenant(request.resource.data.tenantId);
+    }
+
+    // INVENTARIO:
+    match /inventory/{itemId} {
+      allow read, delete: if isSameTenant(resource.data.tenantId);
+      allow create, update: if isSameTenant(request.resource.data.tenantId);
+    }
+
+    // MOVIMIENTOS DE INVENTARIO:
+    match /inventoryMovements/{movId} {
+      allow read, delete: if isSameTenant(resource.data.tenantId);
+      allow create, update: if isSameTenant(request.resource.data.tenantId);
+    }
+
+    // FACTURAS Y GASTOS (COMPRAS):
+    match /purchaseInvoices/{invId} {
+      allow read, delete: if isSameTenant(resource.data.tenantId);
+      allow create, update: if isSameTenant(request.resource.data.tenantId);
     }
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
-import { db, isConfigValid } from './firebase';
+import { db, auth, isConfigValid } from './firebase';
 import { Download, X, LogOut, Activity, Home, Dumbbell, Settings, QrCode } from 'lucide-react';
 import { 
   collection, 
@@ -18,6 +18,7 @@ import { INITIAL_CLEANING_INVENTORY } from './constants/initialInventory';
 import initialAugustMovements from './constants/initialFinancialMovements.json';
 import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage, StaffTimeLog, TenantSettings, InventoryItem, InventoryMovement, PurchaseInvoice, FinancialMovement } from './types';
 import { useAuthStore } from './store/authStore';
+import { getLocalTodayISO } from './utils/dateUtils';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 // Lazy loaded components for better performance
@@ -79,6 +80,8 @@ export function App() {
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   
   const prevInRoomIds = useRef<Set<string>>(new Set());
+  const hasSeededInventoryRef = useRef<boolean>(false);
+  const hasSeededFinMovementsRef = useRef<boolean>(false);
   const [notificationSound, setNotificationSound] = useState<string>(localStorage.getItem('kineflow_sound') || 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
   const [showSoundSettings, setShowSoundSettings] = useState(false);
 
@@ -176,7 +179,6 @@ export function App() {
   const handleLogout = async () => {
     console.log("Logging out");
     try {
-      const { auth } = await import('./firebase');
       if (auth) {
         await auth.signOut();
       }
@@ -235,7 +237,9 @@ export function App() {
 
     const urlParams = new URLSearchParams(window.location.search);
     const tenantFromUrl = urlParams.get('tenant') || (window.location.pathname.includes('/totem/') ? window.location.pathname.split('/totem/')[1] : null);
-    const activeTenantId = tenantFromUrl || localStorage.getItem('kineflow_totem_tenant_id') || user?.tenantId || 'default_tenant';
+    const activeTenantId = (user?.role === UserRole.SUPER_ADMIN)
+      ? (tenantFromUrl || 'default_tenant')
+      : (user?.tenantId || (isTotemRoute ? (tenantFromUrl || localStorage.getItem('kineflow_totem_tenant_id')) : null) || 'default_tenant');
 
     const role = user?.role || UserRole.RECEPCION;
     const assignedDni = user?.assignedDni;
@@ -286,18 +290,6 @@ export function App() {
       setLoading(false);
     });
 
-    let staffQ = query(collection(db, 'staff'));
-    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
-      staffQ = query(collection(db, 'staff'), where('tenantId', '==', activeTenantId));
-    }
-    const unsubscribeStaff = onSnapshot(staffQ, (snapshot) => {
-      const staffData: StaffMember[] = [];
-      snapshot.forEach((doc) => {
-        staffData.push(doc.data() as StaffMember);
-      });
-      setStaff(staffData);
-    });
-
     let productsQ = query(collection(db, 'products'));
     if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
       productsQ = query(collection(db, 'products'), where('tenantId', '==', activeTenantId));
@@ -308,18 +300,6 @@ export function App() {
         productsData.push(doc.data() as Product);
       });
       setProducts(productsData);
-    });
-
-    let appointmentsQ = query(collection(db, 'appointments'));
-    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
-      appointmentsQ = query(collection(db, 'appointments'), where('tenantId', '==', activeTenantId));
-    }
-    const unsubscribeAppointments = onSnapshot(appointmentsQ, (snapshot) => {
-      const appointmentsData: Appointment[] = [];
-      snapshot.forEach((doc) => {
-        appointmentsData.push(doc.data() as Appointment);
-      });
-      setAppointments(appointmentsData);
     });
 
     const exercisesQ = query(collection(db, 'exercises'));
@@ -333,6 +313,39 @@ export function App() {
       } else {
         setExercises(INITIAL_EXERCISES);
       }
+    });
+
+    // Si el usuario autenticado es un PACIENTE, no suscribirse a colecciones administrativas de staff
+    if (role === UserRole.PATIENT && !isTotemRoute) {
+      return () => {
+        unsubscribe();
+        unsubscribeProducts();
+        unsubscribeExercises();
+      };
+    }
+
+    let staffQ = query(collection(db, 'staff'));
+    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      staffQ = query(collection(db, 'staff'), where('tenantId', '==', activeTenantId));
+    }
+    const unsubscribeStaff = onSnapshot(staffQ, (snapshot) => {
+      const staffData: StaffMember[] = [];
+      snapshot.forEach((doc) => {
+        staffData.push(doc.data() as StaffMember);
+      });
+      setStaff(staffData);
+    });
+
+    let appointmentsQ = query(collection(db, 'appointments'));
+    if (role !== UserRole.SUPER_ADMIN || isTotemRoute) {
+      appointmentsQ = query(collection(db, 'appointments'), where('tenantId', '==', activeTenantId));
+    }
+    const unsubscribeAppointments = onSnapshot(appointmentsQ, (snapshot) => {
+      const appointmentsData: Appointment[] = [];
+      snapshot.forEach((doc) => {
+        appointmentsData.push(doc.data() as Appointment);
+      });
+      setAppointments(appointmentsData);
     });
 
     let timeLogsQ = query(collection(db, 'timeLogs'));
@@ -398,24 +411,26 @@ export function App() {
         (activeTenantId && activeTenantId.toLowerCase().includes('rtp'))
       );
 
-      // Solo sembrar los 17 insumos del Excel si el usuario corresponde a recepcionrtp
-      if (snapshot.empty && activeTenantId && db && isRtpUser) {
+      // Solo sembrar los 17 insumos del Excel si el usuario corresponde a recepcionrtp y no se sembró ya en esta sesión
+      if (snapshot.empty && activeTenantId && db && isRtpUser && !hasSeededInventoryRef.current) {
+        hasSeededInventoryRef.current = true;
         const seeded: InventoryItem[] = INITIAL_CLEANING_INVENTORY.map(item => ({
           ...item,
           id: `${item.id}_${activeTenantId}`,
           tenantId: activeTenantId
         }));
         setInventory(seeded);
-        // Guardar en Firestore para recepcionrtp
-        seeded.forEach(async (it) => {
-          try {
-            if (firestore) {
-              await setDoc(doc(firestore, 'inventory', it.id), it);
-            }
-          } catch (e) {
-            console.error('Error seeding inventory item:', e);
+        try {
+          if (firestore) {
+            const batch = writeBatch(firestore);
+            seeded.forEach((it) => {
+              batch.set(doc(firestore, 'inventory', it.id), sanitizeForFirestore(it));
+            });
+            await batch.commit();
           }
-        });
+        } catch (e) {
+          console.error('Error seeding inventory items:', e);
+        }
       } else {
         setInventory(normalizedList);
       }
@@ -455,11 +470,17 @@ export function App() {
         finData.push({ id: docSnap.id, ...docSnap.data() } as FinancialMovement);
       });
 
-      // Si la colección está vacía en Firestore, auto-sembrar con los movimientos de Agosto 2026
-      if (finData.length === 0 && db) {
+      const isDefaultOrRtpTenant =
+        activeTenantId === 'default_tenant' ||
+        activeTenantId.toLowerCase().includes('rtp') ||
+        Boolean(user?.email && user.email.toLowerCase().includes('rtp'));
+
+      // Si la colección está vacía en Firestore, auto-sembrar con los movimientos de Agosto 2026 solo en el tenant base/RTP y con lock de concurrencia
+      if (finData.length === 0 && db && isDefaultOrRtpTenant && !hasSeededFinMovementsRef.current) {
+        hasSeededFinMovementsRef.current = true;
         const firestoreDb = db;
         try {
-          const movementsToSeed = initialAugustMovements as any[];
+          const movementsToSeed = initialAugustMovements as FinancialMovement[];
           for (let i = 0; i < movementsToSeed.length; i += 400) {
             const chunk = movementsToSeed.slice(i, i + 400);
             const batch = writeBatch(firestoreDb);
@@ -478,10 +499,11 @@ export function App() {
       }
 
       // Reconciliación automática: si existen movimientos pre-sembrados del Cierre #59 con fecha 2026-09-01/02, actualizarlos a 2026-08-31
-      if (finData.some(m => (m.id.startsWith('mov_trans_') || m.id.startsWith('mov_efec_')) && m.date.startsWith('2026-09')) && db) {
+      if (finData.some(m => (m.id.startsWith('mov_trans_') || m.id.startsWith('mov_efec_')) && m.date.startsWith('2026-09')) && db && !hasSeededFinMovementsRef.current) {
+        hasSeededFinMovementsRef.current = true;
         const firestoreDb = db;
         try {
-          const seedMap = new Map((initialAugustMovements as any[]).map(m => [m.id, m]));
+          const seedMap = new Map((initialAugustMovements as FinancialMovement[]).map(m => [m.id, m]));
           const toFix = finData.filter(m => seedMap.has(m.id));
           for (let i = 0; i < toFix.length; i += 400) {
             const chunk = toFix.slice(i, i + 400);
@@ -500,7 +522,11 @@ export function App() {
         }
       }
 
-      setFinancialMovements(finData.length > 0 ? finData : (initialAugustMovements as FinancialMovement[]));
+      setFinancialMovements(
+        finData.length > 0
+          ? finData
+          : (isDefaultOrRtpTenant ? (initialAugustMovements as FinancialMovement[]) : [])
+      );
     }, (error) => {
       console.warn('Firestore financialMovements snapshot error (using local data fallback):', error);
       setFinancialMovements(initialAugustMovements as FinancialMovement[]);
@@ -787,8 +813,9 @@ export function App() {
 
     if (db) {
       try {
-        await setDoc(doc(db, 'inventoryMovements', newMovementId), sanitizeForFirestore(newMovement));
-        const itemUpdatePayload: any = {
+        const batch = writeBatch(db);
+        batch.set(doc(db, 'inventoryMovements', newMovementId), sanitizeForFirestore(newMovement));
+        const itemUpdatePayload: Partial<InventoryItem> = {
           currentStock: movementData.newStock,
           updatedAt: new Date().toISOString()
         };
@@ -797,7 +824,8 @@ export function App() {
           itemUpdatePayload.lastPurchaseDate = movementData.date;
           itemUpdatePayload.lastPurchaseQuantity = `${movementData.quantity}`;
         }
-        await setDoc(doc(db, 'inventory', movementData.itemId), itemUpdatePayload, { merge: true });
+        batch.set(doc(db, 'inventory', movementData.itemId), sanitizeForFirestore(itemUpdatePayload), { merge: true });
+        await batch.commit();
       } catch (e) {
         console.error('Error registering inventory movement:', e);
       }
@@ -824,35 +852,60 @@ export function App() {
     invoiceData: Omit<PurchaseInvoice, 'id' | 'createdAt'>,
     itemsToUpdate: { item: InventoryItem; isNew: boolean; qtyAdded: number; unitCost: number }[]
   ) => {
+    const activeTenantId = user?.tenantId || 'default_tenant';
     const invoiceId = `fac_${Date.now()}`;
+    const nowIso = new Date().toISOString();
     const newInvoice: PurchaseInvoice = {
       ...invoiceData,
       id: invoiceId,
-      tenantId: user?.tenantId || 'default_tenant',
-      createdAt: new Date().toISOString()
+      tenantId: activeTenantId,
+      createdAt: nowIso
     };
+
+    const shouldCreateExpense =
+      invoiceData.paymentStatus === 'PAID' &&
+      invoiceData.totalAmount > 0 &&
+      (invoiceData.paymentMethod === 'Efectivo' || invoiceData.paymentMethod === 'Transferencia');
+
+    const expenseMovId = `fin_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const expenseMovement: FinancialMovement | null = shouldCreateExpense
+      ? {
+          id: expenseMovId,
+          tenantId: activeTenantId,
+          date: invoiceData.date,
+          type: 'EXPENSE',
+          paymentMethod: invoiceData.paymentMethod === 'Efectivo' ? 'EFECTIVO' : 'TRANSFERENCIA',
+          amount: invoiceData.totalAmount,
+          category: 'Limpieza/Insumos',
+          description: `Factura ${invoiceData.invoiceNumber || 'S/N'} - ${invoiceData.supplier}${invoiceData.notes ? ` (${invoiceData.notes})` : ''}`,
+          businessUnit: 'KINESIO',
+          costClassification: 'FIXED',
+          createdAt: nowIso
+        }
+      : null;
 
     if (db) {
       try {
-        await setDoc(doc(db, 'purchaseInvoices', invoiceId), sanitizeForFirestore(newInvoice));
+        const batch = writeBatch(db);
+        batch.set(doc(db, 'purchaseInvoices', invoiceId), sanitizeForFirestore(newInvoice));
 
         for (const { item, isNew, qtyAdded, unitCost } of itemsToUpdate) {
           const safeItem: InventoryItem = {
             ...item,
-            tenantId: user?.tenantId || 'default_tenant',
+            tenantId: activeTenantId,
             currentStock: isNew ? qtyAdded : (item.currentStock + qtyAdded),
             lastPurchaseCost: unitCost,
             lastPurchaseDate: invoiceData.date,
             lastPurchaseQuantity: `${qtyAdded} ${item.unit || 'Unidades'}`.trim(),
-            updatedAt: new Date().toISOString()
+            updatedAt: nowIso
           };
 
-          await setDoc(doc(db, 'inventory', safeItem.id), sanitizeForFirestore(safeItem), { merge: true });
+          batch.set(doc(db, 'inventory', safeItem.id), sanitizeForFirestore(safeItem), { merge: true });
 
-          const movId = `mov_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+          const movId = `mov_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
           const movement: InventoryMovement = {
             id: movId,
-            tenantId: user?.tenantId || 'default_tenant',
+            tenantId: activeTenantId,
             itemId: safeItem.id,
             itemName: safeItem.name,
             type: 'IN',
@@ -863,15 +916,24 @@ export function App() {
             cost: unitCost * qtyAdded,
             performedBy: user?.displayName || user?.email || 'Recepción',
             date: invoiceData.date,
-            createdAt: new Date().toISOString()
+            createdAt: nowIso
           };
-          await setDoc(doc(db, 'inventoryMovements', movId), sanitizeForFirestore(movement));
+          batch.set(doc(db, 'inventoryMovements', movId), sanitizeForFirestore(movement));
         }
+
+        if (expenseMovement) {
+          batch.set(doc(db, 'financialMovements', expenseMovement.id), sanitizeForFirestore(expenseMovement));
+        }
+
+        await batch.commit();
       } catch (e) {
         console.error('Error adding purchase invoice:', e);
       }
     } else {
       setPurchaseInvoices(prev => [newInvoice, ...prev]);
+      if (expenseMovement) {
+        setFinancialMovements(prev => [expenseMovement, ...prev]);
+      }
       setInventory(prev => {
         let updated = [...prev];
         itemsToUpdate.forEach(({ item, isNew, qtyAdded, unitCost }) => {
@@ -882,7 +944,7 @@ export function App() {
               lastPurchaseCost: unitCost,
               lastPurchaseDate: invoiceData.date,
               lastPurchaseQuantity: `${qtyAdded} ${item.unit || 'Unidades'}`.trim(),
-              updatedAt: new Date().toISOString()
+              updatedAt: nowIso
             });
           } else {
             updated = updated.map(it => it.id === item.id ? {
@@ -891,7 +953,7 @@ export function App() {
               lastPurchaseCost: unitCost,
               lastPurchaseDate: invoiceData.date,
               lastPurchaseQuantity: `${qtyAdded} ${it.unit || 'Unidades'}`.trim(),
-              updatedAt: new Date().toISOString()
+              updatedAt: nowIso
             } : it);
           }
         });
@@ -906,7 +968,8 @@ export function App() {
 
     if (db) {
       try {
-        await deleteDoc(doc(db, 'purchaseInvoices', invoiceId));
+        const batch = writeBatch(db);
+        batch.delete(doc(db, 'purchaseInvoices', invoiceId));
 
         if (revertStock) {
           for (const it of invoiceToDelete.items) {
@@ -914,12 +977,12 @@ export function App() {
               const currentItem = inventory.find(inv => inv.id === it.itemId);
               if (currentItem) {
                 const newStock = Math.max(0, currentItem.currentStock - it.quantity);
-                await setDoc(doc(db, 'inventory', currentItem.id), {
+                batch.set(doc(db, 'inventory', currentItem.id), {
                   currentStock: newStock,
                   updatedAt: new Date().toISOString()
                 }, { merge: true });
 
-                const movId = `mov_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                const movId = `mov_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
                 const movement: InventoryMovement = {
                   id: movId,
                   tenantId: user?.tenantId || 'default_tenant',
@@ -931,14 +994,15 @@ export function App() {
                   newStock: newStock,
                   reason: `Anulación Factura ${invoiceToDelete.invoiceNumber} - ${invoiceToDelete.supplier}`,
                   performedBy: user?.displayName || user?.email || 'Recepción',
-                  date: new Date().toISOString().split('T')[0],
+                  date: getLocalTodayISO(),
                   createdAt: new Date().toISOString()
                 };
-                await setDoc(doc(db, 'inventoryMovements', movId), sanitizeForFirestore(movement));
+                batch.set(doc(db, 'inventoryMovements', movId), sanitizeForFirestore(movement));
               }
             }
           }
         }
+        await batch.commit();
       } catch (e) {
         console.error('Error deleting purchase invoice:', e);
       }
@@ -961,9 +1025,9 @@ export function App() {
   };
 
   const handleAddFinancialMovement = async (movement: Omit<FinancialMovement, 'id' | 'createdAt'>) => {
-    const id = `fin_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    const id = `fin_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const createdAt = new Date().toISOString();
-    const activeTenantId = user?.tenantId || 'recepcionrtp';
+    const activeTenantId = user?.tenantId || 'default_tenant';
     const newMovement: FinancialMovement = {
       ...movement,
       id,
@@ -1007,7 +1071,7 @@ export function App() {
   };
 
   const handleBulkAddFinancialMovements = async (movementsToAdd: Omit<FinancialMovement, 'id' | 'createdAt'>[]) => {
-    const activeTenantId = user?.tenantId || 'recepcionrtp';
+    const activeTenantId = user?.tenantId || 'default_tenant';
     const now = new Date().toISOString();
 
     if (db) {
@@ -1018,7 +1082,7 @@ export function App() {
           const chunk = movementsToAdd.slice(i, i + chunkSize);
           const batch = writeBatch(firestore);
           chunk.forEach((mov, idx) => {
-            const id = `fin_${Date.now()}_${i + idx}_${Math.random().toString(36).substr(2, 5)}`;
+            const id = `fin_${Date.now()}_${i + idx}_${Math.random().toString(36).slice(2, 7)}`;
             const docRef = doc(firestore, 'financialMovements', id);
             batch.set(docRef, sanitizeForFirestore({
               ...mov,
@@ -1226,12 +1290,18 @@ export function App() {
         <main className="flex-1 flex flex-col h-full overflow-hidden relative">
           {/* Logout button for all roles */}
           <button 
-            onClick={handleLogout}
-            className={`fixed right-6 z-[100] w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center text-red-500 border border-slate-100 hover:bg-red-50 transition-all ${
-              user.role === UserRole.KINE ? 'bottom-20' : 'bottom-6'
-            } md:bottom-6`}
+            onClick={() => {
+              if (window.confirm('¿Deseas cerrar tu sesión actual en KineFlow Pro?')) {
+                handleLogout();
+              }
+            }}
+            title="Cerrar sesión"
+            aria-label="Cerrar sesión"
+            className={`fixed right-5 z-[90] w-11 h-11 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-red-500 border border-slate-200 hover:bg-red-50 hover:scale-105 active:scale-95 transition-all ${
+              user.role === UserRole.KINE ? 'bottom-20' : 'bottom-5'
+            } md:bottom-5`}
           >
-            <LogOut size={20} />
+            <LogOut size={18} />
           </button>
 
           {user.role === UserRole.SUPER_ADMIN ? (
@@ -1296,7 +1366,7 @@ export function App() {
                   patients={patients} 
                   onSelectPatient={handleSelectPatient}
                   onOpenQrScanner={() => setShowQrScanner(true)}
-                  isClockedIn={!!staffTimeLogs.find(l => (l.staffId === user.uid || (user.displayName && l.staffName.includes(user.displayName))) && l.status === 'OPEN' && l.date === new Date().toISOString().split('T')[0])}
+                  isClockedIn={!!staffTimeLogs.find(l => (l.staffId === user.uid || (user.displayName && l.staffName.includes(user.displayName))) && l.status === 'OPEN' && l.date === getLocalTodayISO())}
               />
             ) : (
               <PatientDetail 

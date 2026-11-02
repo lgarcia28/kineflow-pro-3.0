@@ -9,5 +9,15 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     target: ['es2018', 'safari12'],
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+          'vendor-charts': ['recharts'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-xlsx': ['xlsx'],
+        }
+      }
+    }
   }
 });

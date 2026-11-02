@@ -1,5 +1,10 @@
-import ExcelJS from 'exceljs';
+import type ExcelJS from 'exceljs';
 import { FinancialMovement, HistoricalMonthEERR } from '../types';
+
+async function loadExcelJS(): Promise<typeof ExcelJS> {
+  const mod = await import('exceljs');
+  return ((mod as any).default || mod) as typeof ExcelJS;
+}
 import {
   RESUMEN_INCOME_ORDER,
   RESUMEN_EXPENSE_ORDER,
@@ -388,7 +393,8 @@ export async function buildCashFlowWorkbook(
   monthName: string = 'Agosto',
   year: number = 2026
 ): Promise<ExcelJS.Workbook> {
-  const wb = new ExcelJS.Workbook();
+  const ExcelJSLib = await loadExcelJS();
+  const wb = new ExcelJSLib.Workbook();
   wb.creator = 'Kineflow Pro 3.0 — Gestión Financiera RTP';
   wb.created = new Date();
 
@@ -1141,7 +1147,8 @@ export async function buildEERRWorkbook(
   selectedMonthNumber: number = 8,
   selectedYear: number = 2026
 ): Promise<ExcelJS.Workbook> {
-  const wb = new ExcelJS.Workbook();
+  const ExcelJSLib = await loadExcelJS();
+  const wb = new ExcelJSLib.Workbook();
   wb.creator = 'Kineflow Pro 3.0 — Estado de Resultados (EERR)';
   wb.created = new Date();
 

@@ -102,8 +102,7 @@ export const SuperAdminDashboardView: React.FC = () => {
         firstName: 'Director',
         lastName: newTenantName,
         username: sanitizedUsername,
-        role: UserRole.TENANT_ADMIN,
-        password: adminPassword 
+        role: UserRole.TENANT_ADMIN
       };
 
       // Save both docs in transaction/batch ideally, using independent sets here

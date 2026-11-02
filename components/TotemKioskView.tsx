@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import { Patient, CheckInStatus, StaffMember, StaffTimeLog, TenantSettings } from '../types';
 import { parseMediaUrl } from '../utils/mediaUrl';
+import { getLocalTodayISO } from '../utils/dateUtils';
 import { 
   CheckCircle, 
   UserCheck, 
@@ -40,10 +41,8 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
   tenantSettings,
   onExitKiosk
 }) => {
-  // --- Estados de Autorización de Dispositivo ---
-  const [isAuthorized, setIsAuthorized] = useState<boolean>(() => {
-    return localStorage.getItem('kineflow_totem_pin_auth') === 'true';
-  });
+  // --- Estados de Autorización de Dispositivo (en memoria para evitar bypass vía localStorage) ---
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
@@ -150,7 +149,6 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
     if (e) e.preventDefault();
     const expectedPin = tenantSettings?.totemPin || '1234';
     if (pinInput === expectedPin) {
-      localStorage.setItem('kineflow_totem_pin_auth', 'true');
       setIsAuthorized(true);
       setPinError(false);
       setPinInput('');
@@ -160,8 +158,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
   };
 
   const handleDeauthorizeDevice = () => {
-    if (confirm('¿Desea desautorizar este dispositivo para que solicite el PIN nuevamente?')) {
-      localStorage.removeItem('kineflow_totem_pin_auth');
+    if (confirm('¿Desea bloquear este dispositivo para que solicite el PIN nuevamente?')) {
       setIsAuthorized(false);
     }
   };
@@ -174,7 +171,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
     const patient = patients.find(p => p.dni === cleanDni);
 
     if (patient) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalTodayISO();
       const updatedHistory = [...(patient.history || []), `Presente en clínica (Tótem): ${new Date().toLocaleTimeString('es-AR')}`];
 
       const updatedPatient: Patient = {
@@ -227,7 +224,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
   };
 
   // --- Procesar Fichaje de Kinesiólogos (Clock-In / Clock-Out) ---
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalTodayISO();
 
   const handleStaffClockAction = (member: StaffMember) => {
     const nowTimeStr = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });

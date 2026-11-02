@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { StaffMember, StaffTimeLog } from '../types';
 import { useAuthStore } from '../store/authStore';
+import { getLocalTodayISO } from '../utils/dateUtils';
 import { QrCode, X, CheckCircle, Clock, AlertCircle, Camera, LogIn, LogOut } from 'lucide-react';
 
 interface StaffQrScannerModalProps {
@@ -31,7 +32,7 @@ export const StaffQrScannerModal: React.FC<StaffQrScannerModalProps> = ({
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const hasProcessedRef = useRef(false);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalTodayISO();
 
   // Identificar qué miembro del staff es el usuario actual
   const userPrefix = user?.email?.split('@')[0] || '';

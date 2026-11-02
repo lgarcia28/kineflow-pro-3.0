@@ -247,7 +247,6 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           lastName: newStaff.lastName,
           username: newStaff.username,
           role: newStaff.role,
-          password: newStaff.password,
           activities: newStaff.role === UserRole.KINE ? newStaff.activities : [],
           themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : "",
           hourlyRate: newStaff.hourlyRate > 0 ? newStaff.hourlyRate : 0
@@ -289,7 +288,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       firstName: staff.firstName,
       lastName: staff.lastName,
       username: staff.username,
-      password: staff.password || '',
+      password: '',
       role: staff.role as UserRole,
       activities: staff.activities || [],
       themeColor: staff.themeColor || 'blue',
@@ -623,7 +622,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               <Shield size={32} />
             </div>
             <div>
-              <div className="text-3xl font-black text-slate-900">{staffList.length - 1}</div>
+              <div className="text-3xl font-black text-slate-900">{staffList.filter(s => s.id !== user?.uid).length}</div>
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Empleados Activos</div>
             </div>
           </div>

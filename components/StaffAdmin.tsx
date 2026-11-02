@@ -19,6 +19,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { CLINICAL_ACTIVITIES, STAFF_COLORS } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { StaffPayrollView } from './StaffPayrollView';
+import { generateStaffEmail } from '../utils/authUtils';
 
 interface StaffAdminProps {
   staff: StaffMember[];
@@ -67,23 +68,22 @@ export const StaffAdmin: React.FC<StaffAdminProps> = ({
     setIsLoading(true);
     setError(null);
 
-    const email = `${newMember.username}@${user.tenantId || 'kineflow'}.app`;
+    const cleanUsername = newMember.username.toLowerCase().trim();
+    const email = generateStaffEmail(cleanUsername);
 
     try {
-      let uid = Math.random().toString(36).substr(2, 9);
-
-      if (secondaryAuth) {
-        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, newMember.password);
-        uid = userCredential.user.uid;
-      } else {
-        console.warn("Secondary auth no configurado, creando id aleatorio...");
+      if (!secondaryAuth) {
+        throw new Error('El servicio de autenticación secundario no está inicializado.');
       }
+
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, newMember.password);
+      const uid = userCredential.user.uid;
 
       onAddStaff({
         id: uid,
         uid: uid,
-        tenantId: user.tenantId || 'default',
-        username: newMember.username,
+        tenantId: user.tenantId || 'default_tenant',
+        username: cleanUsername,
         firstName: newMember.firstName,
         lastName: newMember.lastName,
         role: newMember.role as UserRole,

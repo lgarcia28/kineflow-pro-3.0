@@ -10,14 +10,16 @@ import {
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, isSupported, Analytics } from 'firebase/analytics';
 
+const metaEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env || {};
+
 const firebaseConfig = {
-  apiKey: "AIzaSyBEvk3PuZ-HvNxBcgndtunv7SP9IjxBJps",
-  authDomain: "kineflow-pro2.firebaseapp.com",
-  projectId: "kineflow-pro2",
-  storageBucket: "kineflow-pro2.firebasestorage.app",
-  messagingSenderId: "360109819538",
-  appId: "1:360109819538:web:083451995f3f071e86884b",
-  measurementId: "G-D6YV7K8Z9W"
+  apiKey: metaEnv.VITE_FIREBASE_API_KEY || "AIzaSyBEvk3PuZ-HvNxBcgndtunv7SP9IjxBJps",
+  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || "kineflow-pro2.firebaseapp.com",
+  projectId: metaEnv.VITE_FIREBASE_PROJECT_ID || "kineflow-pro2",
+  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || "kineflow-pro2.firebasestorage.app",
+  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || "360109819538",
+  appId: metaEnv.VITE_FIREBASE_APP_ID || "1:360109819538:web:083451995f3f071e86884b",
+  measurementId: metaEnv.VITE_FIREBASE_MEASUREMENT_ID || "G-D6YV7K8Z9W"
 };
 
 const isPlaceholder = (val: string | undefined) => !val || val.includes('...') || val === 'undefined';

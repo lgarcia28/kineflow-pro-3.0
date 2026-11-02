@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { useAuthStore } from '../store/authStore';
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { UserRole } from '../types';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -19,26 +19,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           if (!db) {
             console.warn("DB not initialized");
+            setInitializing(false);
             return;
           }
-          // Attempt to find user profile in Firestore
-          // First check staff
-          const staffQ = query(collection(db, 'staff'), where('uid', '==', firebaseUser.uid));
-          const staffSnap = await getDocs(staffQ);
-          
-          if (!staffSnap.empty) {
-            const staffData = staffSnap.docs[0].data();
+
+          // 1. Check direct staff document by UID first (compliant with strict security rules)
+          const directStaffSnap = await getDoc(doc(db, 'staff', firebaseUser.uid));
+          if (directStaffSnap.exists()) {
+            const staffData = directStaffSnap.data();
             setAuth({
               uid: firebaseUser.uid,
               role: staffData.role || UserRole.KINE,
               tenantId: staffData.tenantId || 'default_tenant',
               email: firebaseUser.email,
-              displayName: staffData.firstName + ' ' + staffData.lastName
+              displayName: `${staffData.firstName || ''} ${staffData.lastName || ''}`.trim()
             });
             return;
           }
 
-          // If not staff, check patients
+          // 2. Check direct patient document by UID
+          const directPatientSnap = await getDoc(doc(db, 'patients', firebaseUser.uid));
+          if (directPatientSnap.exists()) {
+            const patientData = directPatientSnap.data();
+            setAuth({
+              uid: firebaseUser.uid,
+              role: UserRole.PATIENT,
+              tenantId: patientData.tenantId || 'default_tenant',
+              email: firebaseUser.email,
+              assignedDni: patientData.dni,
+              displayName: `${patientData.firstName || ''} ${patientData.lastName || ''}`.trim()
+            });
+            return;
+          }
+
+          // 3. Fallback query by uid field if document ID differs from Auth UID
           const patientQ = query(collection(db, 'patients'), where('uid', '==', firebaseUser.uid));
           const patientSnap = await getDocs(patientQ);
 
@@ -50,115 +64,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               tenantId: patientData.tenantId || 'default_tenant',
               email: firebaseUser.email,
               assignedDni: patientData.dni,
-              displayName: patientData.firstName + ' ' + patientData.lastName
+              displayName: `${patientData.firstName || ''} ${patientData.lastName || ''}`.trim()
             });
             return;
           }
 
-          // Fallback especial para recepción si falló la creación del documento
-          if (firebaseUser.email === 'recepcion@staff.kineflow.com') {
-             try {
-                await setDoc(doc(db, 'staff', firebaseUser.uid), {
-                  id: firebaseUser.uid,
-                  uid: firebaseUser.uid,
-                  firstName: 'Admin',
-                  lastName: 'Recepción',
-                  username: 'recepcion',
-                  password: '', 
-                  role: UserRole.RECEPCION,
-                  tenantId: 'default_tenant'
-                }, { merge: true });
-             } catch (e) { console.warn(e); }
-             
-             setAuth({
-               uid: firebaseUser.uid,
-               role: UserRole.RECEPCION,
-               tenantId: 'default_tenant',
-               email: firebaseUser.email,
-               displayName: 'Admin Recepción'
-             });
-             return;
-          }
-
-          // Fallback especial para Kine si falló la creación del documento
-          if (firebaseUser.email === 'kine@staff.kineflow.com') {
-             try {
-                await setDoc(doc(db, 'staff', firebaseUser.uid), {
-                  id: firebaseUser.uid,
-                  uid: firebaseUser.uid,
-                  firstName: 'Admin',
-                  lastName: 'Kinesiólogo',
-                  username: 'kine',
-                  password: '', 
-                  role: UserRole.KINE,
-                  tenantId: 'default_tenant'
-                }, { merge: true });
-             } catch (e) { console.warn(e); }
-             
-             setAuth({
-               uid: firebaseUser.uid,
-               role: UserRole.KINE,
-               tenantId: 'default_tenant',
-               email: firebaseUser.email,
-               displayName: 'Admin Kinesiólogo'
-             });
-             return;
-          }
-
-          // Fallback especial para Dueño General SaaS (Súper Administrador)
-          if (firebaseUser.email === 'super_admin@kineflow.com') {
-             try {
-                await setDoc(doc(db, 'staff', firebaseUser.uid), {
-                  id: firebaseUser.uid,
-                  uid: firebaseUser.uid,
-                  firstName: 'Dueño',
-                  lastName: 'Plataforma',
-                  username: 'super_admin',
-                  password: '', 
-                  role: UserRole.SUPER_ADMIN,
-                  tenantId: 'global'
-                }, { merge: true });
-             } catch (e) { console.warn(e); }
-             
-             setAuth({
-               uid: firebaseUser.uid,
-               role: UserRole.SUPER_ADMIN,
-               tenantId: 'global',
-               email: firebaseUser.email,
-               displayName: 'Dueño Plataforma'
-             });
-             return;
-          }
-
-          // Fallback especial para Dueño de Clínica si falló la creación del documento
-          if (firebaseUser.email === 'admin_master@kineflow.com') {
-             try {
-                await setDoc(doc(db, 'staff', firebaseUser.uid), {
-                  id: firebaseUser.uid,
-                  uid: firebaseUser.uid,
-                  firstName: 'Director',
-                  lastName: 'Institucional',
-                  username: 'admin',
-                  password: '', 
-                  role: UserRole.TENANT_ADMIN,
-                  tenantId: 'default_tenant'
-                }, { merge: true });
-             } catch (e) { console.warn(e); }
-             
-             setAuth({
-               uid: firebaseUser.uid,
-               role: UserRole.TENANT_ADMIN,
-               tenantId: 'default_tenant',
-               email: firebaseUser.email,
-               displayName: 'Director Institucional'
-             });
-             return;
-          }
-
-          // Fallback genérico si el documento no se encontró
+          // Fallback genérico con privilegio mínimo (PATIENT) si el documento no existe aún
           setAuth({
             uid: firebaseUser.uid,
-            role: UserRole.PATIENT, // default fallback
+            role: UserRole.PATIENT,
             tenantId: 'default_tenant',
             email: firebaseUser.email
           });

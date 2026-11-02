@@ -4,6 +4,7 @@ import { secondaryAuth, auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { generatePatientEmail } from '../utils/authUtils';
+import { getLocalTodayISO, getLocalDateOffsetISO } from '../utils/dateUtils';
 import { useAuthStore } from '../store/authStore';
 import { 
   UserPlus, 
@@ -227,15 +228,15 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     lastName: '',
     dni: '',
     condition: '',
-    injuryDate: new Date().toISOString().split('T')[0],
+    injuryDate: getLocalTodayISO(),
     surgeryDate: '',
     surgeryType: '',
     sessionsPerWeek: 3,
     planType: PlanType.SESSIONS,
     totalSessionsPaid: 12,
     remainingSessions: 12,
-    paymentDate: new Date().toISOString().split('T')[0],
-    expirationDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+    paymentDate: getLocalTodayISO(),
+    expirationDate: getLocalDateOffsetISO(30),
     hasHomePlan: false,
     checkInStatus: CheckInStatus.IDLE,
     photoUrl: 'https://picsum.photos/200/200',
@@ -261,15 +262,15 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
       lastName: '',
       dni: '',
       condition: '',
-      injuryDate: new Date().toISOString().split('T')[0],
+      injuryDate: getLocalTodayISO(),
       surgeryDate: '',
       surgeryType: '',
       sessionsPerWeek: 3,
       planType: PlanType.SESSIONS,
       totalSessionsPaid: 12,
       remainingSessions: 12,
-      paymentDate: new Date().toISOString().split('T')[0],
-      expirationDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+      paymentDate: getLocalTodayISO(),
+      expirationDate: getLocalDateOffsetISO(30),
       hasHomePlan: false,
       checkInStatus: CheckInStatus.IDLE,
       photoUrl: 'https://picsum.photos/200/200',
@@ -292,7 +293,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const markAppointmentStatus = (patient: Patient, app: Appointment, status: 'COMPLETED' | 'CANCELLED' | 'NOSHOW') => {
     onUpdateAppointment({ ...app, status });
     let updatedPatient = { ...patient };
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalTodayISO();
     
     if (status === 'COMPLETED') {
       if (patient.planType === PlanType.SESSIONS) {
@@ -403,7 +404,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
           id: authUid, // Use the auth UID as the document ID for consistency
           uid: authUid,
           tenantId: tenantId, 
-          lastVisit: new Date().toISOString().split('T')[0],
+          lastVisit: getLocalTodayISO(),
           routine: {
             id: `r_${Date.now()}`,
             stage: formStage,
@@ -457,14 +458,14 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
       updatedPatient.remainingSessions = (patient.remainingSessions ?? 0) - 1;
     }
     
+    const today = getLocalTodayISO();
     // Cambiamos estado a "En Sala"
     updatedPatient.checkInStatus = CheckInStatus.IN_ROOM;
-    updatedPatient.lastVisit = new Date().toISOString().split('T')[0];
+    updatedPatient.lastVisit = today;
     
     onUpdatePatient(updatedPatient);
 
     // Marcar turno de hoy como completado si existe y estaba SCHEDULED
-    const today = new Date().toISOString().split('T')[0];
     const todayApp = appointments.find((a: Appointment) => a.patientId === patient.id && a.date === today && a.status === 'SCHEDULED');
     if (todayApp) {
       onUpdateAppointment({ ...todayApp, status: 'COMPLETED' });
@@ -473,7 +474,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
 
   const handleCheckOut = (patient: Patient) => {
     if (window.confirm(`¿Finalizar sesión de ${patient.firstName} ${patient.lastName}?`)) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalTodayISO();
       const newHistory = [`Sesión finalizada el ${today}`, ...(patient.history || [])];
       onUpdatePatient({ ...patient, checkInStatus: CheckInStatus.IDLE, lastVisit: today, history: newHistory });
     }
@@ -482,7 +483,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const handleRegisterPayment = () => {
     if (!paymentPatient) return;
     
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalTodayISO();
     let updatedPatient = { ...paymentPatient, paymentDate: today };
     let historyMsg = `Pago registrado (${today}): `;
 
@@ -502,7 +503,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
       const now = new Date();
       let baseDate = currentExp > now ? currentExp : now;
       baseDate.setMonth(baseDate.getMonth() + paymentValue);
-      updatedPatient.expirationDate = baseDate.toISOString().split('T')[0];
+      updatedPatient.expirationDate = getLocalTodayISO(baseDate);
       historyMsg += `Abono por tiempo (${paymentValue} mes/es). Nuevo vto: ${updatedPatient.expirationDate}`;
     }
 
@@ -563,7 +564,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     `${p.firstName} ${p.lastName} ${p.dni}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalTodayISO();
   const todaysAppointments = appointments.filter(a => a.date === todayStr);
 
 

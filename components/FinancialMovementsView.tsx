@@ -356,14 +356,28 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
   };
 
   // Download Cash Flow Excel (Archivo 1: [Mes]_[Año]_Ingresos_y_Gastos.xlsx)
+  const [exportingType, setExportingType] = useState<'CASH' | 'EERR' | null>(null);
+
   const handleExportExcel = async () => {
-    const monthName = MONTH_NAMES[selectedMonth - 1] || 'Mes';
-    await exportCashFlowExcel(monthMovements, monthName, selectedYear);
+    if (exportingType) return;
+    try {
+      setExportingType('CASH');
+      const monthName = MONTH_NAMES[selectedMonth - 1] || 'Mes';
+      await exportCashFlowExcel(monthMovements, monthName, selectedYear);
+    } finally {
+      setExportingType(null);
+    }
   };
 
   // Download EERR Excel (Archivo 2: EERR_RTP_[Mes]_[Año].xlsx)
   const handleExportEERR = async () => {
-    await exportEERRExcel(movements, selectedMonth, selectedYear);
+    if (exportingType) return;
+    try {
+      setExportingType('EERR');
+      await exportEERRExcel(movements, selectedMonth, selectedYear);
+    } finally {
+      setExportingType(null);
+    }
   };
 
   // Parse Excel File for Import
@@ -569,21 +583,23 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
           {/* Botón A: Exportar Caja Diaria (Excel) -> [Mes]_[Año]_Ingresos_y_Gastos.xlsx */}
           <button
             onClick={handleExportExcel}
-            className="px-3.5 py-2.5 rounded-2xl text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
+            disabled={exportingType !== null}
+            className="px-3.5 py-2.5 rounded-2xl text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-50 shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
             title="Descargar archivo independiente 1: [Mes]_[Año]_Ingresos_y_Gastos.xlsx (Resumen, Transferencias y Efectivo)"
           >
-            <Download size={14} />
-            <span>📥 Exportar Caja Diaria (Excel)</span>
+            <Download size={14} className={exportingType === 'CASH' ? 'animate-bounce' : ''} />
+            <span>{exportingType === 'CASH' ? 'Generando Excel...' : '📥 Exportar Caja Diaria (Excel)'}</span>
           </button>
 
           {/* Botón B: Exportar Estado de Resultados (Excel) -> EERR_RTP_[Mes]_[Año].xlsx */}
           <button
             onClick={handleExportEERR}
-            className="px-3.5 py-2.5 rounded-2xl text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
+            disabled={exportingType !== null}
+            className="px-3.5 py-2.5 rounded-2xl text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 disabled:opacity-50 shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
             title="Descargar archivo independiente 2: EERR_RTP_[Mes]_[Año].xlsx (Dashboard Gerencial y Económico)"
           >
-            <FileSpreadsheet size={14} />
-            <span>📥 Exportar Estado de Resultados (Excel)</span>
+            <FileSpreadsheet size={14} className={exportingType === 'EERR' ? 'animate-bounce' : ''} />
+            <span>{exportingType === 'EERR' ? 'Generando Excel...' : '📥 Exportar Estado de Resultados (Excel)'}</span>
           </button>
 
           {/* View P&L Reports */}
