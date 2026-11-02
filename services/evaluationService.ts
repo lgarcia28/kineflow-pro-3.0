@@ -1,18 +1,20 @@
 import { db } from '../firebase';
-import { collection, query, where, getDocs, addDoc, updateDoc, doc, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc } from 'firebase/firestore';
 import { ClinicalEvaluation } from '../types';
+import { getLocalTodayISO } from '../utils/dateUtils';
 
-const COLLECTION_NAME = 'evaluations';
+const COLLECTION_NAME = 'clinical_evaluations';
 
 export const evaluationService = {
   /**
    * Obtiene todas las evaluaciones de un paciente
    */
-  async getByPatientId(patientId: string): Promise<ClinicalEvaluation[]> {
+  async getByPatientId(patientId: string, tenantId: string = 'default_tenant'): Promise<ClinicalEvaluation[]> {
     if (!db) return [];
     try {
       const q = query(
         collection(db, COLLECTION_NAME),
+        where('tenantId', '==', tenantId),
         where('patientId', '==', patientId)
       );
       
@@ -33,12 +35,13 @@ export const evaluationService = {
   /**
    * Crea una nueva evaluación
    */
-  async create(evaluation: Omit<ClinicalEvaluation, 'id'>): Promise<string | null> {
+  async create(evaluation: Omit<ClinicalEvaluation, 'id'>, tenantId: string = 'default_tenant'): Promise<string | null> {
     if (!db) return null;
     try {
       const docRef = await addDoc(collection(db, COLLECTION_NAME), {
         ...evaluation,
-        date: evaluation.date || new Date().toISOString().split('T')[0]
+        tenantId: (evaluation as any).tenantId || tenantId,
+        date: evaluation.date || getLocalTodayISO()
       });
       return docRef.id;
     } catch (error) {

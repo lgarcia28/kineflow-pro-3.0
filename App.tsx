@@ -665,17 +665,19 @@ export function App() {
     console.log(`Bulk adding ${safeDataList.length} patients`);
     setPatients(prev => [...prev, ...safeDataList]);
     if (isConfigValid && db) {
+      const firestore = db;
       try {
-        const promises = safeDataList.map(p => setDoc(doc(db!, 'patients', p.id), p));
-        await Promise.all(promises);
+        for (let i = 0; i < safeDataList.length; i += 400) {
+          const chunk = safeDataList.slice(i, i + 400);
+          const batch = writeBatch(firestore);
+          chunk.forEach(p => {
+            batch.set(doc(firestore, 'patients', p.id), p);
+          });
+          await batch.commit();
+        }
         console.log("Bulk patients saved to Firestore successfully");
       } catch (e: any) { 
         console.error("Error bulk saving patients to Firestore:", e);
-        if (e.code === 'permission-denied') {
-          alert("Error de Permisos: La base de datos está bloqueada. Asegúrese de haber configurado las Reglas de Firestore en el Firebase Console.");
-        } else {
-          alert("Error al guardar algunos pacientes en la base de datos.");
-        }
       }
     }
   };
@@ -722,14 +724,18 @@ export function App() {
       checkInStatus: CheckInStatus.IDLE
     })));
 
-    // Update Firestore
+    // Update Firestore in atomic batch
     if (isConfigValid && db) {
       const firestore = db;
       try {
-        const promises = patientsToReset.map(p => 
-          updateDoc(doc(firestore, 'patients', p.id), { checkInStatus: CheckInStatus.IDLE })
-        );
-        await Promise.all(promises);
+        for (let i = 0; i < patientsToReset.length; i += 400) {
+          const chunk = patientsToReset.slice(i, i + 400);
+          const batch = writeBatch(firestore);
+          chunk.forEach(p => {
+            batch.update(doc(firestore, 'patients', p.id), { checkInStatus: CheckInStatus.IDLE });
+          });
+          await batch.commit();
+        }
         console.log("Waiting room cleared successfully");
       } catch (e) {
         console.error("Error clearing waiting room:", e);
@@ -1108,13 +1114,36 @@ export function App() {
   };
 
   const handleAddAppointment = async (app: Appointment) => {
-    const safeData = { ...app, tenantId: user?.tenantId || 'default_tenant' };
+    const safeData = sanitizeForFirestore({ ...app, tenantId: user?.tenantId || 'default_tenant' });
     if (db) {
       try {
         await setDoc(doc(db, 'appointments', safeData.id), safeData);
       } catch (e) { console.error(e); }
     } else {
       setAppointments(prev => [...prev, safeData]);
+    }
+  };
+
+  const handleBulkAddAppointments = async (apps: Appointment[]) => {
+    if (apps.length === 0) return;
+    const activeTenantId = user?.tenantId || 'default_tenant';
+    const safeApps = apps.map(app => sanitizeForFirestore({ ...app, tenantId: activeTenantId }));
+    if (db) {
+      const firestore = db;
+      try {
+        for (let i = 0; i < safeApps.length; i += 400) {
+          const chunk = safeApps.slice(i, i + 400);
+          const batch = writeBatch(firestore);
+          chunk.forEach(app => {
+            batch.set(doc(firestore, 'appointments', app.id), app);
+          });
+          await batch.commit();
+        }
+      } catch (e) {
+        console.error('Error bulk adding appointments:', e);
+      }
+    } else {
+      setAppointments(prev => [...prev, ...safeApps]);
     }
   };
 
@@ -1166,7 +1195,9 @@ export function App() {
   ];
 
   const currentPatient = patients.find(p => p.id === selectedPatientId);
-  const loggedPatient = patients.find(p => p.dni === user?.assignedDni);
+  const loggedPatient = patients.find(
+    p => (p.dni || '').replace(/\D/g, '').trim() === (user?.assignedDni || '').replace(/\D/g, '').trim()
+  );
 
   const isTotemRoute = window.location.pathname === '/totem' || window.location.pathname === '/totem-kiosk' || window.location.pathname === '/recepcion-totem' || showTotemKiosk;
 
@@ -1177,8 +1208,10 @@ export function App() {
           patients={patients}
           staff={staff}
           timeLogs={staffTimeLogs}
+          appointments={appointments}
           tenantSettings={tenantSettings}
           onUpdatePatient={handleUpdatePatient}
+          onUpdateAppointment={handleUpdateAppointment}
           onAddStaffTimeLog={handleAddStaffTimeLog}
           onUpdateStaffTimeLog={handleUpdateStaffTimeLog}
           onExitKiosk={() => {
@@ -1321,6 +1354,7 @@ export function App() {
               appointments={appointments}
               staff={staff}
               onAddAppointment={handleAddAppointment}
+              onBulkAddAppointments={handleBulkAddAppointments}
               onUpdateAppointment={handleUpdateAppointment}
               onDeleteAppointment={handleDeleteAppointment}
               inventory={inventory}
@@ -1340,6 +1374,18 @@ export function App() {
             />
           ) : user.role === UserRole.TENANT_ADMIN ? (
             <AdminDashboardView 
+              staff={staff}
+              patients={patients}
+              appointments={appointments}
+              timeLogs={staffTimeLogs}
+              tenantSettings={tenantSettings}
+              onAddStaff={handleAddStaff}
+              onUpdateStaffMember={handleUpdateStaffMember}
+              onDeleteStaff={handleDeleteStaff}
+              onAddStaffTimeLog={handleAddStaffTimeLog}
+              onUpdateStaffTimeLog={handleUpdateStaffTimeLog}
+              onDeleteStaffTimeLog={handleDeleteStaffTimeLog}
+              onUpdateTenantSettings={handleUpdateTenantSettings}
               financialMovements={financialMovements}
               onAddFinancialMovement={handleAddFinancialMovement}
               onUpdateFinancialMovement={handleUpdateFinancialMovement}

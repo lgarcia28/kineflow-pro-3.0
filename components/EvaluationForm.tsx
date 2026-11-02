@@ -9,6 +9,7 @@ import { ClinicalEvaluation, Patient, UserRole } from '../types';
 import { processEvaluation } from '../services/evaluationLogic';
 import { evaluationService } from '../services/evaluationService';
 import { EVALUATION_PROTOCOLS } from '../constants';
+import { getLocalTodayISO } from '../utils/dateUtils';
 
 
 // --- Sub-components outside to fix focus issues ---
@@ -178,7 +179,7 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
   const [measurements, setMeasurements] = useState<any>(() => {
     const defaultState: any = {
       basic: { 
-        date: new Date().toISOString().split('T')[0], 
+        date: getLocalTodayISO(), 
         dominantLeg: 'derecha', 
         injuredLeg: 'ninguna',
         pain_during_eval: 'No'
@@ -307,6 +308,7 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
       };
 
       const newEval: Omit<ClinicalEvaluation, 'id'> = {
+        tenantId: patient.tenantId || 'default_tenant',
         patientId: patient.id,
         kineId: 'kine_123',
         date: measurements.basic.date,
@@ -316,7 +318,7 @@ export const EvaluationForm: React.FC<EvaluationFormProps> = ({ patient, onSave,
         summaryMetrics
       };
 
-      const id = await evaluationService.create(newEval);
+      const id = await evaluationService.create(newEval, patient.tenantId || 'default_tenant');
       if (id) {
         onSave({ ...newEval, id } as ClinicalEvaluation);
       }

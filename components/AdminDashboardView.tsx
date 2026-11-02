@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import React, { useState, useEffect, useMemo } from 'react';
+import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db, secondaryAuth } from '../firebase';
-import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuthStore } from '../store/authStore';
 import { UserRole, StaffMember, Patient, CLINICAL_ACTIVITIES, STAFF_COLORS, TenantSettings, Appointment, StaffTimeLog, FinancialMovement } from '../types';
+import { generateStaffEmail } from '../utils/authUtils';
+import { getLocalTodayISO } from '../utils/dateUtils';
 import { 
   Users, 
   Activity, 
@@ -33,6 +35,18 @@ import { FinancialReportsView } from './FinancialReportsView';
 import { parseMediaUrl } from '../utils/mediaUrl';
 
 interface AdminDashboardViewProps {
+  staff?: StaffMember[];
+  patients?: Patient[];
+  appointments?: Appointment[];
+  timeLogs?: StaffTimeLog[];
+  tenantSettings?: TenantSettings;
+  onAddStaff?: (member: StaffMember) => Promise<void> | void;
+  onUpdateStaffMember?: (member: StaffMember) => Promise<void> | void;
+  onDeleteStaff?: (id: string) => Promise<void> | void;
+  onAddStaffTimeLog?: (log: StaffTimeLog) => Promise<void> | void;
+  onUpdateStaffTimeLog?: (log: StaffTimeLog) => Promise<void> | void;
+  onDeleteStaffTimeLog?: (id: string) => Promise<void> | void;
+  onUpdateTenantSettings?: (settings: Partial<TenantSettings>) => Promise<void> | void;
   financialMovements?: FinancialMovement[];
   onAddFinancialMovement?: (movement: Omit<FinancialMovement, 'id' | 'createdAt'>) => Promise<void> | void;
   onUpdateFinancialMovement?: (movement: FinancialMovement) => Promise<void> | void;
@@ -41,6 +55,18 @@ interface AdminDashboardViewProps {
 }
 
 export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
+  staff: propStaff = [],
+  patients: propPatients = [],
+  appointments: propAppointments = [],
+  timeLogs: propTimeLogs = [],
+  tenantSettings: propTenantSettings,
+  onAddStaff,
+  onUpdateStaffMember,
+  onDeleteStaff,
+  onAddStaffTimeLog,
+  onUpdateStaffTimeLog,
+  onDeleteStaffTimeLog,
+  onUpdateTenantSettings,
   financialMovements = [],
   onAddFinancialMovement = () => {},
   onUpdateFinancialMovement = () => {},
@@ -49,30 +75,49 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 }) => {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'GENERAL' | 'PAYROLL' | 'FINANCES' | 'EERR' | 'TOTEM'>('GENERAL');
-  const [staffList, setStaffList] = useState<StaffMember[]>([]);
-  const [timeLogs, setTimeLogs] = useState<StaffTimeLog[]>([]);
-  const [totalPatients, setTotalPatients] = useState(0);
-  const [todaysAppointments, setTodaysAppointments] = useState<Appointment[]>([]);
   const [selectedKineFilter, setSelectedKineFilter] = useState<string>('ALL');
-  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
+  const [confirmDeleteStaffId, setConfirmDeleteStaffId] = useState<string | null>(null);
   const [isCustomActivity, setIsCustomActivity] = useState(false);
   const [customActivityName, setCustomActivityName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
+  const [toastNotification, setToastNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const [tenantSettings, setTenantSettings] = useState<TenantSettings>({
-    priceSingleSession: 10000,
-    pricePack10: 80000,
-    priceMonthly: 50000,
-    defaultHourlyRate: 5000,
-    totemPin: '1234',
-    totemVideoUrl: '',
-    payrollType: 'HOURLY'
-  });
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToastNotification({ message, type });
+    setTimeout(() => setToastNotification(null), 3500);
+  };
+
+  const [tenantSettings, setTenantSettings] = useState<TenantSettings>(
+    propTenantSettings || {
+      priceSingleSession: 10000,
+      pricePack10: 80000,
+      priceMonthly: 50000,
+      defaultHourlyRate: 5000,
+      totemPin: '1234',
+      totemVideoUrl: '',
+      payrollType: 'HOURLY'
+    }
+  );
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  useEffect(() => {
+    if (propTenantSettings) {
+      setTenantSettings(prev => ({ ...prev, ...propTenantSettings }));
+    }
+  }, [propTenantSettings]);
+
+  const staffList = propStaff;
+  const timeLogs = propTimeLogs;
+  const totalPatients = propPatients.length;
+  const todayStr = getLocalTodayISO();
+  const todaysAppointments = useMemo(
+    () => propAppointments.filter(a => a.date === todayStr),
+    [propAppointments, todayStr]
+  );
 
   // Form State
   const [newStaff, setNewStaff] = useState({
@@ -97,98 +142,65 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
   const tenantId = user?.tenantId || 'default_tenant';
 
-  const fetchData = async () => {
-    if (!db || !user) return;
-    setLoading(true);
-    try {
-      // 1. Fetch Staff for this tenant
-      const staffQ = query(collection(db, 'staff'), where('tenantId', '==', tenantId));
-      const staffSnap = await getDocs(staffQ);
-      const staffData: StaffMember[] = [];
-      staffSnap.forEach(doc => staffData.push(doc.data() as StaffMember));
-      setStaffList(staffData);
-
-      // 2. Fetch total patients for this tenant
-      const patientsQ = query(collection(db, 'patients'), where('tenantId', '==', tenantId));
-      const patientsSnap = await getDocs(patientsQ);
-      setTotalPatients(patientsSnap.size);
-
-      // 3. Fetch Tenant Settings
-      const settingsRef = doc(db, 'tenantSettings', tenantId);
-      const settingsSnap = await getDoc(settingsRef);
-      if (settingsSnap.exists()) {
-        setTenantSettings(settingsSnap.data() as TenantSettings);
-      }
-
-      // 4. Fetch today's appointments
-      const todayStr = new Date().toISOString().split('T')[0];
-      const appQ = query(collection(db, 'appointments'), where('tenantId', '==', tenantId), where('date', '==', todayStr));
-      const appSnap = await getDocs(appQ);
-      const appData: Appointment[] = [];
-      appSnap.forEach(doc => appData.push(doc.data() as Appointment));
-      setTodaysAppointments(appData);
-
-      // 5. Fetch timeLogs for staff payroll
-      const timeLogsQ = query(collection(db, 'timeLogs'), where('tenantId', '==', tenantId));
-      const timeLogsSnap = await getDocs(timeLogsQ);
-      const timeLogsData: StaffTimeLog[] = [];
-      timeLogsSnap.forEach(doc => timeLogsData.push({ id: doc.id, ...doc.data() } as StaffTimeLog));
-      setTimeLogs(timeLogsData);
-
-    } catch (e: any) {
-      console.error("Error fetching admin data:", e);
-    } finally {
-      setLoading(false);
+  const handleUpdateStaffMemberInternal = async (member: StaffMember) => {
+    if (onUpdateStaffMember) {
+      await onUpdateStaffMember(member);
+      return;
     }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [tenantId]);
-
-  const handleUpdateStaffMember = async (member: StaffMember) => {
     if (!db) return;
     try {
       await setDoc(doc(db, 'staff', member.id), member, { merge: true });
-      setStaffList(prev => prev.map(s => s.id === member.id ? member : s));
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleAddStaffTimeLog = async (log: StaffTimeLog) => {
+  const handleAddStaffTimeLogInternal = async (log: StaffTimeLog) => {
+    if (onAddStaffTimeLog) {
+      await onAddStaffTimeLog(log);
+      return;
+    }
     if (!db) return;
     try {
       await setDoc(doc(db, 'timeLogs', log.id), log);
-      setTimeLogs(prev => [...prev, log]);
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleUpdateStaffTimeLog = async (log: StaffTimeLog) => {
+  const handleUpdateStaffTimeLogInternal = async (log: StaffTimeLog) => {
+    if (onUpdateStaffTimeLog) {
+      await onUpdateStaffTimeLog(log);
+      return;
+    }
     if (!db) return;
     try {
       await setDoc(doc(db, 'timeLogs', log.id), log, { merge: true });
-      setTimeLogs(prev => prev.map(l => l.id === log.id ? log : l));
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleDeleteStaffTimeLog = async (id: string) => {
+  const handleDeleteStaffTimeLogInternal = async (id: string) => {
+    if (onDeleteStaffTimeLog) {
+      await onDeleteStaffTimeLog(id);
+      return;
+    }
     if (!db) return;
     try {
       await deleteDoc(doc(db, 'timeLogs', id));
-      setTimeLogs(prev => prev.filter(l => l.id !== id));
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleUpdateTenantSettings = async (settings: Partial<TenantSettings>) => {
+  const handleUpdateTenantSettingsInternal = async (settings: Partial<TenantSettings>) => {
     const updated = { ...tenantSettings, ...settings };
     setTenantSettings(updated);
+    if (onUpdateTenantSettings) {
+      await onUpdateTenantSettings(settings);
+      return;
+    }
     if (db) {
       try {
         await setDoc(doc(db, 'tenantSettings', tenantId), updated, { merge: true });
@@ -198,16 +210,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     }
   };
 
-  const generateEmail = (username: string, role: string) => {
-    return `${username.toLowerCase().trim()}@staff.kineflow.com`; // Usamos dominio generico porque el tenant restringe los datos igual.
-  };
-
   const handleSubmitStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
 
-    if (!newStaff.firstName || !newStaff.lastName || (!editingStaffId && (!newStaff.username || !newStaff.password))) {
+    const cleanFirstName = newStaff.firstName.trim();
+    const cleanLastName = newStaff.lastName.trim();
+
+    if (!cleanFirstName || !cleanLastName || (!editingStaffId && (!newStaff.username || !newStaff.password))) {
       setError("Por favor completa los campos obligatorios.");
       setIsSubmitting(false);
       return;
@@ -225,17 +236,18 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       if (editingStaffId) {
         const userRef = doc(db, 'staff', editingStaffId);
         const updates: Partial<StaffMember> = {
-          firstName: newStaff.firstName,
-          lastName: newStaff.lastName,
+          firstName: cleanFirstName,
+          lastName: cleanLastName,
           role: newStaff.role,
           activities: newStaff.role === UserRole.KINE ? newStaff.activities : [],
           themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : "",
-          hourlyRate: newStaff.hourlyRate > 0 ? newStaff.hourlyRate : 0
+          hourlyRate: Math.max(0, Number(newStaff.hourlyRate) || 0)
         };
         await setDoc(userRef, updates, { merge: true });
+        showToast('Empleado actualizado correctamente.');
       } else {
         if (!secondaryAuth) throw new Error("Firebase no inicializado");
-        const email = generateEmail(newStaff.username, newStaff.role);
+        const email = generateStaffEmail(newStaff.username);
         const cred = await createUserWithEmailAndPassword(secondaryAuth, email, newStaff.password);
         const newUid = cred.user.uid;
 
@@ -243,16 +255,21 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           id: newUid,
           uid: newUid,
           tenantId: tenantId,
-          firstName: newStaff.firstName,
-          lastName: newStaff.lastName,
-          username: newStaff.username,
+          firstName: cleanFirstName,
+          lastName: cleanLastName,
+          username: newStaff.username.trim().toLowerCase(),
           role: newStaff.role,
           activities: newStaff.role === UserRole.KINE ? newStaff.activities : [],
           themeColor: newStaff.role === UserRole.KINE ? newStaff.themeColor : "",
-          hourlyRate: newStaff.hourlyRate > 0 ? newStaff.hourlyRate : 0
+          hourlyRate: Math.max(0, Number(newStaff.hourlyRate) || 0)
         };
 
-        await setDoc(doc(db, 'staff', newUid), userDoc);
+        if (onAddStaff) {
+          await onAddStaff(userDoc);
+        } else {
+          await setDoc(doc(db, 'staff', newUid), userDoc);
+        }
+        showToast('Empleado creado exitosamente.');
       }
 
       setNewStaff({
@@ -269,7 +286,6 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       setCustomActivityName('');
       setEditingStaffId(null);
       setShowAddModal(false);
-      fetchData(); // Refresh list
 
     } catch (e: any) {
       console.error(e);
@@ -299,18 +315,19 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     setShowAddModal(true);
   };
 
-  const handleDeleteStaff = async (staffId: string) => {
-    if (!window.confirm("¿Seguro que deseas eliminar el acceso a este empleado?")) return;
-    
-    // Note: Deleting Auth users client-side is technically restricted, so here we just delete 
-    // their Firestore profile which revokes their access to the app's collections.
+  const handleDeleteStaffInternal = async (staffId: string) => {
     if (!db) return;
     try {
-      await deleteDoc(doc(db, 'staff', staffId));
-      fetchData();
+      if (onDeleteStaff) {
+        await onDeleteStaff(staffId);
+      } else {
+        await deleteDoc(doc(db, 'staff', staffId));
+      }
+      setConfirmDeleteStaffId(null);
+      showToast('Acceso de empleado eliminado.');
     } catch (e) {
       console.error(e);
-      alert("Error al borrar empleado.");
+      showToast('Error al borrar empleado.', 'error');
     }
   };
 
@@ -318,26 +335,32 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     if (!db) return;
     setIsSavingSettings(true);
     try {
-      await setDoc(doc(db, 'tenantSettings', tenantId), { ...tenantSettings, id: tenantId }, { merge: true });
-      alert('Precios guardados exitosamente.');
+      await handleUpdateTenantSettingsInternal(tenantSettings);
+      showToast('Precios guardados exitosamente.');
     } catch(e) {
       console.error(e);
-      alert('Error al guardar configuración.');
+      showToast('Error al guardar configuración.', 'error');
     } finally {
       setIsSavingSettings(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 flex justify-center items-center h-full">
-        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex-1 bg-slate-50 overflow-y-auto pb-24">
+    <div className="flex-1 bg-slate-50 overflow-y-auto pb-24 relative">
+      {toastNotification && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed top-5 right-5 z-[500] px-5 py-3.5 rounded-2xl shadow-2xl border font-bold text-xs flex items-center gap-2.5 animate-in fade-in slide-in-from-top-3 duration-200 ${
+            toastNotification.type === 'error'
+              ? 'bg-red-950 text-white border-red-800'
+              : 'bg-slate-900 text-white border-slate-800'
+          }`}
+        >
+          <Check size={16} className={toastNotification.type === 'error' ? 'text-red-400' : 'text-emerald-400'} />
+          <span>{toastNotification.message}</span>
+        </div>
+      )}
       <div className="bg-indigo-900 text-white pt-10 pb-20 px-8 md:px-12 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-[80px] opacity-20 animate-pulse"></div>
         <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -413,11 +436,11 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               staff={staffList}
               timeLogs={timeLogs}
               tenantSettings={tenantSettings}
-              onUpdateStaffMember={handleUpdateStaffMember}
-              onAddStaffTimeLog={handleAddStaffTimeLog}
-              onUpdateStaffTimeLog={handleUpdateStaffTimeLog}
-              onDeleteStaffTimeLog={handleDeleteStaffTimeLog}
-              onUpdateTenantSettings={handleUpdateTenantSettings}
+              onUpdateStaffMember={handleUpdateStaffMemberInternal}
+              onAddStaffTimeLog={handleAddStaffTimeLogInternal}
+              onUpdateStaffTimeLog={handleUpdateStaffTimeLogInternal}
+              onDeleteStaffTimeLog={handleDeleteStaffTimeLogInternal}
+              onUpdateTenantSettings={handleUpdateTenantSettingsInternal}
             />
           </div>
         )}
@@ -427,6 +450,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
             <FinancialMovementsView
               movements={financialMovements}
+              patients={propPatients}
               staff={staffList}
               onAddMovement={onAddFinancialMovement}
               onUpdateMovement={onUpdateFinancialMovement}
@@ -542,11 +566,11 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                       if (!db) return;
                       setIsSavingSettings(true);
                       try {
-                        await setDoc(doc(db, 'tenantSettings', tenantId), { ...tenantSettings, id: tenantId }, { merge: true });
-                        alert('Ajustes del Tótem y Publicidad guardados correctamente.');
+                        await handleUpdateTenantSettingsInternal(tenantSettings);
+                        showToast('Ajustes del Tótem y Publicidad guardados correctamente.');
                       } catch (e) {
                         console.error(e);
-                        alert('Error al guardar ajustes.');
+                        showToast('Error al guardar ajustes.', 'error');
                       } finally {
                         setIsSavingSettings(false);
                       }
@@ -721,28 +745,28 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">1 Sesión Suelta</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
-                <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.priceSingleSession} onChange={e => setTenantSettings({...tenantSettings, priceSingleSession: Number(e.target.value)})} />
+                <input type="number" min="0" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.priceSingleSession} onChange={e => setTenantSettings({...tenantSettings, priceSingleSession: Math.max(0, Number(e.target.value) || 0)})} />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Paquete 10 Sesiones</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
-                <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.pricePack10} onChange={e => setTenantSettings({...tenantSettings, pricePack10: Number(e.target.value)})} />
+                <input type="number" min="0" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.pricePack10} onChange={e => setTenantSettings({...tenantSettings, pricePack10: Math.max(0, Number(e.target.value) || 0)})} />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Abono Mensual</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
-                <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.priceMonthly} onChange={e => setTenantSettings({...tenantSettings, priceMonthly: Number(e.target.value)})} />
+                <input type="number" min="0" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-8 font-black text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none" value={tenantSettings.priceMonthly} onChange={e => setTenantSettings({...tenantSettings, priceMonthly: Math.max(0, Number(e.target.value) || 0)})} />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-black text-indigo-600 uppercase tracking-widest ml-1">Tarifa Base Kines ($/hr)</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-indigo-400">$</span>
-                <input type="number" className="w-full bg-indigo-50/50 border border-indigo-200 rounded-2xl p-4 pl-8 font-black text-indigo-950 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" value={tenantSettings.defaultHourlyRate || 5000} onChange={e => setTenantSettings({...tenantSettings, defaultHourlyRate: Number(e.target.value)})} />
+                <input type="number" min="0" className="w-full bg-indigo-50/50 border border-indigo-200 rounded-2xl p-4 pl-8 font-black text-indigo-950 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" value={tenantSettings.defaultHourlyRate || 5000} onChange={e => setTenantSettings({...tenantSettings, defaultHourlyRate: Math.max(0, Number(e.target.value) || 0)})} />
               </div>
             </div>
           </div>
@@ -826,9 +850,26 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                           <button onClick={() => handleEditStaff(staff)} className="w-10 h-10 inline-flex border border-slate-200 items-center justify-center rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-colors" title="Editar">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                           </button>
-                          <button onClick={() => handleDeleteStaff(staff.id)} className="w-10 h-10 inline-flex border border-slate-200 items-center justify-center rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-colors" title="Eliminar">
-                            <Trash2 size={16} />
-                          </button>
+                          {confirmDeleteStaffId === staff.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleDeleteStaffInternal(staff.id)}
+                                className="px-2.5 py-2 rounded-xl text-[10px] font-black uppercase bg-red-600 text-white hover:bg-red-700 transition-colors"
+                              >
+                                Confirmar
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteStaffId(null)}
+                                className="px-2.5 py-2 rounded-xl text-[10px] font-black uppercase bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setConfirmDeleteStaffId(staff.id)} className="w-10 h-10 inline-flex border border-slate-200 items-center justify-center rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-colors" title="Eliminar">
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>

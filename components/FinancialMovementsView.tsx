@@ -118,6 +118,12 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
   const [importSummary, setImportSummary] = useState<{ transCount: number; efecCount: number; totalAmount: number } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [toastNotification, setToastNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToastNotification({ message, type });
+    setTimeout(() => setToastNotification(null), 3500);
+  };
 
   // Form State for Add / Edit
   const [formType, setFormType] = useState<FinancialMovementType>('INCOME');
@@ -485,7 +491,7 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
         });
 
         if (importedRows.length === 0) {
-          alert('No se pudieron encontrar registros en las hojas "Transferencias" o "Efectivo" de este archivo Excel.');
+          showToast('No se encontraron registros en las hojas "Transferencias" o "Efectivo".', 'error');
           return;
         }
 
@@ -494,7 +500,7 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
         setIsImportModalOpen(true);
       } catch (err) {
         console.error('Error al leer Excel:', err);
-        alert('Error al leer el archivo Excel. Asegúrate de que sea un archivo válido .xlsx');
+        showToast('Error al leer el archivo Excel. Asegúrate de que sea un archivo válido .xlsx', 'error');
       }
     };
     reader.readAsBinaryString(file);
@@ -506,21 +512,36 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
     if (!parsedImportMovements.length || !onBulkAddMovements) return;
     setIsImporting(true);
     try {
+      const count = parsedImportMovements.length;
       await onBulkAddMovements(parsedImportMovements);
       setIsImportModalOpen(false);
       setParsedImportMovements([]);
       setImportSummary(null);
-      alert(`¡Se importaron ${parsedImportMovements.length} movimientos con éxito!`);
+      showToast(`¡Se importaron ${count} movimientos con éxito!`);
     } catch (err) {
       console.error('Error importing:', err);
-      alert('Hubo un error al guardar los movimientos.');
+      showToast('Hubo un error al guardar los movimientos.', 'error');
     } finally {
       setIsImporting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {toastNotification && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed top-5 right-5 z-[500] px-5 py-3.5 rounded-2xl shadow-2xl border font-bold text-xs flex items-center gap-2.5 animate-in fade-in slide-in-from-top-3 duration-200 ${
+            toastNotification.type === 'error'
+              ? 'bg-red-950 text-white border-red-800'
+              : 'bg-slate-900 text-white border-slate-800'
+          }`}
+        >
+          <CheckCircle size={16} className={toastNotification.type === 'error' ? 'text-red-400' : 'text-emerald-400'} />
+          <span>{toastNotification.message}</span>
+        </div>
+      )}
       {/* Top Header / Actions */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
         <div>

@@ -60,6 +60,7 @@ interface RecepcionViewProps {
   appointments: Appointment[];
   staff: StaffMember[];
   onAddAppointment: (app: Appointment) => void;
+  onBulkAddAppointments?: (apps: Appointment[]) => void;
   onUpdateAppointment: (app: Appointment) => void;
   onDeleteAppointment: (id: string) => void;
   inventory?: InventoryItem[];
@@ -95,6 +96,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   appointments,
   staff,
   onAddAppointment,
+  onBulkAddAppointments,
   onUpdateAppointment,
   onDeleteAppointment,
   inventory = [],
@@ -125,6 +127,21 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const [autoSchedulePatientId, setAutoSchedulePatientId] = useState<string | null>(null);
   const [formStage, setFormStage] = useState<Stage>(Stage.KINESIOLOGY);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [toastNotification, setToastNotification] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmLabel?: string;
+    isDanger?: boolean;
+    onConfirm: () => void;
+  } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setToastNotification({ message, type });
+    setTimeout(() => setToastNotification(null), 3500);
+  };
+
+  const normalizeDni = (dni?: string) => (dni || '').replace(/\D/g, '').trim();
 
   const getExportData = () => {
     return patients.map(p => ({
@@ -166,21 +183,22 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const handleExportPatientsExcel = () => {
     setShowExportMenu(false);
     if (!patients || patients.length === 0) {
-      alert('No hay pacientes disponibles para exportar.');
+      showToast('No hay pacientes disponibles para exportar.', 'error');
       return;
     }
     const exportData = getExportData();
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Pacientes');
-    const filename = `Exportacion_Pacientes_Kineflow_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const filename = `Exportacion_Pacientes_Kineflow_${getLocalTodayISO()}.xlsx`;
     XLSX.writeFile(workbook, filename);
+    showToast('Base de pacientes exportada en Excel.');
   };
 
   const handleExportPatientsCSV = () => {
     setShowExportMenu(false);
     if (!patients || patients.length === 0) {
-      alert('No hay pacientes disponibles para exportar.');
+      showToast('No hay pacientes disponibles para exportar.', 'error');
       return;
     }
     const exportData = getExportData();
@@ -192,10 +210,11 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `Exportacion_Pacientes_Kineflow_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `Exportacion_Pacientes_Kineflow_${getLocalTodayISO()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    showToast('Base de pacientes exportada en CSV.');
   };
   const [paymentPatient, setPaymentPatient] = useState<Patient | null>(null);
   const [paymentTypeState, setPaymentTypeState] = useState<'SINGLE' | 'PACK' | 'MONTH'>('MONTH');
@@ -294,17 +313,18 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     onUpdateAppointment({ ...app, status });
     let updatedPatient = { ...patient };
     const today = getLocalTodayISO();
+    const wasAlreadyInRoom = patient.checkInStatus === CheckInStatus.IN_ROOM;
     
     if (status === 'COMPLETED') {
-      if (patient.planType === PlanType.SESSIONS) {
-        updatedPatient.remainingSessions = (patient.remainingSessions ?? 0) - 1;
+      if (!wasAlreadyInRoom && patient.planType === PlanType.SESSIONS) {
+        updatedPatient.remainingSessions = (Number(patient.remainingSessions) || 0) - 1;
       }
       updatedPatient.checkInStatus = CheckInStatus.IN_ROOM;
       updatedPatient.lastVisit = today;
       updatedPatient.history = [`Turno completado (${today})`, ...(patient.history || [])];
     } else if (status === 'NOSHOW') {
       if (patient.planType === PlanType.SESSIONS) {
-        updatedPatient.remainingSessions = (patient.remainingSessions ?? 0) - 1;
+        updatedPatient.remainingSessions = (Number(patient.remainingSessions) || 0) - 1;
         updatedPatient.history = [`Ausente sin aviso (${today}) - Sesión descontada`, ...(patient.history || [])];
       } else {
         updatedPatient.history = [`Ausente sin aviso (${today})`, ...(patient.history || [])];
@@ -355,22 +375,43 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   const handlePatientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check for duplicate DNI
-    const duplicate = patients.find((p: Patient) => p.dni === patientForm.dni && (!editingPatient || p.id !== editingPatient.id));
-    if (duplicate) {
-      setError(`Ya existe un paciente con el DNI ${patientForm.dni} (${duplicate.firstName} ${duplicate.lastName})`);
+    const cleanDni = normalizeDni(patientForm.dni);
+    const cleanFirstName = (patientForm.firstName || '').trim();
+    const cleanLastName = (patientForm.lastName || '').trim();
+    if (!cleanFirstName || !cleanLastName || !cleanDni) {
+      setError('Nombre, Apellido y DNI numérico son obligatorios.');
       return;
     }
+
+    // Check for duplicate DNI (normalized without dots or spaces)
+    const duplicate = patients.find(
+      (p: Patient) => normalizeDni(p.dni) === cleanDni && (!editingPatient || p.id !== editingPatient.id)
+    );
+    if (duplicate) {
+      setError(`Ya existe un paciente con el DNI ${cleanDni} (${duplicate.firstName} ${duplicate.lastName})`);
+      return;
+    }
+
+    const sanitizedPatientForm: Partial<Patient> = {
+      ...patientForm,
+      firstName: cleanFirstName,
+      lastName: cleanLastName,
+      dni: cleanDni,
+      sessionsPerWeek: Math.max(1, Number(patientForm.sessionsPerWeek) || 3),
+      totalSessionsPaid: Math.max(0, Number(patientForm.totalSessionsPaid) || 0),
+      remainingSessions: Number(patientForm.remainingSessions) || 0
+    };
 
     if (editingPatient) {
       onUpdatePatient({
         ...editingPatient,
-        ...patientForm as Patient,
+        ...sanitizedPatientForm as Patient,
         routine: {
           ...editingPatient.routine,
           stage: formStage
         }
       });
+      showToast(`Perfil de ${cleanFirstName} ${cleanLastName} actualizado.`);
     } else {
       // Validate tenantId
       const tenantId = useAuthStore.getState().user?.tenantId;
@@ -381,7 +422,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
 
       // Initialize routine days based on sessionsPerWeek
       const days: RoutineDay[] = [];
-      const numDays = patientForm.sessionsPerWeek || 3;
+      const numDays = sanitizedPatientForm.sessionsPerWeek || 3;
       for (let i = 1; i <= numDays; i++) {
         days.push({ id: `day-${Date.now()}-${i}`, name: `Día ${i}`, exercises: [] });
       }
@@ -391,16 +432,16 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
 
         // Attempt to create Firebase Auth user
         if (secondaryAuth) {
-          const email = generatePatientEmail(patientForm.dni!);
-          // The initial password is the DNI
-          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, patientForm.dni!);
+          const email = generatePatientEmail(cleanDni);
+          // The initial password is the normalized DNI
+          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, cleanDni);
           authUid = userCredential.user.uid;
         } else {
           console.warn("Secondary auth not initialized, skipping Firebase Auth creation.");
         }
 
         const patient: Patient = {
-          ...patientForm as Patient,
+          ...sanitizedPatientForm as Patient,
           id: authUid, // Use the auth UID as the document ID for consistency
           uid: authUid,
           tenantId: tenantId, 
@@ -432,30 +473,32 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
   };
 
   const handleResetPassword = async (patient: Patient) => {
-    if (!patient.dni) {
+    const cleanDni = normalizeDni(patient.dni);
+    if (!cleanDni) {
       setError("El paciente no tiene un DNI registrado.");
       return;
     }
     try {
-      const email = generatePatientEmail(patient.dni);
+      const email = generatePatientEmail(cleanDni);
       if (auth) {
         await sendPasswordResetEmail(auth, email);
-        alert(`Se ha enviado un correo a ${email} (si está configurado) para restablecer la contraseña. \n\nNota: Dado que usamos correos ficticios (dni@pacientes...), en producción deberás usar un servidor (Admin SDK) para setear la clave manualmente, o solicitar el correo real del paciente.`);
+        showToast(`Solicitud de restablecimiento enviada a ${email}.`, 'info');
       } else {
-        alert("Firebase Auth no está activo.");
+        showToast("Firebase Auth no está activo.", 'error');
       }
     } catch (err) {
       console.error(err);
-      alert("No se pudo enviar la solicitud de reseteo.");
+      showToast("No se pudo enviar la solicitud de reseteo.", 'error');
     }
   };
 
   const handleCheckIn = (patient: Patient) => {
     let updatedPatient = { ...patient };
+    const wasAlreadyInRoom = patient.checkInStatus === CheckInStatus.IN_ROOM;
     
-    // Si es por sesiones, descontamos una (incluso si queda en negativo para registrar deuda)
-    if (patient.planType === PlanType.SESSIONS) {
-      updatedPatient.remainingSessions = (patient.remainingSessions ?? 0) - 1;
+    // Si es por sesiones y aún no estaba en sala, descontamos una (incluso si queda en negativo para registrar deuda)
+    if (!wasAlreadyInRoom && patient.planType === PlanType.SESSIONS) {
+      updatedPatient.remainingSessions = (Number(patient.remainingSessions) || 0) - 1;
     }
     
     const today = getLocalTodayISO();
@@ -470,41 +513,69 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     if (todayApp) {
       onUpdateAppointment({ ...todayApp, status: 'COMPLETED' });
     }
+    showToast(`${patient.firstName} ${patient.lastName} ingresó a sala.`);
   };
 
   const handleCheckOut = (patient: Patient) => {
-    if (window.confirm(`¿Finalizar sesión de ${patient.firstName} ${patient.lastName}?`)) {
-      const today = getLocalTodayISO();
-      const newHistory = [`Sesión finalizada el ${today}`, ...(patient.history || [])];
-      onUpdatePatient({ ...patient, checkInStatus: CheckInStatus.IDLE, lastVisit: today, history: newHistory });
+    setConfirmDialog({
+      title: 'Finalizar Sesión',
+      message: `¿Confirmas finalizar la sesión actual de ${patient.firstName} ${patient.lastName}?`,
+      confirmLabel: 'Finalizar Sesión',
+      onConfirm: () => {
+        const today = getLocalTodayISO();
+        const newHistory = [`Sesión finalizada el ${today}`, ...(patient.history || [])];
+        onUpdatePatient({ ...patient, checkInStatus: CheckInStatus.IDLE, lastVisit: today, history: newHistory });
+        setConfirmDialog(null);
+        showToast(`Sesión de ${patient.firstName} ${patient.lastName} finalizada.`);
+      }
+    });
+  };
+
+  const handleRequestEndDay = () => {
+    const inRoomPatients = patients.filter(p => p.checkInStatus === CheckInStatus.IN_ROOM);
+    let msg = 'Se vaciará la sala de espera y se resetearán los estados de todos los pacientes.';
+    if (inRoomPatients.length > 0) {
+      const names = inRoomPatients.map(p => `${p.firstName} ${p.lastName}`).join(', ');
+      msg = `Hay pacientes en sala (${names}). Se finalizará su sesión automáticamente. ¿Deseas continuar?`;
     }
+    setConfirmDialog({
+      title: 'Finalizar Jornada',
+      message: msg,
+      confirmLabel: 'Finalizar Jornada',
+      onConfirm: () => {
+        onClearWaitingRoom();
+        setConfirmDialog(null);
+        showToast('Jornada finalizada y sala de espera liberada.');
+      }
+    });
   };
 
   const handleRegisterPayment = () => {
     if (!paymentPatient) return;
     
+    const safeVal = Math.max(1, Number(paymentValue) || 1);
     const today = getLocalTodayISO();
     let updatedPatient = { ...paymentPatient, paymentDate: today };
     let historyMsg = `Pago registrado (${today}): `;
 
     if (paymentTypeState === 'SINGLE') {
       updatedPatient.planType = PlanType.SESSIONS;
-      updatedPatient.totalSessionsPaid = (updatedPatient.totalSessionsPaid || 0) + 1;
-      updatedPatient.remainingSessions = (updatedPatient.remainingSessions || 0) + 1;
+      updatedPatient.totalSessionsPaid = (Number(updatedPatient.totalSessionsPaid) || 0) + 1;
+      updatedPatient.remainingSessions = (Number(updatedPatient.remainingSessions) || 0) + 1;
       historyMsg += `1 sesión suelta.`;
     } else if (paymentTypeState === 'PACK') {
       updatedPatient.planType = PlanType.SESSIONS;
-      updatedPatient.totalSessionsPaid = (updatedPatient.totalSessionsPaid || 0) + paymentValue;
-      updatedPatient.remainingSessions = (updatedPatient.remainingSessions || 0) + paymentValue;
-      historyMsg += `Paquete de ${paymentValue} sesiones.`;
+      updatedPatient.totalSessionsPaid = (Number(updatedPatient.totalSessionsPaid) || 0) + safeVal;
+      updatedPatient.remainingSessions = (Number(updatedPatient.remainingSessions) || 0) + safeVal;
+      historyMsg += `Paquete de ${safeVal} sesiones.`;
     } else if (paymentTypeState === 'MONTH') {
       updatedPatient.planType = PlanType.TIME;
       const currentExp = new Date(updatedPatient.expirationDate || today);
       const now = new Date();
       let baseDate = currentExp > now ? currentExp : now;
-      baseDate.setMonth(baseDate.getMonth() + paymentValue);
+      baseDate.setMonth(baseDate.getMonth() + safeVal);
       updatedPatient.expirationDate = getLocalTodayISO(baseDate);
-      historyMsg += `Abono por tiempo (${paymentValue} mes/es). Nuevo vto: ${updatedPatient.expirationDate}`;
+      historyMsg += `Abono por tiempo (${safeVal} mes/es). Nuevo vto: ${updatedPatient.expirationDate}`;
     }
 
     updatedPatient.history = [historyMsg, ...(updatedPatient.history || [])];
@@ -512,11 +583,11 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     // Registrar automáticamente en Caja y Finanzas
     let paymentAmount = 0;
     if (paymentTypeState === 'SINGLE') {
-      paymentAmount = tenantSettings.priceSingleSession || 10000;
+      paymentAmount = Math.max(0, Number(tenantSettings.priceSingleSession) || 10000);
     } else if (paymentTypeState === 'PACK') {
-      paymentAmount = ((tenantSettings.pricePack10 || 80000) / 10) * paymentValue;
+      paymentAmount = (Math.max(0, Number(tenantSettings.pricePack10) || 80000) / 10) * safeVal;
     } else if (paymentTypeState === 'MONTH') {
-      paymentAmount = (tenantSettings.priceMonthly || 50000) * paymentValue;
+      paymentAmount = Math.max(0, Number(tenantSettings.priceMonthly) || 50000) * safeVal;
     }
 
     if (onAddFinancialMovement && paymentAmount > 0) {
@@ -529,9 +600,9 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
         amount: paymentAmount,
         category: updatedPatient.healthInsurance ? 'Obra Social' : 'Particular',
         patientName: `${paymentPatient.firstName} ${paymentPatient.lastName}`.trim(),
-        cuit: paymentPatient.dni,
+        cuit: normalizeDni(paymentPatient.dni),
         professional: assignedStaff?.firstName ? assignedStaff.firstName.split(' ')[0] : undefined,
-        description: `Pago recepción: ${paymentTypeState === 'SINGLE' ? '1 sesión' : paymentTypeState === 'PACK' ? `${paymentValue} sesiones` : `${paymentValue} mes(es)`}`,
+        description: `Pago recepción: ${paymentTypeState === 'SINGLE' ? '1 sesión' : paymentTypeState === 'PACK' ? `${safeVal} sesiones` : `${safeVal} mes(es)`}`,
         businessUnit: 'KINESIO',
         costClassification: 'NONE',
       });
@@ -539,6 +610,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
 
     onUpdatePatient(updatedPatient);
     setPaymentPatient(null);
+    showToast(`Cobro de $${paymentAmount.toLocaleString('es-AR')} registrado en Caja.`);
   };
 
   const getPlanStatus = (patient: Patient) => {
@@ -560,9 +632,13 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     }
   };
 
-  const filteredPatients = patients.filter((p: Patient) => 
-    `${p.firstName} ${p.lastName} ${p.dni}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPatients = patients.filter((p: Patient) => {
+    const cleanSearch = searchTerm.toLowerCase().trim();
+    const numericSearch = cleanSearch.replace(/\D/g, '');
+    const fullText = `${p.firstName} ${p.lastName} ${p.dni || ''}`.toLowerCase();
+    const matchesNumericDni = numericSearch.length > 0 && normalizeDni(p.dni).includes(numericSearch);
+    return fullText.includes(cleanSearch) || matchesNumericDni;
+  });
 
   const todayStr = getLocalTodayISO();
   const todaysAppointments = appointments.filter(a => a.date === todayStr);
@@ -570,6 +646,60 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
 
   return (
     <div className="flex-1 h-full bg-slate-50/50 overflow-hidden flex flex-col relative w-full">
+      {toastNotification && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed top-5 right-5 z-[500] px-5 py-3.5 rounded-2xl shadow-2xl border font-bold text-xs flex items-center gap-2.5 animate-in fade-in slide-in-from-top-3 duration-200 ${
+            toastNotification.type === 'error'
+              ? 'bg-red-950 text-white border-red-800'
+              : 'bg-slate-900 text-white border-slate-800'
+          }`}
+        >
+          <CheckCircle2 size={16} className={toastNotification.type === 'error' ? 'text-red-400' : 'text-emerald-400'} />
+          <span>{toastNotification.message}</span>
+        </div>
+      )}
+
+      {confirmDialog && (
+        <div className="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl p-7 space-y-5 border border-slate-100">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-black text-slate-900">{confirmDialog.title}</h3>
+                <p className="text-xs font-medium text-slate-500 mt-1.5 leading-relaxed whitespace-pre-line">{confirmDialog.message}</p>
+              </div>
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="p-2 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+                className="px-5 py-2.5 rounded-xl text-xs font-black text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmDialog.onConfirm}
+                className={`px-5 py-2.5 rounded-xl text-xs font-black text-white shadow-lg transition-all active:scale-95 ${
+                  confirmDialog.isDanger
+                    ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20'
+                    : 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20'
+                }`}
+              >
+                {confirmDialog.confirmLabel || 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Decorative background glow */}
       <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-primary-100 rounded-full mix-blend-multiply filter blur-[80px] opacity-60 z-0 pointer-events-none"></div>
 
@@ -590,17 +720,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               <Tv size={13} /> Tótem
             </button>
             <button 
-              onClick={() => {
-                const inRoomPatients = patients.filter(p => p.checkInStatus === CheckInStatus.IN_ROOM);
-                let msg = '¿Desea finalizar la jornada? Se vaciará la sala de espera y se resetearán los estados de todos los pacientes.';
-                if (inRoomPatients.length > 0) {
-                  const names = inRoomPatients.map(p => `${p.firstName} ${p.lastName}`).join(', ');
-                  msg = `Hay pacientes que no se les finalizó el día:\n\n${names}\n\nSe finalizarán automáticamente. ¿Desea continuar?`;
-                }
-                if (window.confirm(msg)) {
-                  onClearWaitingRoom();
-                }
-              }}
+              onClick={handleRequestEndDay}
               className="px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-900 text-white hover:bg-slate-800 shadow-sm flex items-center gap-1 border border-slate-700"
               title="Finalizar Jornada"
             >
@@ -671,17 +791,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
             <Tv size={14} /> Modo Tótem
           </button>
           <button 
-            onClick={() => {
-              const inRoomPatients = patients.filter(p => p.checkInStatus === CheckInStatus.IN_ROOM);
-              let msg = '¿Desea finalizar la jornada? Se vaciará la sala de espera y se resetearán los estados de todos los pacientes.';
-              if (inRoomPatients.length > 0) {
-                const names = inRoomPatients.map(p => `${p.firstName} ${p.lastName}`).join(', ');
-                msg = `Hay pacientes que no se les finalizó el día:\n\n${names}\n\nSe finalizarán automáticamente. ¿Desea continuar?`;
-              }
-              if (window.confirm(msg)) {
-                onClearWaitingRoom();
-              }
-            }}
+            onClick={handleRequestEndDay}
             className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/10 active:scale-95 transition-all flex items-center gap-2 border border-slate-700"
           >
             <Moon size={14} /> Finalizar Jornada
@@ -927,6 +1037,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               appointments={appointments}
               staff={staff}
               onAddAppointment={onAddAppointment}
+              onBulkAddAppointments={onBulkAddAppointments}
               onUpdateAppointment={onUpdateAppointment}
               onDeleteAppointment={onDeleteAppointment}
               onUpdatePatient={onUpdatePatient}
@@ -1018,7 +1129,19 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                         <Settings2 size={20} />
                       </button>
                       <button 
-                        onClick={() => { if(window.confirm('¿Eliminar producto/servicio permanentemente?')) onDeleteProduct(product.id); }}
+                        onClick={() => {
+                          setConfirmDialog({
+                            title: 'Eliminar Ítem',
+                            message: `¿Deseas eliminar "${product.name}" permanentemente del catálogo?`,
+                            confirmLabel: 'Eliminar',
+                            isDanger: true,
+                            onConfirm: () => {
+                              onDeleteProduct(product.id);
+                              setConfirmDialog(null);
+                              showToast('Ítem eliminado del catálogo.');
+                            }
+                          });
+                        }}
                         className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 hover:scale-110 transition-all transform translate-y-8 group-hover:translate-y-0 duration-300 delay-50 shadow-xl shadow-red-500/30"
                       >
                         <Trash2 size={20} />
@@ -1375,7 +1498,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                             onClick={() => {
                               setFormStage(Stage.GYM);
                               if (!editingPatient) {
-                                const oneMonthLater = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+                                const oneMonthLater = getLocalDateOffsetISO(30);
                                 setPatientForm({
                                   ...patientForm, 
                                   planType: PlanType.TIME,
@@ -1437,7 +1560,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                           <button 
                             type="button"
                             onClick={() => {
-                              const oneMonthLater = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+                              const oneMonthLater = getLocalDateOffsetISO(30);
                               setPatientForm({
                                 ...patientForm, 
                                 planType: PlanType.TIME,
@@ -1460,7 +1583,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                           min="1" max="7"
                           className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
                           value={patientForm.sessionsPerWeek || 3}
-                          onChange={e => setPatientForm({...patientForm, sessionsPerWeek: Number(e.target.value)})}
+                          onChange={e => setPatientForm({...patientForm, sessionsPerWeek: Math.max(1, Math.min(7, Number(e.target.value) || 1))})}
                         />
                       </div>
 
@@ -1472,7 +1595,10 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                             min="1"
                             className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-sm"
                             value={patientForm.totalSessionsPaid || 12}
-                            onChange={e => setPatientForm({...patientForm, totalSessionsPaid: Number(e.target.value), remainingSessions: Number(e.target.value)})}
+                            onChange={e => {
+                              const safeSessions = Math.max(0, Number(e.target.value) || 0);
+                              setPatientForm({...patientForm, totalSessionsPaid: safeSessions, remainingSessions: safeSessions});
+                            }}
                           />
                         </div>
                       )}
@@ -1513,7 +1639,21 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                     </button>
                     <button 
                       type="button" 
-                      onClick={() => { if(window.confirm('¿ELIMINAR PACIENTE DEFINITIVAMENTE? Esta acción destruirá todo su historial clínico. No se puede deshacer.')) { onDeletePatient(editingPatient.id); setShowAddModal(false); setEditingPatient(null); } }} 
+                      onClick={() => {
+                        setConfirmDialog({
+                          title: 'Eliminar Paciente',
+                          message: `¿ELIMINAR A ${editingPatient.firstName.toUpperCase()} ${editingPatient.lastName.toUpperCase()} DEFINITIVAMENTE?\nEsta acción destruirá todo su historial clínico y no se puede deshacer.`,
+                          confirmLabel: 'Eliminar Paciente',
+                          isDanger: true,
+                          onConfirm: () => {
+                            onDeletePatient(editingPatient.id);
+                            setConfirmDialog(null);
+                            setShowAddModal(false);
+                            setEditingPatient(null);
+                            showToast('Paciente eliminado del sistema.');
+                          }
+                        });
+                      }} 
                       className="w-full sm:w-auto text-red-500 font-bold py-3 px-5 hover:bg-red-100 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
                     >
                       <Trash2 size={18} /> Borrar
@@ -1577,10 +1717,11 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                   <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Precio ($)</label>
                   <input 
                     type="number"
+                    min="0"
                     placeholder="0" 
                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm text-lg"
                     value={productForm.price}
-                    onChange={e => setProductForm({...productForm, price: Number(e.target.value)})}
+                    onChange={e => setProductForm({...productForm, price: Math.max(0, Number(e.target.value) || 0)})}
                     required
                   />
                 </div>
@@ -1705,14 +1846,14 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               {paymentTypeState === 'PACK' && (
                 <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                   <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Cantidad de Sesiones</label>
-                  <input type="number" min="1" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 text-lg" value={paymentValue} onChange={e => setPaymentValue(Number(e.target.value))} />
+                  <input type="number" min="1" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 text-lg" value={paymentValue} onChange={e => setPaymentValue(Math.max(1, Number(e.target.value) || 1))} />
                 </div>
               )}
 
               {paymentTypeState === 'MONTH' && (
                 <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                   <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Cantidad de Meses</label>
-                  <input type="number" min="1" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 text-lg" value={paymentValue} onChange={e => setPaymentValue(Number(e.target.value))} />
+                  <input type="number" min="1" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 text-lg" value={paymentValue} onChange={e => setPaymentValue(Math.max(1, Number(e.target.value) || 1))} />
                 </div>
               )}
 

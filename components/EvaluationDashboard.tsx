@@ -40,7 +40,7 @@ export const EvaluationDashboard: React.FC<EvaluationDashboardProps> = ({
 
   const fetchEvaluations = async () => {
     setLoading(true);
-    const data = await evaluationService.getByPatientId(patient.id);
+    const data = await evaluationService.getByPatientId(patient.id, patient.tenantId || 'default_tenant');
     setEvaluations(data);
     setLoading(false);
   };

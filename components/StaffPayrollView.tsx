@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StaffMember, StaffTimeLog, TenantSettings } from '../types';
+import { getLocalTodayISO } from '../utils/dateUtils';
 import { 
   Clock, 
   DollarSign, 
@@ -46,10 +47,11 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
   const [showAddLogModal, setShowAddLogModal] = useState(false);
 
   // Formulario Nuevo Fichaje Manual
-  const [manualDate, setManualDate] = useState(new Date().toISOString().split('T')[0]);
+  const [manualDate, setManualDate] = useState(getLocalTodayISO());
   const [manualClockIn, setManualClockIn] = useState('08:00');
   const [manualClockOut, setManualClockOut] = useState('12:00');
   const [manualStaffId, setManualStaffId] = useState('');
+  const [confirmApplyAll, setConfirmApplyAll] = useState(false);
 
   // Formulario Configuración de Tarifa Base General de la Clínica
   const [baseHourlyRate, setBaseHourlyRate] = useState<number>(tenantSettings?.defaultHourlyRate || 5000);
@@ -123,17 +125,16 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
 
   // Aplicar Tarifa Base General a Todos
   const handleApplyBaseRateToAll = () => {
-    if (confirm(`¿Deseas aplicar la tarifa de $${baseHourlyRate.toLocaleString('es-AR')}/hr a TODOS los kinesiólogos? (Sobreescribirá las tarifas personalizadas)`)) {
-      staff.forEach(member => {
-        onUpdateStaffMember({
-          ...member,
-          hourlyRate: baseHourlyRate
-        });
+    staff.forEach(member => {
+      onUpdateStaffMember({
+        ...member,
+        hourlyRate: Math.max(0, Number(baseHourlyRate) || 0)
       });
-      if (onUpdateTenantSettings) {
-        onUpdateTenantSettings({ defaultHourlyRate: baseHourlyRate });
-      }
+    });
+    if (onUpdateTenantSettings) {
+      onUpdateTenantSettings({ defaultHourlyRate: Math.max(0, Number(baseHourlyRate) || 0) });
     }
+    setConfirmApplyAll(false);
   };
 
   // Guardar Configuración de Tótem
@@ -167,7 +168,7 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
 
     const newLog: StaffTimeLog = {
       id: `manual_${Date.now()}`,
-      tenantId: targetStaff.tenantId || 'default',
+      tenantId: targetStaff.tenantId || 'default_tenant',
       staffId: targetStaff.id,
       staffName: `${targetStaff.firstName} ${targetStaff.lastName}`,
       date: manualDate,
@@ -295,7 +296,7 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
               min="0"
               step="500"
               value={baseHourlyRate}
-              onChange={(e) => setBaseHourlyRate(parseFloat(e.target.value) || 0)}
+              onChange={(e) => setBaseHourlyRate(Math.max(0, parseFloat(e.target.value) || 0))}
               className="w-24 bg-transparent text-white font-black text-base outline-none"
               placeholder="5000"
             />
@@ -311,13 +312,30 @@ export const StaffPayrollView: React.FC<StaffPayrollViewProps> = ({
             {isSavingBaseRate ? 'Guardando...' : 'Guardar Tarifa General'}
           </button>
 
-          <button
-            onClick={handleApplyBaseRateToAll}
-            className="bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border border-white/20 active:scale-95"
-            title="Aplica este valor a todos los kinesiólogos del listado"
-          >
-            Aplicar a Todos
-          </button>
+          {!confirmApplyAll ? (
+            <button
+              onClick={() => setConfirmApplyAll(true)}
+              className="bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border border-white/20 active:scale-95"
+              title="Aplica este valor a todos los kinesiólogos del listado"
+            >
+              Aplicar a Todos
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleApplyBaseRateToAll}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all active:scale-95"
+              >
+                Confirmar (${baseHourlyRate.toLocaleString('es-AR')}/hr)
+              </button>
+              <button
+                onClick={() => setConfirmApplyAll(false)}
+                className="bg-white/10 hover:bg-white/20 text-slate-300 px-3 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all"
+              >
+                Cancelar
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

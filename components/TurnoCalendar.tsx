@@ -48,6 +48,7 @@ interface TurnoCalendarProps {
   appointments: Appointment[];
   staff: StaffMember[];
   onAddAppointment: (appointment: Appointment) => void;
+  onBulkAddAppointments?: (appointments: Appointment[]) => void;
   onUpdateAppointment: (appointment: Appointment) => void;
   onDeleteAppointment: (id: string) => void;
   onUpdatePatient: (patient: Patient) => void;
@@ -60,6 +61,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
   appointments,
   staff,
   onAddAppointment,
+  onBulkAddAppointments,
   onUpdateAppointment,
   onDeleteAppointment,
   onUpdatePatient,
@@ -160,8 +162,14 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
       const patient = patients.find(p => p.id === multiBookingPatientId);
       if (!patient) return;
 
+      // Control de colisión: evitar duplicar el mismo paciente en la misma fecha y horario
+      const hasDuplicatePatientSlot = appointments.some(
+        a => a.status !== 'CANCELLED' && a.patientId === patient.id && a.date === dateStr && a.time === timeStr
+      );
+      if (hasDuplicatePatientSlot) return;
+
       const newApp: Appointment = {
-        id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `app_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
         patientId: patient.id,
         patientName: `${patient.firstName} ${patient.lastName}`,
         date: dateStr,
@@ -607,6 +615,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
       {showAddModal && (
         <AppointmentModal 
           patients={patients}
+          appointments={appointments}
           staff={staff}
           selectedSlot={selectedSlot}
           initialAppointment={editingAppointment}
@@ -629,7 +638,11 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
           }}
           onUpdatePatient={onUpdatePatient}
           onBulkAddAppointments={(apps) => {
-            apps.forEach(app => onAddAppointment(app));
+            if (onBulkAddAppointments) {
+              onBulkAddAppointments(apps);
+            } else {
+              apps.forEach(app => onAddAppointment(app));
+            }
           }}
         />
       )}
@@ -639,6 +652,7 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
 
 interface AppointmentModalProps {
   patients: Patient[];
+  appointments: Appointment[];
   staff: StaffMember[];
   selectedSlot: { date: string; time: string } | null;
   initialAppointment: Appointment | null;
@@ -652,6 +666,7 @@ interface AppointmentModalProps {
 
 const AppointmentModal: React.FC<AppointmentModalProps> = ({
   patients,
+  appointments,
   staff,
   selectedSlot,
   initialAppointment,
@@ -672,6 +687,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
   const [notes, setNotes] = useState(initialAppointment?.notes || '');
   const [weeksToGenerate, setWeeksToGenerate] = useState(4);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [collisionError, setCollisionError] = useState<string | null>(null);
   const [patientSearch, setPatientSearch] = useState('');
   const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -723,6 +739,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setCollisionError(null);
     if (!selectedPatient) return;
 
     if (isRecurring && !initialAppointment) {
@@ -736,36 +753,61 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
       if (weeksToGenerate > 0) {
         const newApps: Appointment[] = [];
         const startDate = startOfDay(parseISO(date));
+        const baseTimestamp = Date.now();
         
         for (let i = 0; i < weeksToGenerate; i++) {
-          recurringSlots.forEach(slot => {
+          recurringSlots.forEach((slot, slotIdx) => {
             // Calculate date for this slot in this week
             const weekStart = addWeeks(startOfWeek(startDate, { weekStartsOn: 1 }), i);
             const slotDate = addDays(weekStart, slot.dayOfWeek === 0 ? 6 : slot.dayOfWeek - 1);
             
             // Only add if it's today or in the future from the selected date
             if (slotDate >= startDate) {
-              newApps.push({
-                id: `app_${Date.now()}_${i}_${slot.dayOfWeek}`,
-                patientId: selectedPatient.id,
-                patientName: `${selectedPatient.firstName} ${selectedPatient.lastName}`,
-                date: format(slotDate, 'yyyy-MM-dd'),
-                time: slot.time,
-                duration: 60,
-                status: 'SCHEDULED',
-                isRecurring: true,
-                kineId: slot.kineId || kineId,
-                activityId: slot.activityId || activityId,
-                notes
-              });
+              const slotDateStr = format(slotDate, 'yyyy-MM-dd');
+              const alreadyExists =
+                appointments.some(
+                  a => a.status !== 'CANCELLED' && a.patientId === selectedPatient.id && a.date === slotDateStr && a.time === slot.time
+                ) ||
+                newApps.some(a => a.date === slotDateStr && a.time === slot.time);
+
+              if (!alreadyExists) {
+                newApps.push({
+                  id: `app_${baseTimestamp}_${i}_${slotIdx}_${slot.dayOfWeek}`,
+                  patientId: selectedPatient.id,
+                  patientName: `${selectedPatient.firstName} ${selectedPatient.lastName}`,
+                  date: slotDateStr,
+                  time: slot.time,
+                  duration: 60,
+                  status: 'SCHEDULED',
+                  isRecurring: true,
+                  kineId: slot.kineId || kineId,
+                  activityId: slot.activityId || activityId,
+                  notes
+                });
+              }
             }
           });
         }
-        onBulkAddAppointments(newApps);
+        if (newApps.length > 0) {
+          onBulkAddAppointments(newApps);
+        }
       }
     } else {
+      const hasDuplicate = appointments.some(
+        a =>
+          a.status !== 'CANCELLED' &&
+          a.id !== initialAppointment?.id &&
+          a.patientId === patientId &&
+          a.date === date &&
+          a.time === time
+      );
+      if (hasDuplicate) {
+        setCollisionError('El paciente ya posee un turno activo en esta misma fecha y horario.');
+        return;
+      }
+
       const newApp: Appointment = {
-        id: initialAppointment?.id || `app_${Date.now()}`,
+        id: initialAppointment?.id || `app_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         patientId,
         patientName: `${selectedPatient.firstName} ${selectedPatient.lastName}`,
         date,
@@ -1091,6 +1133,12 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </div>
 
             <div className="flex flex-col gap-3 mt-4 sticky bottom-0 bg-white pt-2 pb-2 border-t border-slate-100 z-10">
+              {collisionError && (
+                <div role="status" aria-live="polite" className="bg-red-50 border border-red-200 text-red-600 text-xs font-bold p-3 rounded-xl flex items-center gap-2">
+                  <XCircle size={16} className="shrink-0" />
+                  <span>{collisionError}</span>
+                </div>
+              )}
               <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-xl shadow-slate-200">
                 {initialAppointment ? 'Guardar Cambios' : (isRecurring ? 'Guardar Horarios y Generar' : 'Confirmar Turno')}
               </button>

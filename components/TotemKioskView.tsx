@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'react-qr-code';
-import { Patient, CheckInStatus, StaffMember, StaffTimeLog, TenantSettings } from '../types';
+import { Patient, CheckInStatus, PlanType, Appointment, StaffMember, StaffTimeLog, TenantSettings } from '../types';
 import { parseMediaUrl } from '../utils/mediaUrl';
 import { getLocalTodayISO } from '../utils/dateUtils';
 import { 
@@ -24,7 +24,9 @@ interface TotemKioskViewProps {
   patients: Patient[];
   staff: StaffMember[];
   timeLogs: StaffTimeLog[];
+  appointments?: Appointment[];
   onUpdatePatient: (patient: Patient) => void;
+  onUpdateAppointment?: (app: Appointment) => void;
   onAddStaffTimeLog: (log: StaffTimeLog) => void;
   onUpdateStaffTimeLog: (log: StaffTimeLog) => void;
   tenantSettings?: TenantSettings;
@@ -35,7 +37,9 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
   patients,
   staff,
   timeLogs,
+  appointments = [],
   onUpdatePatient,
+  onUpdateAppointment,
   onAddStaffTimeLog,
   onUpdateStaffTimeLog,
   tenantSettings,
@@ -158,9 +162,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
   };
 
   const handleDeauthorizeDevice = () => {
-    if (confirm('¿Desea bloquear este dispositivo para que solicite el PIN nuevamente?')) {
-      setIsAuthorized(false);
-    }
+    setIsAuthorized(false);
   };
 
   // --- Procesar Check-In de Pacientes ---
@@ -168,20 +170,40 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
     const cleanDni = dniInput.trim().replace(/\D/g, '');
     if (!cleanDni) return;
 
-    const patient = patients.find(p => p.dni === cleanDni);
+    const patient = patients.find(p => (p.dni || '').replace(/\D/g, '').trim() === cleanDni);
 
     if (patient) {
       const today = getLocalTodayISO();
-      const updatedHistory = [...(patient.history || []), `Presente en clínica (Tótem): ${new Date().toLocaleTimeString('es-AR')}`];
+      const wasAlreadyInRoom = patient.checkInStatus === CheckInStatus.IN_ROOM;
+      const updatedHistory = wasAlreadyInRoom
+        ? (patient.history || [])
+        : [...(patient.history || []), `Presente en clínica (Tótem): ${new Date().toLocaleTimeString('es-AR')}`];
+
+      const nextRemainingSessions =
+        !wasAlreadyInRoom && patient.planType === PlanType.SESSIONS
+          ? (Number(patient.remainingSessions) || 0) - 1
+          : patient.remainingSessions;
 
       const updatedPatient: Patient = {
         ...patient,
+        remainingSessions: nextRemainingSessions,
         checkInStatus: CheckInStatus.IN_ROOM,
         lastVisit: today,
         history: updatedHistory
       };
 
       onUpdatePatient(updatedPatient);
+
+      // Sincronizar con el turno agendado de hoy si estaba SCHEDULED
+      if (onUpdateAppointment) {
+        const todayApp = appointments.find(
+          a => a.patientId === patient.id && a.date === today && a.status === 'SCHEDULED'
+        );
+        if (todayApp) {
+          onUpdateAppointment({ ...todayApp, status: 'COMPLETED' });
+        }
+      }
+
       setWelcomePatient(updatedPatient);
       setDniInput('');
       setErrorMessage(null);
@@ -255,7 +277,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
       // Marcar INGRESO (Clock-In)
       const newLog: StaffTimeLog = {
         id: `log_${member.id}_${Date.now()}`,
-        tenantId: member.tenantId || 'default',
+        tenantId: member.tenantId || 'default_tenant',
         staffId: member.id,
         staffName: `${member.firstName} ${member.lastName}`,
         date: todayStr,
