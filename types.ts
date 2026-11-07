@@ -212,6 +212,12 @@ export interface Patient {
   currentMedication?: string; // Medicación actual
   hasFitnessCertificate?: string; // ¿Posee Certificado de Aptitud Física?
   referralSource?: string; // ¿Cómo conoció la clínica?
+
+  // --- Estado Financiero y Deuda ---
+  paymentStatus?: 'PAID' | 'PENDING';
+  debtAmount?: number; // Monto total adeudado
+  pendingPlanType?: 'SINGLE' | 'PACK' | 'MONTH'; // Concepto de la deuda
+  lastPaymentMethod?: 'EFECTIVO' | 'TRANSFERENCIA';
 }
 
 export interface Product {

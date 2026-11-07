@@ -33,9 +33,15 @@ import {
   XCircle,
   Repeat,
   Search,
-  X
+  X,
+  CreditCard,
+  Banknote,
+  AlertCircle
 } from 'lucide-react';
-import { Patient, Appointment, RecurringSlot, StaffMember, UserRole, STAFF_COLORS, CLINICAL_ACTIVITIES } from '../types';
+import { Patient, Appointment, RecurringSlot, StaffMember, UserRole, STAFF_COLORS, CLINICAL_ACTIVITIES, FinancialMovement, TenantSettings, PlanType } from '../types';
+import { getSuggestedCierreNumber } from '../utils/financialUtils';
+import { getLocalTodayISO } from '../utils/dateUtils';
+import { normalizeDni } from '../utils/authUtils';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -54,6 +60,9 @@ interface TurnoCalendarProps {
   onUpdatePatient: (patient: Patient) => void;
   autoSchedulePatientId?: string | null;
   onClearAutoSchedule?: () => void;
+  financialMovements?: FinancialMovement[];
+  onAddFinancialMovement?: (movement: Omit<FinancialMovement, 'id' | 'createdAt'>) => Promise<void> | void;
+  tenantSettings?: TenantSettings;
 }
 
 export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
@@ -66,7 +75,10 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
   onDeleteAppointment,
   onUpdatePatient,
   autoSchedulePatientId,
-  onClearAutoSchedule
+  onClearAutoSchedule,
+  financialMovements,
+  onAddFinancialMovement,
+  tenantSettings
 }) => {
   const [view, setView] = useState<'WEEK' | 'MONTH'>('WEEK');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -644,6 +656,9 @@ export const TurnoCalendar: React.FC<TurnoCalendarProps> = ({
               apps.forEach(app => onAddAppointment(app));
             }
           }}
+          financialMovements={financialMovements}
+          onAddFinancialMovement={onAddFinancialMovement}
+          tenantSettings={tenantSettings}
         />
       )}
     </div>
@@ -662,6 +677,9 @@ interface AppointmentModalProps {
   onUpdatePatient: (patient: Patient) => void;
   onBulkAddAppointments: (apps: Appointment[]) => void;
   autoPatientId?: string | null;
+  financialMovements?: FinancialMovement[];
+  onAddFinancialMovement?: (movement: Omit<FinancialMovement, 'id' | 'createdAt'>) => Promise<void> | void;
+  tenantSettings?: TenantSettings;
 }
 
 const AppointmentModal: React.FC<AppointmentModalProps> = ({
@@ -675,7 +693,10 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
   onDelete,
   onUpdatePatient,
   onBulkAddAppointments,
-  autoPatientId
+  autoPatientId,
+  financialMovements,
+  onAddFinancialMovement,
+  tenantSettings
 }) => {
   const [patientId, setPatientId] = useState(initialAppointment?.patientId || autoPatientId || '');
   const [date, setDate] = useState(initialAppointment?.date || selectedSlot?.date || format(new Date(), 'yyyy-MM-dd'));
@@ -691,6 +712,13 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
   const [patientSearch, setPatientSearch] = useState('');
   const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Quick Pay States in Agenda
+  const [showQuickPay, setShowQuickPay] = useState(false);
+  const [quickPayMethod, setQuickPayMethod] = useState<'EFECTIVO' | 'TRANSFERENCIA'>('TRANSFERENCIA');
+  const [quickPayAmount, setQuickPayAmount] = useState<number>(10000);
+  const [quickPaySuccess, setQuickPaySuccess] = useState(false);
+  const [chargeDebtOnBooking, setChargeDebtOnBooking] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -722,6 +750,50 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
       }
     }
   }, [selectedPatient]);
+
+  useEffect(() => {
+    if (selectedPatient) {
+      const debt = Number(selectedPatient.debtAmount);
+      if (debt > 0) {
+        setQuickPayAmount(debt);
+      } else {
+        setQuickPayAmount(Number(tenantSettings?.priceSingleSession) || 10000);
+      }
+      setQuickPaySuccess(false);
+      setShowQuickPay(false);
+      setChargeDebtOnBooking(false);
+    }
+  }, [selectedPatient, tenantSettings]);
+
+  const handleConfirmQuickPay = async () => {
+    if (!selectedPatient || !onAddFinancialMovement || quickPayAmount <= 0) return;
+    const today = getLocalTodayISO();
+    const suggestedCierre = getSuggestedCierreNumber(today, financialMovements || []);
+    await onAddFinancialMovement({
+      date: today,
+      type: 'INCOME',
+      paymentMethod: quickPayMethod,
+      amount: quickPayAmount,
+      category: selectedPatient.healthInsurance ? 'Obra Social' : 'Particular',
+      patientName: `${selectedPatient.firstName} ${selectedPatient.lastName}`.trim(),
+      cuit: normalizeDni(selectedPatient.dni),
+      professional: staff.find(s => s.id === kineId)?.firstName?.split(' ')[0],
+      description: `Cobro en agenda (${quickPayMethod === 'EFECTIVO' ? 'Efectivo' : 'Transferencia'}): Saldo deudor`,
+      businessUnit: 'KINESIO',
+      costClassification: 'NONE',
+      cierreNumber: suggestedCierre,
+    });
+
+    onUpdatePatient({
+      ...selectedPatient,
+      debtAmount: 0,
+      paymentStatus: 'PAID',
+      pendingPlanType: undefined,
+      lastPaymentMethod: quickPayMethod,
+    });
+    setQuickPaySuccess(true);
+    setShowQuickPay(false);
+  };
 
   const handleAddSlot = () => {
     setRecurringSlots([...recurringSlots, { dayOfWeek: 1, time: '08:00' }]);
@@ -819,6 +891,19 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
         activityId,
         notes
       };
+
+      if (!initialAppointment && chargeDebtOnBooking) {
+        const sessionPrice = Number(tenantSettings?.priceSingleSession) || 10000;
+        onUpdatePatient({
+          ...selectedPatient,
+          debtAmount: (Number(selectedPatient.debtAmount) || 0) + sessionPrice,
+          paymentStatus: 'PENDING',
+          pendingPlanType: 'SINGLE',
+          totalSessionsPaid: (Number(selectedPatient.totalSessionsPaid) || 0) + 1,
+          remainingSessions: (Number(selectedPatient.remainingSessions) || 0) + 1,
+        });
+      }
+
       onSave(newApp);
     }
     onClose();
@@ -936,6 +1021,123 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 className="sr-only opacity-0 w-0 h-0 pointer-events-none"
               />
             </div>
+
+            {selectedPatient && (
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                {/* 1. Alerta de Deuda Pendiente */}
+                {(Number(selectedPatient.debtAmount) > 0 || selectedPatient.paymentStatus === 'PENDING') ? (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                          <AlertCircle size={16} className="text-amber-600 shrink-0" />
+                          Saldo pendiente de pago: ${(Number(selectedPatient.debtAmount) || 0).toLocaleString('es-AR')}
+                        </p>
+                        <p className="text-[11px] text-amber-700 font-medium mt-0.5">
+                          Concepto: {selectedPatient.pendingPlanType === 'MONTH' ? 'Plan Mensual' : selectedPatient.pendingPlanType === 'PACK' ? 'Paquete de Sesiones' : 'Sesión Individual'} sin abonar
+                        </p>
+                      </div>
+                      {onAddFinancialMovement && (
+                        <button
+                          type="button"
+                          onClick={() => setShowQuickPay(!showQuickPay)}
+                          className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0"
+                        >
+                          <CreditCard size={14} /> {showQuickPay ? 'Cerrar Cobro' : '💳 Cobrar Ahora'}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Inline Quick Pay Drawer */}
+                    {showQuickPay && (
+                      <div className="p-4 bg-white border border-amber-200 rounded-xl space-y-3 pt-3 shadow-sm">
+                        <p className="text-xs font-black text-slate-800 uppercase tracking-wider">Registrar Cobro y Asentar en Caja</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Medio de Pago</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setQuickPayMethod('TRANSFERENCIA')}
+                                className={`py-2 rounded-lg font-bold text-xs border flex items-center justify-center gap-1 transition-all ${
+                                  quickPayMethod === 'TRANSFERENCIA'
+                                    ? 'bg-blue-50 border-blue-200 text-blue-700 font-black'
+                                    : 'bg-white border-slate-200 text-slate-500'
+                                }`}
+                              >
+                                <CreditCard size={12} /> Transf
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setQuickPayMethod('EFECTIVO')}
+                                className={`py-2 rounded-lg font-bold text-xs border flex items-center justify-center gap-1 transition-all ${
+                                  quickPayMethod === 'EFECTIVO'
+                                    ? 'bg-amber-50 border-amber-200 text-amber-700 font-black'
+                                    : 'bg-white border-slate-200 text-slate-500'
+                                }`}
+                              >
+                                <Banknote size={12} /> Efectivo
+                              </button>
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Monto ($)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={quickPayAmount}
+                              onChange={e => setQuickPayAmount(Math.max(1, Number(e.target.value) || 1))}
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setShowQuickPay(false)}
+                            className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleConfirmQuickPay}
+                            className="px-4 py-1.5 text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+                          >
+                            <CheckCircle2 size={14} /> Confirmar Cobro
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {quickPaySuccess && (
+                      <p className="text-xs font-bold text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 flex items-center gap-1.5">
+                        <CheckCircle2 size={16} /> ¡Cobro asentado en Caja y deuda saldada exitosamente!
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  /* 2. Paciente al día pero sin sesiones */
+                  !isRecurring && selectedPatient.planType === PlanType.SESSIONS && (Number(selectedPatient.remainingSessions) || 0) <= 0 && (
+                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                      <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <AlertCircle size={15} className="text-slate-400 shrink-0" />
+                        El paciente no posee sesiones restantes en su saldo.
+                      </p>
+                      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer pt-1">
+                        <input
+                          type="checkbox"
+                          checked={chargeDebtOnBooking}
+                          onChange={e => setChargeDebtOnBooking(e.target.checked)}
+                          className="w-4 h-4 rounded text-primary-600 focus:ring-primary-500 border-slate-300"
+                        />
+                        <span>Anotar este turno a deuda individual (${(Number(tenantSettings?.priceSingleSession) || 10000).toLocaleString('es-AR')})</span>
+                      </label>
+                    </div>
+                  )
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
               <div className="space-y-1">

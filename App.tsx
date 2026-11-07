@@ -19,6 +19,7 @@ import initialAugustMovements from './constants/initialFinancialMovements.json';
 import { Patient, ViewState, UserRole, ExerciseDefinition, Product, CheckInStatus, StaffMember, Appointment, Stage, StaffTimeLog, TenantSettings, InventoryItem, InventoryMovement, PurchaseInvoice, FinancialMovement } from './types';
 import { useAuthStore } from './store/authStore';
 import { getLocalTodayISO } from './utils/dateUtils';
+import { getSuggestedCierreNumber } from './utils/financialUtils';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 // Lazy loaded components for better performance
@@ -886,6 +887,7 @@ export function App() {
           description: `Factura ${invoiceData.invoiceNumber || 'S/N'} - ${invoiceData.supplier}${invoiceData.notes ? ` (${invoiceData.notes})` : ''}`,
           businessUnit: 'KINESIO',
           costClassification: 'FIXED',
+          cierreNumber: getSuggestedCierreNumber(invoiceData.date, financialMovements),
           createdAt: nowIso
         }
       : null;
@@ -1034,8 +1036,14 @@ export function App() {
     const id = `fin_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const createdAt = new Date().toISOString();
     const activeTenantId = user?.tenantId || 'default_tenant';
+    const computedCierre =
+      typeof movement.cierreNumber === 'number' && movement.cierreNumber > 0
+        ? movement.cierreNumber
+        : getSuggestedCierreNumber(movement.date || getLocalTodayISO(), financialMovements);
+
     const newMovement: FinancialMovement = {
       ...movement,
+      cierreNumber: computedCierre,
       id,
       tenantId: activeTenantId,
       createdAt,

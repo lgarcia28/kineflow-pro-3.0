@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Patient, PlanType, CheckInStatus, Product, RoutineDay, Appointment, UserRole, StaffMember, Stage, TenantSettings, InventoryItem, InventoryMovement, PurchaseInvoice, FinancialMovement } from '../types';
 import { secondaryAuth, auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { generatePatientEmail } from '../utils/authUtils';
 import { getLocalTodayISO, getLocalDateOffsetISO } from '../utils/dateUtils';
+import { getSuggestedCierreNumber } from '../utils/financialUtils';
 import { useAuthStore } from '../store/authStore';
 import { 
   UserPlus, 
@@ -265,6 +266,30 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     homeRoutine: { id: Math.random().toString(), stage: 0 as any, currentWeek: 1, days: [] }
   });
 
+  // Onboarding Payment States
+  const [onboardingPaysNow, setOnboardingPaysNow] = useState<boolean>(true);
+  const [onboardingPaymentMethod, setOnboardingPaymentMethod] = useState<'EFECTIVO' | 'TRANSFERENCIA'>('TRANSFERENCIA');
+  const [onboardingPaymentAmount, setOnboardingPaymentAmount] = useState<number>(80000);
+  const [isAmountManuallyEdited, setIsAmountManuallyEdited] = useState<boolean>(false);
+
+  const defaultPlanPrice = useMemo(() => {
+    if (patientForm.planType === PlanType.TIME) {
+      return Number(tenantSettings?.priceMonthly) || 50000;
+    }
+    const sessions = Number(patientForm.totalSessionsPaid) || 12;
+    if (sessions === 1) {
+      return Number(tenantSettings?.priceSingleSession) || 10000;
+    }
+    const packPrice = Number(tenantSettings?.pricePack10) || 80000;
+    return Math.round((packPrice / 10) * sessions);
+  }, [patientForm.planType, patientForm.totalSessionsPaid, tenantSettings]);
+
+  useEffect(() => {
+    if (!isAmountManuallyEdited) {
+      setOnboardingPaymentAmount(defaultPlanPrice);
+    }
+  }, [defaultPlanPrice, isAmountManuallyEdited]);
+
   const [productForm, setProductForm] = useState<Partial<Product>>({
     name: '',
     description: '',
@@ -300,6 +325,10 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     });
     setFormStage(Stage.KINESIOLOGY);
     setEditingPatient(null);
+    setOnboardingPaysNow(true);
+    setOnboardingPaymentMethod('TRANSFERENCIA');
+    setOnboardingPaymentAmount(defaultPlanPrice);
+    setIsAmountManuallyEdited(false);
   };
 
   const handleEditPatient = (patient: Patient) => {
@@ -440,12 +469,22 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
           console.warn("Secondary auth not initialized, skipping Firebase Auth creation.");
         }
 
+        const paymentAmountFinal = Math.max(0, Number(onboardingPaymentAmount) || 0);
+        const planKind: 'SINGLE' | 'PACK' | 'MONTH' =
+          sanitizedPatientForm.planType === PlanType.TIME
+            ? 'MONTH'
+            : (Number(sanitizedPatientForm.totalSessionsPaid) === 1 ? 'SINGLE' : 'PACK');
+
         const patient: Patient = {
           ...sanitizedPatientForm as Patient,
           id: authUid, // Use the auth UID as the document ID for consistency
           uid: authUid,
           tenantId: tenantId, 
           lastVisit: getLocalTodayISO(),
+          paymentStatus: onboardingPaysNow ? 'PAID' : 'PENDING',
+          debtAmount: onboardingPaysNow ? 0 : paymentAmountFinal,
+          pendingPlanType: onboardingPaysNow ? undefined : planKind,
+          lastPaymentMethod: onboardingPaysNow ? onboardingPaymentMethod : undefined,
           routine: {
             id: `r_${Date.now()}`,
             stage: formStage,
@@ -460,6 +499,29 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
           }
         };
         onAddPatient(patient);
+
+        // Si abonó en el acto, emitir el movimiento financiero a Caja
+        if (onboardingPaysNow && onAddFinancialMovement && paymentAmountFinal > 0) {
+          const today = getLocalTodayISO();
+          const suggestedCierre = getSuggestedCierreNumber(today, financialMovements);
+          onAddFinancialMovement({
+            date: today,
+            type: 'INCOME',
+            paymentMethod: onboardingPaymentMethod,
+            amount: paymentAmountFinal,
+            category: patient.healthInsurance ? 'Obra Social' : 'Particular',
+            patientName: `${patient.firstName} ${patient.lastName}`.trim(),
+            cuit: normalizeDni(patient.dni),
+            description: `Alta paciente (${onboardingPaymentMethod === 'EFECTIVO' ? 'Efectivo' : 'Transferencia'}): ${patient.planType === PlanType.TIME ? 'Plan Mensual' : `${patient.totalSessionsPaid} sesiones`}`,
+            businessUnit: 'KINESIO',
+            costClassification: 'NONE',
+            cierreNumber: suggestedCierre,
+          });
+          showToast(`Paciente ingresado y cobro de $${paymentAmountFinal.toLocaleString('es-AR')} asentado en Caja.`);
+        } else if (!onboardingPaysNow && paymentAmountFinal > 0) {
+          showToast(`Paciente ingresado con deuda registrada de $${paymentAmountFinal.toLocaleString('es-AR')}.`, 'info');
+        }
+
         setSchedulePromptPatient(patient);
       } catch (err: any) {
         console.error("Error creating auth user:", err);
@@ -593,6 +655,7 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
     if (onAddFinancialMovement && paymentAmount > 0) {
       const lastApp = appointments.find(a => a.patientId === paymentPatient.id && a.kineId);
       const assignedStaff = lastApp?.kineId ? staff.find(s => s.id === lastApp.kineId) : undefined;
+      const suggestedCierre = getSuggestedCierreNumber(today, financialMovements);
       onAddFinancialMovement({
         date: today,
         type: 'INCOME',
@@ -605,8 +668,31 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
         description: `Pago recepción: ${paymentTypeState === 'SINGLE' ? '1 sesión' : paymentTypeState === 'PACK' ? `${safeVal} sesiones` : `${safeVal} mes(es)`}`,
         businessUnit: 'KINESIO',
         costClassification: 'NONE',
+        cierreNumber: suggestedCierre,
       });
     }
+
+    // Absorción y cancelación de deuda previa
+    if (paymentTypeState === 'PACK' || paymentTypeState === 'MONTH') {
+      // Absorbe y cancela cualquier deuda previa
+      updatedPatient.debtAmount = 0;
+      updatedPatient.paymentStatus = 'PAID';
+      updatedPatient.pendingPlanType = undefined;
+    } else if (paymentTypeState === 'SINGLE') {
+      const currentDebt = Number(updatedPatient.debtAmount) || 0;
+      if (currentDebt > 0) {
+        const remainingDebt = Math.max(0, currentDebt - paymentAmount);
+        updatedPatient.debtAmount = remainingDebt;
+        if (remainingDebt === 0) {
+          updatedPatient.paymentStatus = 'PAID';
+          updatedPatient.pendingPlanType = undefined;
+        }
+      } else {
+        updatedPatient.paymentStatus = 'PAID';
+        updatedPatient.debtAmount = 0;
+      }
+    }
+    updatedPatient.lastPaymentMethod = paymentMethodState;
 
     onUpdatePatient(updatedPatient);
     setPaymentPatient(null);
@@ -949,9 +1035,18 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                             <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-md">DNI: {patient.dni}</span>
                             <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-md truncate max-w-[150px] md:max-w-xs">{patient.condition}</span>
                           </div>
-                          <div className="flex items-center gap-2 mt-3">
+                          <div className="flex flex-wrap items-center gap-2 mt-3">
                             <span className={`w-2.5 h-2.5 rounded-full shadow-sm ${status.color}`}></span>
                             <span className={`text-[11px] font-black uppercase tracking-wider ${status.text}`}>{status.label}</span>
+                            {patient.debtAmount && patient.debtAmount > 0 ? (
+                              <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider animate-pulse">
+                                Deuda: ${patient.debtAmount.toLocaleString('es-AR')}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                Al día
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -990,8 +1085,14 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                                   setPaymentValue(10);
                                 }
                               }}
-                              className={`w-full md:w-auto px-4 py-3.5 rounded-[1.25rem] font-bold text-sm flex items-center justify-center transition-all shadow-sm hover:-translate-y-0.5 active:scale-95 ${status.label === 'Vencido' || status.label === 'Próximo a vencer' ? 'bg-orange-500 text-white border-transparent hover:bg-orange-600 shadow-orange-500/20' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
-                              title="Registrar Pago"
+                              className={`w-full md:w-auto px-4 py-3.5 rounded-[1.25rem] font-bold text-sm flex items-center justify-center transition-all shadow-sm hover:-translate-y-0.5 active:scale-95 ${
+                                patient.debtAmount && patient.debtAmount > 0
+                                  ? 'bg-red-600 text-white border-transparent hover:bg-red-700 shadow-red-500/20'
+                                  : status.label === 'Vencido' || status.label === 'Próximo a vencer'
+                                  ? 'bg-orange-500 text-white border-transparent hover:bg-orange-600 shadow-orange-500/20'
+                                  : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+                              }`}
+                              title={patient.debtAmount && patient.debtAmount > 0 ? `Cobrar Deuda ($${patient.debtAmount.toLocaleString('es-AR')})` : "Registrar Pago"}
                             >
                               <CreditCard size={20} />
                             </button>
@@ -1043,6 +1144,9 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
               onUpdatePatient={onUpdatePatient}
               autoSchedulePatientId={autoSchedulePatientId}
               onClearAutoSchedule={() => setAutoSchedulePatientId(null)}
+              financialMovements={financialMovements}
+              onAddFinancialMovement={onAddFinancialMovement}
+              tenantSettings={tenantSettings}
             />
           </div>
         ) : activeTab === 'INVENTORY' ? (
@@ -1621,6 +1725,108 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
                           </div>
                         </label>
                       </div>
+
+                      {!editingPatient && (
+                        <div className="col-span-full space-y-4 pt-4 border-t border-slate-100 animate-fade-in">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-black text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                              <CreditCard size={16} className="text-primary-600" />
+                              ¿Abona en este momento?
+                            </label>
+                            <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${
+                              onboardingPaysNow ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {onboardingPaysNow ? 'Cobro inmediato' : 'Registrar como deuda'}
+                            </span>
+                          </div>
+
+                          {/* Switch Buttons */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setOnboardingPaysNow(true)}
+                              className={`p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all border ${
+                                onboardingPaysNow
+                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-700 shadow-sm ring-2 ring-emerald-500/20'
+                                  : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                              }`}
+                            >
+                              <CheckCircle2 size={16} /> Sí, abona ahora
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setOnboardingPaysNow(false)}
+                              className={`p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all border ${
+                                !onboardingPaysNow
+                                  ? 'bg-amber-50 border-amber-300 text-amber-700 shadow-sm ring-2 ring-amber-500/20'
+                                  : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                              }`}
+                            >
+                              <Clock size={16} /> No, registrar como deuda
+                            </button>
+                          </div>
+
+                          {/* Details based on choice */}
+                          <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {onboardingPaysNow && (
+                                <div className="space-y-1.5">
+                                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Medio de Pago *</label>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setOnboardingPaymentMethod('TRANSFERENCIA')}
+                                      className={`py-2.5 rounded-xl font-bold text-xs transition-all border flex items-center justify-center gap-1.5 ${
+                                        onboardingPaymentMethod === 'TRANSFERENCIA'
+                                          ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
+                                          : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                                      }`}
+                                    >
+                                      <CreditCard size={14} /> Transf
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setOnboardingPaymentMethod('EFECTIVO')}
+                                      className={`py-2.5 rounded-xl font-bold text-xs transition-all border flex items-center justify-center gap-1.5 ${
+                                        onboardingPaymentMethod === 'EFECTIVO'
+                                          ? 'bg-amber-50 border-amber-200 text-amber-700 shadow-sm'
+                                          : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                                      }`}
+                                    >
+                                      <Banknote size={14} /> Efectivo
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className={onboardingPaysNow ? "space-y-1.5" : "col-span-full space-y-1.5"}>
+                                <div className="flex items-center justify-between">
+                                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                                    {onboardingPaysNow ? 'Monto a Cobrar ($) *' : 'Monto de la Deuda ($) *'}
+                                  </label>
+                                  <span className="text-[10px] text-slate-400 font-semibold">(Editable con desc.)</span>
+                                </div>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={onboardingPaymentAmount}
+                                  onChange={e => {
+                                    setIsAmountManuallyEdited(true);
+                                    setOnboardingPaymentAmount(Math.max(0, Number(e.target.value) || 0));
+                                  }}
+                                  className="w-full bg-white border border-slate-200 rounded-xl p-3 font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
+                                />
+                              </div>
+                            </div>
+
+                            <p className="text-[11px] text-slate-500 font-medium">
+                              {onboardingPaysNow
+                                ? 'ℹ️ Al guardar, se asentará el cobro directamente en el Libro de Caja Diaria con su N° de Cierre activo.'
+                                : '⚠️ El paciente se guardará con saldo deudor pendiente y aparecerá destacado en Recepción y en el Calendario de Turnos.'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </form>
@@ -1888,6 +2094,14 @@ export const RecepcionView: React.FC<RecepcionViewProps> = ({
             </div>
 
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col gap-4">
+              {paymentPatient.debtAmount && paymentPatient.debtAmount > 0 ? (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-2.5 text-amber-800 text-xs font-bold">
+                  <AlertCircle size={18} className="text-amber-600 shrink-0" />
+                  <span>
+                    El paciente posee una deuda de <strong className="text-amber-900">${paymentPatient.debtAmount.toLocaleString('es-AR')}</strong> que será cancelada con este cobro.
+                  </span>
+                </div>
+              ) : null}
               <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                 <span className="text-sm font-black text-slate-500 uppercase tracking-widest">Total a Abonar</span>
                 <span className="text-2xl font-black text-emerald-600">${paymentTotal.toLocaleString()}</span>

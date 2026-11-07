@@ -42,6 +42,8 @@ import {
   getAutoClassification
 } from '../constants/financialCategories';
 import { exportCashFlowExcel, exportEERRExcel } from '../utils/financialExcelExport';
+import { getLocalTodayISO } from '../utils/dateUtils';
+import { getSuggestedCierreNumber } from '../utils/financialUtils';
 
 interface FinancialMovementsViewProps {
   movements: FinancialMovement[];
@@ -128,7 +130,7 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
   // Form State for Add / Edit
   const [formType, setFormType] = useState<FinancialMovementType>('INCOME');
   const [formMethod, setFormMethod] = useState<PaymentMethod>('TRANSFERENCIA');
-  const [formDate, setFormDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [formDate, setFormDate] = useState<string>(getLocalTodayISO());
   const [formAmount, setFormAmount] = useState<string>('');
   const [formCategory, setFormCategory] = useState<string>('Particular');
   const [formCustomCategory, setFormCustomCategory] = useState<string>('');
@@ -269,7 +271,8 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
     setEditingMovement(null);
     setFormType(type);
     setFormMethod(method);
-    setFormDate(new Date().toISOString().split('T')[0]);
+    const today = getLocalTodayISO();
+    setFormDate(today);
     setFormAmount('');
     setFormCategory(type === 'INCOME' ? 'Particular' : 'Ins. kine');
     setFormCustomCategory('');
@@ -277,7 +280,8 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
     setFormCuit('');
     setFormProfessional('');
     setFormDescription('');
-    setFormCierreNumber('');
+    const suggestedCierre = getSuggestedCierreNumber(today, movements);
+    setFormCierreNumber(suggestedCierre.toString());
     const auto = getAutoClassification(type === 'INCOME' ? 'Particular' : 'Ins. kine', type === 'INCOME');
     setFormBusinessUnit(auto.businessUnit);
     setFormCostClassification(auto.costClassification);
@@ -1196,7 +1200,14 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
                     type="date"
                     required
                     value={formDate}
-                    onChange={e => setFormDate(e.target.value)}
+                    onChange={e => {
+                      const newDate = e.target.value;
+                      setFormDate(newDate);
+                      if (!editingMovement && newDate) {
+                        const suggested = getSuggestedCierreNumber(newDate, movements);
+                        setFormCierreNumber(suggested.toString());
+                      }
+                    }}
                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 font-bold text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
@@ -1289,16 +1300,35 @@ export const FinancialMovementsView: React.FC<FinancialMovementsViewProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                    N° Cierre / Día
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500">
+                      N° Cierre / Turno
+                    </label>
+                    {!editingMovement && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = parseInt(formCierreNumber, 10) || 0;
+                          setFormCierreNumber((current + 1).toString());
+                        }}
+                        className="text-[10px] font-bold text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-2 py-0.5 rounded-lg border border-primary-200 transition-colors"
+                        title="Incrementar para iniciar un nuevo turno o arqueo de caja"
+                      >
+                        + Nuevo Turno
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="number"
-                    placeholder="Opcional (ej: 1, 2...)"
+                    min="1"
+                    placeholder="Automático (correlativo)"
                     value={formCierreNumber}
                     onChange={e => setFormCierreNumber(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Correlativo automático. Edita si abres un nuevo turno.
+                  </span>
                 </div>
               </div>
 
